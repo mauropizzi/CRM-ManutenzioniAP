@@ -73,10 +73,11 @@ const materialUsedSchema = z.object({
 });
 
 export const interventionConclusionFormSchema = z.object({
-  intervention_concluded: z.boolean().default(false),
-  request_quote: z.boolean().default(false),
-  client_absent: z.boolean().default(false),
-  work_description: z.string().min(10, { message: "Descrivi i lavori svolti (almeno 10 caratteri)." }),
+  // These fields are optional in InterventionRequest, so make them optional in Zod schema
+  intervention_concluded: z.boolean().optional(),
+  request_quote: z.boolean().optional(),
+  client_absent: z.boolean().optional(),
+  work_description: z.string().min(10, { message: "Descrivi i lavori svolti (almeno 10 caratteri)." }).optional(),
   operative_notes_conclusion: z.string().optional(),
   time_entries: z.array(timeEntrySchema).optional(),
   kilometers: z.coerce.number().min(0, { message: "I Km non possono essere negativi." }).optional(),
@@ -94,6 +95,7 @@ export const InterventionConclusionForm = ({ initialData, onSubmit }: Interventi
   const form = useForm<InterventionConclusionFormValues>({
     resolver: zodResolver(interventionConclusionFormSchema),
     defaultValues: {
+      // Provide explicit fallbacks for optional fields that are expected by the form
       intervention_concluded: initialData?.intervention_concluded ?? false,
       request_quote: initialData?.request_quote ?? false,
       client_absent: initialData?.client_absent ?? false,
@@ -101,7 +103,7 @@ export const InterventionConclusionForm = ({ initialData, onSubmit }: Interventi
       operative_notes_conclusion: initialData?.operative_notes_conclusion ?? '',
       time_entries: initialData?.time_entries?.map(entry => ({
         ...entry,
-        date: new Date(entry.date), // Ensure date is a Date object
+        date: new Date(entry.date),
       })) ?? [],
       kilometers: initialData?.kilometers ?? 0,
       materials_used: initialData?.materials_used ?? [],

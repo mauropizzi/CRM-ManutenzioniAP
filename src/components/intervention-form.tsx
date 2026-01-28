@@ -66,7 +66,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
       internal_ref: initialData?.internal_ref ?? '',
       scheduled_date: initialData?.scheduled_date,
       scheduled_time: initialData?.scheduled_time ?? '',
-      status: initialData?.status ? initialData.status : 'Da fare', // Gestione esplicita per garantire che non sia undefined
+      status: initialData?.status ?? 'Da fare',
       assigned_technicians: initialData?.assigned_technicians ?? '',
       office_notes: initialData?.office_notes ?? '',
     },
