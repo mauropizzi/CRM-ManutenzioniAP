@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CustomerProvider } from "@/context/customer-context";
+import { InterventionProvider } from "@/context/intervention-context"; // Importa il nuovo provider
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
@@ -30,8 +31,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <CustomerProvider>
-          {children}
-          <Toaster />
+          <InterventionProvider> {/* Avvolgi i children con il nuovo provider */}
+            {children}
+            <Toaster />
+          </InterventionProvider>
         </CustomerProvider>
       </body>
     </html>
