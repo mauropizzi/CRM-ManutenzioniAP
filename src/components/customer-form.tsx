@@ -15,12 +15,12 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
-import { DialogFooter } from '@/components/ui/dialog';
 import { Customer } from '@/types/customer';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import Link from 'next/link';
 
-const formSchema = z.object({
+export const formSchema = z.object({
   ragione_sociale: z.string().min(2, { message: "La ragione sociale deve contenere almeno 2 caratteri." }),
   codice_fiscale: z.string().min(16, { message: "Il codice fiscale deve contenere 16 caratteri." }).max(16, { message: "Il codice fiscale deve contenere 16 caratteri." }),
   partita_iva: z.string().min(11, { message: "La partita IVA deve contenere 11 caratteri." }).max(11, { message: "La partita IVA deve contenere 11 caratteri." }),
@@ -33,59 +33,59 @@ const formSchema = z.object({
   referente: z.string().optional(),
   pec: z.string().email({ message: "Inserisci una PEC valida." }).optional(),
   sdi: z.string().optional(),
-  attivo: z.boolean().default(true),
+  attivo: z.boolean(), // Modificato da z.boolean().default(true) a z.boolean()
   note: z.string().optional(),
 });
 
+export type CustomerFormValues = z.infer<typeof formSchema>;
+
 interface CustomerFormProps {
   initialData?: Customer;
-  onSubmit: (data: Omit<Customer, 'id'> | Customer) => void;
-  onClose: () => void;
+  onSubmit: (data: CustomerFormValues) => void;
 }
 
-export const CustomerForm = ({ initialData, onSubmit, onClose }: CustomerFormProps) => {
-  const form = useForm<z.infer<typeof formSchema>>({
+export const CustomerForm = ({ initialData, onSubmit }: CustomerFormProps) => {
+  const form = useForm<CustomerFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      ragione_sociale: initialData?.ragione_sociale || '',
-      codice_fiscale: initialData?.codice_fiscale || '',
-      partita_iva: initialData?.partita_iva || '',
-      indirizzo: initialData?.indirizzo || '',
-      citta: initialData?.citta || '',
-      cap: initialData?.cap || '',
-      provincia: initialData?.provincia || '',
-      telefono: initialData?.telefono || '',
-      email: initialData?.email || '',
-      referente: initialData?.referente || '',
-      pec: initialData?.pec || '',
-      sdi: initialData?.sdi || '',
+      ragione_sociale: initialData?.ragione_sociale ?? '',
+      codice_fiscale: initialData?.codice_fiscale ?? '',
+      partita_iva: initialData?.partita_iva ?? '',
+      indirizzo: initialData?.indirizzo ?? '',
+      citta: initialData?.citta ?? '',
+      cap: initialData?.cap ?? '',
+      provincia: initialData?.provincia ?? '',
+      telefono: initialData?.telefono ?? '',
+      email: initialData?.email ?? '',
+      referente: initialData?.referente ?? '',
+      pec: initialData?.pec ?? '',
+      sdi: initialData?.sdi ?? '',
       attivo: initialData?.attivo ?? true, // Usa ?? per default a true se undefined/null
-      note: initialData?.note || '',
+      note: initialData?.note ?? '',
     },
   });
 
   useEffect(() => {
     form.reset({
-      ragione_sociale: initialData?.ragione_sociale || '',
-      codice_fiscale: initialData?.codice_fiscale || '',
-      partita_iva: initialData?.partita_iva || '',
-      indirizzo: initialData?.indirizzo || '',
-      citta: initialData?.citta || '',
-      cap: initialData?.cap || '',
-      provincia: initialData?.provincia || '',
-      telefono: initialData?.telefono || '',
-      email: initialData?.email || '',
-      referente: initialData?.referente || '',
-      pec: initialData?.pec || '',
-      sdi: initialData?.sdi || '',
+      ragione_sociale: initialData?.ragione_sociale ?? '',
+      codice_fiscale: initialData?.codice_fiscale ?? '',
+      partita_iva: initialData?.partita_iva ?? '',
+      indirizzo: initialData?.indirizzo ?? '',
+      citta: initialData?.citta ?? '',
+      cap: initialData?.cap ?? '',
+      provincia: initialData?.provincia ?? '',
+      telefono: initialData?.telefono ?? '',
+      email: initialData?.email ?? '',
+      referente: initialData?.referente ?? '',
+      pec: initialData?.pec ?? '',
+      sdi: initialData?.sdi ?? '',
       attivo: initialData?.attivo ?? true,
-      note: initialData?.note || '',
+      note: initialData?.note ?? '',
     });
   }, [initialData, form]);
 
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    onSubmit(initialData ? { ...initialData, ...values } : values);
-    onClose();
+  const handleSubmit = (values: CustomerFormValues) => {
+    onSubmit(values);
   };
 
   return (
@@ -281,14 +281,16 @@ export const CustomerForm = ({ initialData, onSubmit, onClose }: CustomerFormPro
             </FormItem>
           )}
         />
-        <DialogFooter className="pt-4">
-          <Button type="button" variant="outline" onClick={onClose} className="rounded-md px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
-            Annulla
-          </Button>
+        <div className="flex justify-end gap-2 pt-4">
+          <Link href="/customers" passHref>
+            <Button type="button" variant="outline" className="rounded-md px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+              Annulla
+            </Button>
+          </Link>
           <Button type="submit" className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2">
             {initialData ? 'Salva Modifiche' : 'Aggiungi Cliente'}
           </Button>
-        </DialogFooter>
+        </div>
       </form>
     </Form>
   );

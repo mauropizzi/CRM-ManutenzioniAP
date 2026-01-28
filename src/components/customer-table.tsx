@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Table,
   TableBody,
@@ -10,74 +10,29 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { Customer } from '@/types/customer';
 import { useCustomers } from '@/context/customer-context';
-import { CustomerForm } from './customer-form';
 import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 export const CustomerTable = () => {
-  const { customers, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>(undefined);
-
-  const handleAddClick = () => {
-    setEditingCustomer(undefined);
-    setIsFormOpen(true);
-  };
-
-  const handleEditClick = (customer: Customer) => {
-    setEditingCustomer(customer);
-    setIsFormOpen(true);
-  };
+  const { customers, deleteCustomer } = useCustomers();
 
   const handleDeleteClick = (id: string) => {
     deleteCustomer(id);
-  };
-
-  const handleFormSubmit = (data: Omit<Customer, 'id'> | Customer) => {
-    if ('id' in data && data.id) {
-      updateCustomer(data as Customer);
-    } else {
-      addCustomer(data as Omit<Customer, 'id'>);
-    }
   };
 
   return (
     <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Anagrafica Clienti</h2>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleAddClick} className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 flex items-center gap-2">
-              <PlusCircle size={18} /> Aggiungi Cliente
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] p-6 bg-white dark:bg-gray-900 rounded-lg shadow-xl">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-                {editingCustomer ? 'Modifica Cliente' : 'Aggiungi Nuovo Cliente'}
-              </DialogTitle>
-              <DialogDescription className="text-gray-600 dark:text-gray-400">
-                {editingCustomer ? 'Apporta modifiche ai dettagli del cliente qui.' : 'Compila i dettagli per aggiungere un nuovo cliente.'}
-              </DialogDescription>
-            </DialogHeader>
-            <CustomerForm
-              initialData={editingCustomer}
-              onSubmit={handleFormSubmit}
-              onClose={() => setIsFormOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        <Link href="/customers/new" passHref>
+          <Button className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 flex items-center gap-2">
+            <PlusCircle size={18} /> Aggiungi Cliente
+          </Button>
+        </Link>
       </div>
 
       {customers.length === 0 ? (
@@ -126,14 +81,15 @@ export const CustomerTable = () => {
                   </TableCell>
                   <TableCell className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate">{customer.note}</TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditClick(customer)}
-                      className="rounded-md text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700"
-                    >
-                      <Edit size={18} />
-                    </Button>
+                    <Link href={`/customers/${customer.id}/edit`} passHref>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-md text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700"
+                      >
+                        <Edit size={18} />
+                      </Button>
+                    </Link>
                     <Button
                       variant="ghost"
                       size="icon"
