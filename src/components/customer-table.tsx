@@ -23,6 +23,7 @@ import { useCustomers } from '@/context/customer-context';
 import { CustomerForm } from './customer-form';
 import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner';
+import { Badge } from '@/components/ui/badge';
 
 export const CustomerTable = () => {
   const { customers, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
@@ -61,7 +62,7 @@ export const CustomerTable = () => {
               <PlusCircle size={18} /> Aggiungi Cliente
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] p-6 bg-white dark:bg-gray-900 rounded-lg shadow-xl">
+          <DialogContent className="sm:max-w-[600px] p-6 bg-white dark:bg-gray-900 rounded-lg shadow-xl">
             <DialogHeader>
               <DialogTitle className="text-xl font-semibold text-gray-800 dark:text-gray-100">
                 {editingCustomer ? 'Modifica Cliente' : 'Aggiungi Nuovo Cliente'}
@@ -86,20 +87,44 @@ export const CustomerTable = () => {
           <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <TableHeader className="bg-gray-50 dark:bg-gray-800">
               <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tl-md">Nome</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Email</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Telefono</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tl-md">Ragione Sociale</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Codice Fiscale</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Partita IVA</TableHead>
                 <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Indirizzo</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Città</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">CAP</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Provincia</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Telefono</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Email</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Referente</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">PEC</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">SDI</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Attivo</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Note</TableHead>
                 <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tr-md">Azioni</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
               {customers.map((customer: Customer) => (
                 <TableRow key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{customer.name}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{customer.ragione_sociale}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.codice_fiscale}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.partita_iva}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.indirizzo}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.citta}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.cap}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.provincia}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.telefono}</TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.email}</TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.phone}</TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.address}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.referente}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.pec}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.sdi}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
+                    <Badge className={`rounded-full px-2 py-1 text-xs font-semibold ${customer.attivo ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+                      {customer.attivo ? 'Sì' : 'No'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate">{customer.note}</TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
                     <Button
                       variant="ghost"
