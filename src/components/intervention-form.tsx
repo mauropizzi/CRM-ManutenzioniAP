@@ -35,12 +35,12 @@ export const interventionFormSchema = z.object({
   model: z.string().min(2, { message: "Il modello deve contenere almeno 2 caratteri." }),
   serial_number: z.string().min(2, { message: "La matricola deve contenere almeno 2 caratteri." }),
   system_location: z.string().min(5, { message: "L'ubicazione dell'impianto deve contenere almeno 5 caratteri." }),
-  internal_ref: z.string().optional(),
+  internal_ref: z.string().optional().or(z.literal('')),
   scheduled_date: z.date().optional(),
-  scheduled_time: z.string().optional(),
+  scheduled_time: z.string().optional().or(z.literal('')),
   status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']).default('Da fare'),
-  assigned_technicians: z.string().optional(),
-  office_notes: z.string().optional(),
+  assigned_technicians: z.string().optional().or(z.literal('')),
+  office_notes: z.string().optional().or(z.literal('')),
 });
 
 export type InterventionFormValues = z.infer<typeof interventionFormSchema>;
@@ -66,10 +66,10 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
       internal_ref: initialData?.internal_ref ?? '',
       scheduled_date: initialData?.scheduled_date,
       scheduled_time: initialData?.scheduled_time ?? '',
-      status: initialData?.status ?? 'Da fare',
+      status: initialData?.status ?? 'Da fare', // Ensure a default for status
       assigned_technicians: initialData?.assigned_technicians ?? '',
       office_notes: initialData?.office_notes ?? '',
-    },
+    } as InterventionFormValues, // Explicitly cast to ensure type compatibility
   });
 
   const handleSubmit = (values: InterventionFormValues) => {
