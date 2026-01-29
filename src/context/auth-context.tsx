@@ -51,6 +51,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchUserProfile = async (authUser: any) => {
+    console.log('Fetching profile for user:', authUser.id);
+    
     try {
       // Try to fetch profile
       const { data, error } = await supabase
@@ -59,17 +61,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', authUser.id)
         .single();
 
+      console.log('Profile fetch result:', { data, error });
+
       if (error) {
-        // If profile doesn't exist, create it
-        if (error.code === 'PGRST116') {
-          console.log('Profile not found, creating...');
+        console.log('Profile fetch error code:', error.code);
+        
+        // If profile doesn't exist (PGRST116 = not found), create it
+        if (error.code === 'PGRST116' || error.message?.includes('not found') || error.message?.includes('No rows found')) {
+          console.log('Profile not found, creating new profile...');
+          
+          const newProfileData = {
+            id: authUser.id,
+            first_name: authUser.user_metadata?.first_name || '',
+            last_name: authUser.user_metadata?.last_name || '',
+          };
+          
+          console.log('Inserting profile data:', newProfileData);
+          
           const { data: newProfile, error: createError } = await supabase
             .from('profiles')
-            .insert([{
-              id: authUser.id,
-              first_name: authUser.user_metadata?.first_name || '',
-              last_name: authUser.user_metadata?.last_name || '',
-            }])
+            .insert([newProfileData])
             .select()
             .single();
 
@@ -83,6 +94,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return;
           }
 
+          console.log('New profile created:', newProfile);
+
           if (newProfile) {
             setUser({
               id: authUser.id,
@@ -94,11 +107,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return;
           }
         } else {
-          console.error('Error fetching profile:', error);
+          console.error('Error fetching profile (not 404):', error);
         }
       }
 
       if (data) {
+        console.log('Profile found:', data);
         setUser({
           id: authUser.id,
           email: authUser.email || '',
@@ -108,13 +122,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       } else {
         // Fallback if no profile data
+        console.log('No profile data, using fallback');
         setUser({
           id: authUser.id,
           email: authUser.email || '',
         });
       }
     } catch (error) {
-      console.error('Exception fetching profile:', error);
+      console.error('Exception in fetchUserProfile:', error);
       setUser({
         id: authUser.id,
         email: authUser.email || '',
