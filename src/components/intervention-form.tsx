@@ -38,7 +38,7 @@ export const interventionFormSchema = z.object({
   internal_ref: z.string().optional().or(z.literal('')),
   scheduled_date: z.date().optional(),
   scheduled_time: z.string().optional().or(z.literal('')),
-  status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']).default('Da fare'),
+  status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']),
   assigned_technicians: z.string().optional().or(z.literal('')),
   office_notes: z.string().optional().or(z.literal('')),
 });
@@ -66,10 +66,10 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
       internal_ref: initialData?.internal_ref ?? '',
       scheduled_date: initialData?.scheduled_date,
       scheduled_time: initialData?.scheduled_time ?? '',
-      status: initialData?.status ? initialData.status : 'Da fare', // Reso più esplicito
+      status: initialData?.status ?? 'Da fare',
       assigned_technicians: initialData?.assigned_technicians ?? '',
       office_notes: initialData?.office_notes ?? '',
-    } as InterventionFormValues, // Cast esplicito dell'intero oggetto
+    },
   });
 
   const handleSubmit = (values: InterventionFormValues) => {
