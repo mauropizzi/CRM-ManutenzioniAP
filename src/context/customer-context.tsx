@@ -19,7 +19,6 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load customers from Supabase on mount
   useEffect(() => {
     fetchCustomers();
   }, []);

@@ -19,7 +19,6 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const [interventionRequests, setInterventionRequests] = useState<InterventionRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load interventions from Supabase on mount
   useEffect(() => {
     fetchInterventions();
   }, []);
