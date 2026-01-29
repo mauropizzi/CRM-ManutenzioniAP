@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Users, Wrench, ClipboardList } from "lucide-react"
+import { Home, Users, Wrench, ClipboardList, LogOut, User } from "lucide-react"
 
 import {
   Sidebar,
@@ -14,7 +14,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/context/auth-context"
 import { cn } from "@/lib/utils"
 
 const menuItems = [
@@ -37,6 +40,7 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const { user, signOut } = useAuth()
 
   return (
     <Sidebar>
@@ -78,6 +82,38 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+      
+      <SidebarFooter className="border-t border-sidebar-border p-4">
+        {user ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-sidebar-foreground">
+              <User className="h-4 w-4" />
+              <span className="truncate">{user.email}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full"
+              onClick={signOut}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        ) : (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full"
+            asChild
+          >
+            <Link href="/login">
+              <User className="h-4 w-4 mr-2" />
+              Accedi
+            </Link>
+          </Button>
+        )}
+      </SidebarFooter>
     </Sidebar>
   )
 }
