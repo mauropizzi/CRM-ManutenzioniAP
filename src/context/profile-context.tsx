@@ -32,18 +32,43 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // Prova a ottenere il profilo
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
-      
-      setProfile(data as Profile);
+      if (error) {
+        // Se il profilo non esiste, crealo
+        if (error.code === 'PGRST116') {
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              first_name: user.user_metadata?.first_name || null,
+              last_name: user.user_metadata?.last_name || null,
+              role: 'tecnico',
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            setProfile(null);
+          } else {
+            setProfile(newProfile as Profile);
+          }
+        } else {
+          console.error('Error fetching profile:', error);
+          setProfile(null);
+        }
+      } else {
+        setProfile(data as Profile);
+      }
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      toast.error("Errore nel caricamento del profilo");
+      console.error('Unexpected error fetching profile:', error);
+      setProfile(null);
     } finally {
       setIsLoading(false);
     }
@@ -52,8 +77,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     fetchProfile();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      fetchProfile();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        fetchProfile();
+      } else if (event === 'SIGNED_OUT') {
+        setProfile(null);
+        setIsLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -62,7 +92,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const updateProfile = async (data: Partial<Profile>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error('Non autenticato');
 
       const { error } = await supabase
         .from('profiles')
