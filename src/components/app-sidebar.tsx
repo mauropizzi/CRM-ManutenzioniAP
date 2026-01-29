@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/auth-context"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils"
 
 const menuItems = [
@@ -83,7 +84,13 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter className="border-t border-sidebar-border p-4">
+      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-3">
+        {/* Theme Toggle */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-sidebar-foreground">Tema</span>
+          <ThemeToggle />
+        </div>
+        
         {user ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm text-sidebar-foreground">
