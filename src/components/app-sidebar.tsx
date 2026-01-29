@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Home, Users, Wrench, ClipboardList, UserCog } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { Home, Users, Wrench, ClipboardList, UserCog, LogOut } from "lucide-react"
 
 import {
   Sidebar,
@@ -14,8 +14,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar"
 import { useProfile } from "@/context/profile-context"
+import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
 const menuItems = [
@@ -38,12 +41,29 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { canManageUsers } = useProfile()
+  const router = useRouter()
+  const { canManageUsers, profile } = useProfile()
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut()
+      toast.success("Logout effettuato con successo")
+      router.push("/")
+      router.refresh()
+    } catch (error) {
+      toast.error("Errore durante il logout")
+    }
+  }
 
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <h2 className="text-lg font-bold text-sidebar-foreground">Gestione Interventi</h2>
+        {profile && (
+          <p className="text-xs text-sidebar-foreground/60 mt-1">
+            {profile.first_name} {profile.last_name} ({profile.role})
+          </p>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -100,6 +120,21 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
       </SidebarContent>
+      
+      <SidebarFooter className="border-t border-sidebar-border p-4">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              onClick={handleLogout}
+              tooltip="Logout"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }
