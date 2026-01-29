@@ -11,9 +11,9 @@ export default function NewInterventionPage() {
   const { addInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
-  const handleSubmit = (data: InterventionFormValues) => {
-    addInterventionRequest(data as Omit<InterventionRequest, 'id'>);
-    router.push('/interventions'); // Reindirizza a una pagina di elenco interventi (da creare)
+  const handleSubmit = async (data: InterventionFormValues) => {
+    await addInterventionRequest(data as Omit<InterventionRequest, 'id'>);
+    router.push('/interventions');
   };
 
   return (

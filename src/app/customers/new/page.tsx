@@ -11,8 +11,8 @@ export default function NewCustomerPage() {
   const { addCustomer } = useCustomers();
   const router = useRouter();
 
-  const handleSubmit = (data: CustomerFormValues) => {
-    addCustomer(data as Omit<Customer, 'id'>);
+  const handleSubmit = async (data: CustomerFormValues) => {
+    await addCustomer(data as Omit<Customer, 'id'>);
     router.push('/customers');
   };
 

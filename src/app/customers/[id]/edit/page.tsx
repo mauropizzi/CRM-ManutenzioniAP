@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { use } from 'react';
 import { CustomerForm, CustomerFormValues } from '@/components/customer-form';
 import { useCustomers } from '@/context/customer-context';
 import { useRouter } from 'next/navigation';
@@ -9,13 +9,13 @@ import { Customer } from '@/types/customer';
 import { Toaster } from '@/components/ui/sonner';
 
 interface EditCustomerPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function EditCustomerPage({ params }: EditCustomerPageProps) {
-  const { id } = params;
+  const { id } = use(params);
   const { customers, updateCustomer } = useCustomers();
   const router = useRouter();
 
@@ -25,8 +25,8 @@ export default function EditCustomerPage({ params }: EditCustomerPageProps) {
     notFound();
   }
 
-  const handleSubmit = (data: CustomerFormValues) => {
-    updateCustomer({ ...customerToEdit, ...data } as Customer);
+  const handleSubmit = async (data: CustomerFormValues) => {
+    await updateCustomer({ ...customerToEdit, ...data } as Customer);
     router.push('/customers');
   };
 

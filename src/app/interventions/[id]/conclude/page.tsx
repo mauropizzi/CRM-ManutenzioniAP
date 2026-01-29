@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { use } from 'react';
 import { InterventionConclusionForm, InterventionConclusionFormValues } from '@/components/intervention-conclusion-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
@@ -9,13 +9,13 @@ import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
 
 interface ConcludeInterventionPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function ConcludeInterventionPage({ params }: ConcludeInterventionPageProps) {
-  const { id } = params;
+  const { id } = use(params);
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
@@ -25,10 +25,10 @@ export default function ConcludeInterventionPage({ params }: ConcludeInterventio
     notFound();
   }
 
-  const handleSubmit = (data: InterventionConclusionFormValues) => {
+  const handleSubmit = async (data: InterventionConclusionFormValues) => {
     const updatedStatus = data.intervention_concluded ? 'Completato' : interventionToConclude.status;
 
-    updateInterventionRequest({
+    await updateInterventionRequest({
       ...interventionToConclude,
       ...data,
       status: updatedStatus,
