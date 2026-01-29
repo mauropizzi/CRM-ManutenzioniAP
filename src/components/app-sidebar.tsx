@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Users, Wrench, ClipboardList } from "lucide-react"
+import { Home, Users, Wrench, ClipboardList, UserCog } from "lucide-react"
 
 import {
   Sidebar,
@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar"
+import { useProfile } from "@/context/profile-context"
 import { cn } from "@/lib/utils"
 
 const menuItems = [
@@ -37,6 +38,7 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const { canManageUsers } = useProfile()
 
   return (
     <Sidebar>
@@ -77,6 +79,26 @@ export function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
+
+        {canManageUsers && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Amministrazione</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  asChild 
+                  isActive={pathname === "/users"}
+                  tooltip="Gestione Utenti"
+                >
+                  <Link href="/users" className="flex items-center gap-3">
+                    <UserCog className="h-4 w-4" />
+                    <span>Gestione Utenti</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   )
