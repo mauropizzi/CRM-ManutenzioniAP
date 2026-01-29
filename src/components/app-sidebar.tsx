@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { Home, Users, Wrench, ClipboardList, UserCog, LogOut } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { Home, Users, Wrench, ClipboardList, UserCog } from "lucide-react"
 
 import {
   Sidebar,
@@ -16,13 +16,12 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar"
 import { useProfile } from "@/context/profile-context"
-import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 const menuItems = [
   {
     title: "Dashboard",
-    url: "/dashboard",
+    url: "/",
     icon: Home,
   },
   {
@@ -39,23 +38,7 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const router = useRouter()
-  const { canManageUsers, profile } = useProfile()
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut()
-      toast.success("Logout effettuato")
-      router.push('/')
-    } catch (error) {
-      toast.error("Errore durante il logout")
-    }
-  }
-
-  // Non mostrare sidebar se non loggato (sulla pagina login)
-  if (!profile) {
-    return null
-  }
+  const { canManageUsers } = useProfile()
 
   return (
     <Sidebar>
@@ -116,23 +99,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroup>
         )}
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Account</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                onClick={handleLogout}
-                tooltip="Logout"
-              >
-                <div className="flex items-center gap-3 text-red-600">
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   )
