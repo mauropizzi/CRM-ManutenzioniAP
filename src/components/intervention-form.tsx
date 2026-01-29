@@ -51,27 +51,25 @@ interface InterventionFormProps {
 }
 
 export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProps) => {
-  const defaultValues: InterventionFormValues = {
-    client_company_name: initialData?.client_company_name ?? '',
-    client_email: initialData?.client_email ?? '',
-    client_phone: initialData?.client_phone ?? '',
-    client_address: initialData?.client_address ?? '',
-    system_type: initialData?.system_type ?? '',
-    brand: initialData?.brand ?? '',
-    model: initialData?.model ?? '',
-    serial_number: initialData?.serial_number ?? '',
-    system_location: initialData?.system_location ?? '',
-    internal_ref: initialData?.internal_ref ?? '',
-    scheduled_date: initialData?.scheduled_date,
-    scheduled_time: initialData?.scheduled_time ?? '',
-    status: (initialData?.status as InterventionFormValues['status']) ?? 'Da fare', // Explicit cast before nullish coalescing
-    assigned_technicians: initialData?.assigned_technicians ?? '',
-    office_notes: initialData?.office_notes ?? '',
-  };
-
   const form = useForm<InterventionFormValues>({
     resolver: zodResolver(interventionFormSchema),
-    defaultValues: defaultValues,
+    defaultValues: {
+      client_company_name: initialData?.client_company_name ?? '',
+      client_email: initialData?.client_email ?? '',
+      client_phone: initialData?.client_phone ?? '',
+      client_address: initialData?.client_address ?? '',
+      system_type: initialData?.system_type ?? '',
+      brand: initialData?.brand ?? '',
+      model: initialData?.model ?? '',
+      serial_number: initialData?.serial_number ?? '',
+      system_location: initialData?.system_location ?? '',
+      internal_ref: initialData?.internal_ref ?? '',
+      scheduled_date: initialData?.scheduled_date,
+      scheduled_time: initialData?.scheduled_time ?? '',
+      status: initialData?.status ?? 'Da fare',
+      assigned_technicians: initialData?.assigned_technicians ?? '',
+      office_notes: initialData?.office_notes ?? '',
+    } as InterventionFormValues, // Explicitly cast the entire object
   });
 
   const handleSubmit = (values: InterventionFormValues) => {
