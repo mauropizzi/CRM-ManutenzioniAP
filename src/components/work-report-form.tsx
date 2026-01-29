@@ -26,12 +26,12 @@ const materialSchema = z.object({
 });
 
 export const workReportSchema = z.object({
-  client_absent: z.boolean().default(false),
+  client_absent: z.boolean(),
   work_description: z.string().min(10, { message: "Descrivi i lavori svolti (min. 10 caratteri)." }),
   operative_notes: z.string().optional(),
   time_entries: z.array(timeEntrySchema).min(1, { message: "Aggiungi almeno una riga ore." }),
   kilometers: z.coerce.number().min(0).optional(),
-  materials: z.array(materialSchema).default([]),
+  materials: z.array(materialSchema),
 });
 
 export type WorkReportFormValues = z.infer<typeof workReportSchema>;
