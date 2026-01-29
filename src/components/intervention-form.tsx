@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { it } from 'date-fns/locale'; // Importa la locale italiana
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -49,6 +50,21 @@ interface InterventionFormProps {
   initialData?: InterventionRequest;
   onSubmit: (data: InterventionFormValues) => void;
 }
+
+// Funzione per generare le opzioni dell'ora
+const generateTimeOptions = () => {
+  const times = [];
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      const hour = h.toString().padStart(2, '0');
+      const minute = m.toString().padStart(2, '0');
+      times.push(`${hour}:${minute}`);
+    }
+  }
+  return times;
+};
+
+const timeOptions = generateTimeOptions();
 
 export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProps) => {
   const form = useForm<InterventionFormValues>({
@@ -254,7 +270,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                           )}
                         >
                           {field.value ? (
-                            format(field.value, "dd/MM/yyyy")
+                            format(field.value, "dd/MM/yyyy", { locale: it }) // Usa la locale italiana
                           ) : (
                             <span>gg / mm / aaaa</span>
                           )}
@@ -268,6 +284,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
+                        locale={it} // Passa la locale italiana al calendario
                       />
                     </PopoverContent>
                   </Popover>
@@ -281,9 +298,20 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Ora programmata</FormLabel>
-                  <FormControl>
-                    <Input placeholder="-- : --" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        <SelectValue placeholder="Seleziona ora" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
+                      {timeOptions.map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
