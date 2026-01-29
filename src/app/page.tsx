@@ -1,29 +1,111 @@
-import { MadeWithDyad } from "@/components/made-with-dyad";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+"use client";
 
-export default function Home() {
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useProfile } from '@/context/profile-context';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const { profile, isLoading } = useProfile();
+
+  useEffect(() => {
+    if (!isLoading && profile) {
+      // Se l'utente è già loggato, redirect alla dashboard
+      router.push('/dashboard');
+    }
+  }, [profile, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (profile) {
+    return null; // Redirect in corso
+  }
+
   return (
-    <div className="grid grid-rows-[1fr_auto] items-center justify-items-center min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)] bg-gray-50 dark:bg-gray-950">
-      <main className="flex flex-col gap-8 row-start-1 items-center sm:items-center text-center">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">Benvenuto!</h1>
-        <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">
-          Questa è la tua applicazione Next.js. Clicca qui sotto per gestire i tuoi clienti o registrare una richiesta di intervento.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Link href="/customers" passHref>
-            <Button className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-              Vai all'Anagrafica Clienti
-            </Button>
-          </Link>
-          <Link href="/interventions/new" passHref>
-            <Button className="rounded-lg bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
-              Registra Intervento
-            </Button>
-          </Link>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Gestione Interventi
+          </h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            Accedi o registrati per continuare
+          </p>
         </div>
-      </main>
-      <MadeWithDyad />
+
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
+          <Auth
+            supabaseClient={supabase}
+            providers={[]}
+            appearance={{
+              theme: ThemeSupa,
+              variables: {
+                default: {
+                  colors: {
+                    brand: '#2563eb',
+                    brandAccent: '#1d4ed8',
+                  },
+                },
+              },
+            }}
+            theme="light"
+            localization={{
+              variables: {
+                sign_in: {
+                  email_label: 'Email',
+                  password_label: 'Password',
+                  email_input_placeholder: 'nome@azienda.it',
+                  password_input_placeholder: 'La tua password',
+                  button_label: 'Accedi',
+                  loading_button_label: 'Accesso in corso...',
+                  social_provider_text: '{{provider}}',
+                  link_text: 'Hai già un account? Accedi',
+                },
+                sign_up: {
+                  email_label: 'Email',
+                  password_label: 'Password',
+                  email_input_placeholder: 'nome@azienda.it',
+                  password_input_placeholder: 'Scegli una password',
+                  button_label: 'Registrati',
+                  loading_button_label: 'Registrazione in corso...',
+                  social_provider_text: '{{provider}}',
+                  link_text: 'Non hai un account? Registrati',
+                  confirmation_text: 'Controlla la tua email per il link di conferma',
+                },
+                forgotten_password: {
+                  email_label: 'Email',
+                  password_label: 'Password',
+                  email_input_placeholder: 'nome@azienda.it',
+                  button_label: 'Invia istruzioni reset',
+                  loading_button_label: 'Invio in corso...',
+                  link_text: 'Password dimenticata?',
+                  confirmation_text: 'Controlla la tua email per il link di reset',
+                },
+                update_password: {
+                  password_label: 'Nuova password',
+                  password_input_placeholder: 'Nuova password',
+                  button_label: 'Aggiorna password',
+                  loading_button_label: 'Aggiornamento in corso...',
+                  confirmation_text: 'Password aggiornata',
+                },
+              },
+            }}
+          />
+        </div>
+
+        <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+          <p>Sistema di gestione interventi tecnici</p>
+        </div>
+      </div>
     </div>
   );
 }
