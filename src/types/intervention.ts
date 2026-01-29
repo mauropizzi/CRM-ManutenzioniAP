@@ -14,6 +14,15 @@ export interface MaterialUsed {
   description: string;
 }
 
+export interface WorkReportData {
+  client_absent?: boolean;
+  work_description?: string;
+  operative_notes?: string;
+  time_entries?: TimeEntry[];
+  kilometers?: number;
+  materials?: MaterialUsed[];
+}
+
 export interface InterventionRequest {
   id: string;
   // Anagrafica cliente
@@ -44,4 +53,12 @@ export interface InterventionRequest {
   time_entries?: TimeEntry[];
   kilometers?: number;
   materials_used?: MaterialUsed[];
+  
+  // Bolla di lavoro
+  work_report_data?: WorkReportData;
+  
+  // Metadata
+  user_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
