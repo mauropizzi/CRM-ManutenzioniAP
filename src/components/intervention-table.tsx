@@ -85,12 +85,12 @@ export const InterventionTable = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
-                    <Link href={`/interventions/${request.id}/conclude`} passHref>
+                    <Link href={`/interventions/${request.id}/work-report`} passHref> {/* Modificato il link qui */}
                       <Button
                         variant="ghost"
                         size="icon"
                         className="rounded-md text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-700"
-                        title="Concludi Intervento"
+                        title="Bolla di Lavoro" // Modificato il titolo
                       >
                         <FileText size={18} />
                       </Button>
