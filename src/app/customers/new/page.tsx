@@ -4,7 +4,6 @@ import React from 'react';
 import { CustomerForm, CustomerFormValues } from '@/components/customer-form';
 import { useCustomers } from '@/context/customer-context';
 import { useRouter } from 'next/navigation';
-import { Customer } from '@/types/customer';
 import { Toaster } from '@/components/ui/sonner';
 
 export default function NewCustomerPage() {
@@ -12,7 +11,7 @@ export default function NewCustomerPage() {
   const router = useRouter();
 
   const handleSubmit = async (data: CustomerFormValues) => {
-    await addCustomer(data as Omit<Customer, 'id'>);
+    await addCustomer(data);
     router.push('/customers');
   };
 

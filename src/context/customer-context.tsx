@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface CustomerContextType {
   customers: Customer[];
-  addCustomer: (customer: Omit<Customer, 'id'>) => Promise<void>;
+  addCustomer: (customer: Omit<Customer, 'id' | 'user_id'>) => Promise<void>;
   updateCustomer: (customer: Customer) => Promise<void>;
   deleteCustomer: (id: string) => Promise<void>;
   loading: boolean;
@@ -20,7 +20,6 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Only fetch if we're in the browser
     if (typeof window !== 'undefined') {
       fetchCustomers();
     }
@@ -54,13 +53,26 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addCustomer = async (newCustomer: Omit<Customer, 'id'>) => {
+  const addCustomer = async (newCustomer: Omit<Customer, 'id' | 'user_id'>) => {
     try {
-      console.log('Adding customer:', newCustomer);
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Devi essere autenticato per aggiungere un cliente");
+        return;
+      }
+
+      const customerWithUserId = {
+        ...newCustomer,
+        user_id: user.id,
+      };
+
+      console.log('Adding customer:', customerWithUserId);
       
       const { data, error } = await supabase
         .from('customers')
-        .insert([newCustomer])
+        .insert([customerWithUserId])
         .select()
         .single();
 

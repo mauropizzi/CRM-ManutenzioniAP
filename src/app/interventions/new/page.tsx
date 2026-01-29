@@ -4,7 +4,6 @@ import React from 'react';
 import { InterventionForm, InterventionFormValues } from '@/components/intervention-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
-import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
 
 export default function NewInterventionPage() {
@@ -12,7 +11,7 @@ export default function NewInterventionPage() {
   const router = useRouter();
 
   const handleSubmit = async (data: InterventionFormValues) => {
-    await addInterventionRequest(data as Omit<InterventionRequest, 'id'>);
+    await addInterventionRequest(data);
     router.push('/interventions');
   };
 

@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface InterventionContextType {
   interventionRequests: InterventionRequest[];
-  addInterventionRequest: (request: Omit<InterventionRequest, 'id'>) => Promise<void>;
+  addInterventionRequest: (request: Omit<InterventionRequest, 'id' | 'user_id'>) => Promise<void>;
   updateInterventionRequest: (request: InterventionRequest) => Promise<void>;
   deleteInterventionRequest: (id: string) => Promise<void>;
   loading: boolean;
@@ -20,7 +20,6 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Only fetch if we're in the browser
     if (typeof window !== 'undefined') {
       fetchInterventions();
     }
@@ -54,13 +53,26 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addInterventionRequest = async (newRequest: Omit<InterventionRequest, 'id'>) => {
+  const addInterventionRequest = async (newRequest: Omit<InterventionRequest, 'id' | 'user_id'>) => {
     try {
-      console.log('Adding intervention:', newRequest);
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Devi essere autenticato per aggiungere un intervento");
+        return;
+      }
+
+      const requestWithUserId = {
+        ...newRequest,
+        user_id: user.id,
+      };
+
+      console.log('Adding intervention:', requestWithUserId);
       
       const { data, error } = await supabase
         .from('interventions')
-        .insert([newRequest])
+        .insert([requestWithUserId])
         .select()
         .single();
 
