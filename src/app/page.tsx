@@ -1,98 +1,29 @@
-"use client";
+import { MadeWithDyad } from "@/components/made-with-dyad";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-export default function LoginPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Se l'utente è già loggato, reindirizza alla dashboard
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        router.push("/interventions");
-      }
-    };
-
-    checkSession();
-
-    // Ascolta i cambiamenti di autenticazione
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        router.push("/interventions");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router]);
-
+export default function Home() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Gestione Interventi</CardTitle>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            Accedi o registrati per continuare
-          </p>
-        </CardHeader>
-        <CardContent>
-          <Auth
-            supabaseClient={supabase}
-            providers={[]}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: '#2563eb',
-                    brandAccent: '#1d4ed8',
-                  },
-                },
-              },
-            }}
-            theme="light"
-            localization={{
-              variables: {
-                sign_in: {
-                  email_label: "Email",
-                  password_label: "Password",
-                  button_label: "Accedi",
-                  loading_button_label: "Accesso in corso...",
-                  social_provider_text: "Accedi con {{provider}}",
-                  link_text: "Hai già un account? Accedi",
-                },
-                sign_up: {
-                  email_label: "Email",
-                  password_label: "Password",
-                  button_label: "Registrati",
-                  loading_button_label: "Registrazione in corso...",
-                  social_provider_text: "Registrati con {{provider}}",
-                  link_text: "Non hai un account? Registrati",
-                  confirmation_text: "Controlla la tua email per il link di conferma",
-                },
-                forgotten_password: {
-                  email_label: "Email",
-                  button_label: "Invia istruzioni reset",
-                  loading_button_label: "Invio in corso...",
-                  link_text: "Password dimenticata?",
-                  confirmation_text: "Controlla la tua email per il link di reset",
-                },
-                update_password: {
-                  password_label: "Nuova password",
-                  button_label: "Aggiorna password",
-                  loading_button_label: "Aggiornamento in corso...",
-                  confirmation_text: "Password aggiornata con successo",
-                },
-              },
-            }}
-          />
-        </CardContent>
-      </Card>
+    <div className="grid grid-rows-[1fr_auto] items-center justify-items-center min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)] bg-gray-50 dark:bg-gray-950">
+      <main className="flex flex-col gap-8 row-start-1 items-center sm:items-center text-center">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">Benvenuto!</h1>
+        <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">
+          Questa è la tua applicazione Next.js. Clicca qui sotto per gestire i tuoi clienti o registrare una richiesta di intervento.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Link href="/customers" passHref>
+            <Button className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
+              Vai all'Anagrafica Clienti
+            </Button>
+          </Link>
+          <Link href="/interventions/new" passHref>
+            <Button className="rounded-lg bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
+              Registra Intervento
+            </Button>
+          </Link>
+        </div>
+      </main>
+      <MadeWithDyad />
     </div>
   );
 }

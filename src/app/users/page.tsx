@@ -46,18 +46,8 @@ export default function UsersPage() {
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
-    // Check auth
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/");
-        return;
-      }
-    };
-    checkAuth();
-
     if (!canManageUsers) {
-      router.push('/interventions');
+      router.push('/');
       return;
     }
     fetchUsers();
@@ -65,6 +55,7 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     try {
+      // Ottieni tutti i profili
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -72,11 +63,14 @@ export default function UsersPage() {
 
       if (profilesError) throw profilesError;
 
+      // Per ogni profilo, ottieni l'email dall'auth
       const usersWithEmail = await Promise.all(
         (profiles || []).map(async (p) => {
+          // Nota: in produzione useresti una edge function o una vista
+          // Qui mostriamo solo i dati disponibili
           return {
             ...p,
-            email: 'N/A',
+            email: 'N/A', // L'email non è accessibile direttamente da RLS
           } as UserWithEmail;
         })
       );
@@ -95,6 +89,7 @@ export default function UsersPage() {
     setIsCreating(true);
 
     try {
+      // 1. Crea l'utente in auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -109,6 +104,7 @@ export default function UsersPage() {
       if (authError) throw authError;
       if (!authData.user) throw new Error('User creation failed');
 
+      // 2. Aggiorna il ruolo nel profilo (creato automaticamente dal trigger)
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ role })
@@ -118,12 +114,14 @@ export default function UsersPage() {
 
       toast.success("Utente creato con successo");
       
+      // Reset form
       setEmail('');
       setPassword('');
       setFirstName('');
       setLastName('');
       setRole('tecnico');
       
+      // Refresh lista
       fetchUsers();
     } catch (error: any) {
       console.error('Error creating user:', error);
@@ -156,7 +154,7 @@ export default function UsersPage() {
   };
 
   if (!canManageUsers) {
-    return null;
+    return null; // Redirect in corso
   }
 
   return (
