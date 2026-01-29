@@ -86,7 +86,7 @@ export const InterventionTable = () => {
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center gap-2">
-                      {/* Link alla Bolla di Lavoro - reso più visibile con testo */}
+                      {/* Link alla Bolla di Consegna */}
                       <Link href={`/interventions/${request.id}/work-report`} passHref>
                         <Button
                           variant="outline"
