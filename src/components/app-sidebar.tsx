@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Home, Users, Wrench, ClipboardList, UserCog, LogOut, User } from "lucide-react"
+import { Home, Users, Wrench, ClipboardList, UserCog, LogOut } from "lucide-react"
 
 import {
   Sidebar,
@@ -83,24 +83,6 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
-          </SidebarMenu>
-        </SidebarGroup>
-        
-        <SidebarGroup>
-          <SidebarGroupLabel>Account</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                asChild 
-                isActive={pathname === "/profile"}
-                tooltip="Il Mio Profilo"
-              >
-                <Link href="/profile" className="flex items-center gap-3">
-                  <User className="h-4 w-4" />
-                  <span>Il Mio Profilo</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
         

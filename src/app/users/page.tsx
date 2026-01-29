@@ -25,15 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { UserPlus, Users, Shield, Building2, Wrench, Key, Edit2, Save, X } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { UserPlus, Users, Shield, Building2, Wrench } from 'lucide-react';
 
 interface UserWithEmail extends Profile {
   email?: string;
@@ -44,10 +36,8 @@ export default function UsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<UserWithEmail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [editingUser, setEditingUser] = useState<string | null>(null);
-  const [editRole, setEditRole] = useState<UserRole>('tecnico');
   
-  // Form state creazione
+  // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -56,6 +46,7 @@ export default function UsersPage() {
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
+    // Check auth
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -74,7 +65,6 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     try {
-      // Admin vede tutti i profili
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -82,12 +72,14 @@ export default function UsersPage() {
 
       if (profilesError) throw profilesError;
 
-      // Per l'email, dobbiamo usare una funzione edge o mostrare solo ID
-      // Per ora mostriamo i dati disponibili
-      const usersWithEmail = (profiles || []).map((p) => ({
-        ...p,
-        email: 'N/A', // L'email richiede privilegi admin sull'auth
-      })) as UserWithEmail[];
+      const usersWithEmail = await Promise.all(
+        (profiles || []).map(async (p) => {
+          return {
+            ...p,
+            email: 'N/A',
+          } as UserWithEmail;
+        })
+      );
 
       setUsers(usersWithEmail);
     } catch (error) {
@@ -117,7 +109,6 @@ export default function UsersPage() {
       if (authError) throw authError;
       if (!authData.user) throw new Error('User creation failed');
 
-      // Aggiorna il ruolo
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ role })
@@ -140,34 +131,6 @@ export default function UsersPage() {
     } finally {
       setIsCreating(false);
     }
-  };
-
-  const handleUpdateRole = async (userId: string) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: editRole, updated_at: new Date().toISOString() })
-        .eq('id', userId);
-
-      if (error) throw error;
-
-      toast.success("Ruolo aggiornato con successo");
-      setEditingUser(null);
-      fetchUsers();
-    } catch (error) {
-      console.error('Error updating role:', error);
-      toast.error("Errore nell'aggiornamento del ruolo");
-    }
-  };
-
-  const handleResetPassword = async (userId: string) => {
-    // Questo richiede una edge function con service role
-    toast.info("Funzionalità disponibile solo tramite amministrazione Supabase");
-  };
-
-  const startEditing = (user: UserWithEmail) => {
-    setEditingUser(user.id);
-    setEditRole(user.role);
   };
 
   const getRoleIcon = (role: UserRole) => {
@@ -207,7 +170,7 @@ export default function UsersPage() {
               Gestione Utenti
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {isAdmin ? "Amministratore: vedi e modifica tutti gli utenti" : "Crea e gestisci utenti con diversi livelli di accesso"}
+              Crea e gestisci utenti con diversi livelli di accesso
             </p>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -318,7 +281,7 @@ export default function UsersPage() {
         {/* Tabella utenti */}
         <Card>
           <CardHeader>
-            <CardTitle>Tutti gli Utenti Registrati</CardTitle>
+            <CardTitle>Utenti Registrati</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -335,9 +298,7 @@ export default function UsersPage() {
                       <TableHead>Nome</TableHead>
                       <TableHead>Cognome</TableHead>
                       <TableHead>Ruolo</TableHead>
-                      <TableHead>ID Utente</TableHead>
                       <TableHead>Ultimo aggiornamento</TableHead>
-                      {isAdmin && <TableHead>Azioni</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -346,77 +307,14 @@ export default function UsersPage() {
                         <TableCell>{user.first_name || '-'}</TableCell>
                         <TableCell>{user.last_name || '-'}</TableCell>
                         <TableCell>
-                          {editingUser === user.id ? (
-                            <Select value={editRole} onValueChange={(v) => setEditRole(v as UserRole)}>
-                              <SelectTrigger className="w-40">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="amministratore">Amministratore</SelectItem>
-                                <SelectItem value="ufficio">Ufficio</SelectItem>
-                                <SelectItem value="tecnico">Tecnico</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <div className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}>
-                              {getRoleIcon(user.role)}
-                              <span className="capitalize">{user.role}</span>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-xs font-mono text-gray-500">
-                          {user.id.substring(0, 8)}...
+                          <div className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}>
+                            {getRoleIcon(user.role)}
+                            <span className="capitalize">{user.role}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="text-sm text-gray-500">
                           {new Date(user.updated_at).toLocaleDateString('it-IT')}
                         </TableCell>
-                        {isAdmin && (
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {editingUser === user.id ? (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleUpdateRole(user.id)}
-                                    className="text-green-600"
-                                  >
-                                    <Save className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setEditingUser(null)}
-                                    className="text-red-600"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </>
-                              ) : (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => startEditing(user)}
-                                    className="text-blue-600"
-                                    title="Modifica ruolo"
-                                  >
-                                    <Edit2 className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleResetPassword(user.id)}
-                                    className="text-orange-600"
-                                    title="Reset password"
-                                  >
-                                    <Key className="h-4 w-4" />
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                          </TableCell>
-                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -435,7 +333,7 @@ export default function UsersPage() {
             <div className="flex items-start gap-2">
               <Shield className="h-4 w-4 text-red-500 mt-0.5" />
               <div>
-                <span className="font-medium">Amministratore:</span> Vede e modifica TUTTI i dati di tutti gli utenti, gestisce ruoli e permessi
+                <span className="font-medium">Amministratore:</span> Accesso completo, gestione utenti, tutte le funzionalità
               </div>
             </div>
             <div className="flex items-start gap-2">
