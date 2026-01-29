@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -25,6 +25,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const profileFetchInProgress = useRef(false);
 
   useEffect(() => {
     // Check current session
@@ -51,6 +52,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchUserProfile = async (authUser: any) => {
+    // Prevent multiple simultaneous fetches
+    if (profileFetchInProgress.current) {
+      console.log('Profile fetch already in progress, skipping...');
+      return;
+    }
+    
+    profileFetchInProgress.current = true;
     console.log('Fetching profile for user:', authUser.id);
     
     try {
@@ -86,7 +94,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
           if (createError) {
             console.error('Error creating profile:', createError);
-            // Still set user without profile data
+            
+            // If user doesn't exist in auth.users table (database reset), force logout
+            if (createError.code === '23503') {
+              console.error('User does not exist in database, forcing logout...');
+              toast.error("Sessione non valida. Effettua nuovamente il login.");
+              await signOut();
+              return;
+            }
+            
+            // Still set user without profile data for other errors
             setUser({
               id: authUser.id,
               email: authUser.email || '',
@@ -134,6 +151,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: authUser.id,
         email: authUser.email || '',
       });
+    } finally {
+      profileFetchInProgress.current = false;
     }
   };
 
