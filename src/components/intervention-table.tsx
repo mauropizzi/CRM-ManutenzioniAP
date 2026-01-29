@@ -84,37 +84,30 @@ export const InterventionTable = () => {
                       {request.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
-                    <Link href={`/interventions/${request.id}/work-report`} passHref> {/* Modificato il link qui */}
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      {/* Link alla Bolla di Lavoro - reso più visibile con testo */}
+                      <Link href={`/interventions/${request.id}/work-report`} passHref>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-md text-green-700 border-green-600 hover:bg-green-50 dark:text-green-400 dark:border-green-500 dark:hover:bg-gray-700 flex items-center gap-1"
+                        >
+                          <FileText size={16} />
+                          <span>Bolla</span>
+                        </Button>
+                      </Link>
+                      
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="rounded-md text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-700"
-                        title="Bolla di Lavoro" // Modificato il titolo
+                        onClick={() => handleDeleteClick(request.id)}
+                        className="rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700"
+                        title="Elimina Intervento"
                       >
-                        <FileText size={18} />
+                        <Trash2 size={18} />
                       </Button>
-                    </Link>
-                    {/* Potresti aggiungere un pulsante per modificare i dati iniziali dell'intervento se necessario */}
-                    {/* <Link href={`/interventions/${request.id}/edit`} passHref>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-md text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700"
-                        title="Modifica Intervento"
-                      >
-                        <Edit size={18} />
-                      </Button>
-                    </Link> */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(request.id)}
-                      className="rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700"
-                      title="Elimina Intervento"
-                    >
-                      <Trash2 size={18} />
-                    </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
