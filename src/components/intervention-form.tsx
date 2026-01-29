@@ -64,7 +64,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
     internal_ref: initialData?.internal_ref ?? '',
     scheduled_date: initialData?.scheduled_date,
     scheduled_time: initialData?.scheduled_time ?? '',
-    status: initialData?.status ?? 'Da fare',
+    status: (initialData?.status ?? 'Da fare') as InterventionFormValues['status'], // Explicit cast here
     assigned_technicians: initialData?.assigned_technicians ?? '',
     office_notes: initialData?.office_notes ?? '',
   };
