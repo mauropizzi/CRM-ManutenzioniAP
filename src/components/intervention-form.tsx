@@ -66,10 +66,10 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
       internal_ref: initialData?.internal_ref ?? '',
       scheduled_date: initialData?.scheduled_date,
       scheduled_time: initialData?.scheduled_time ?? '',
-      status: initialData?.status ?? 'Da fare',
+      status: initialData?.status ? initialData.status : 'Da fare', // Reso più esplicito
       assigned_technicians: initialData?.assigned_technicians ?? '',
       office_notes: initialData?.office_notes ?? '',
-    } as InterventionFormValues, // Explicitly cast the entire object
+    } as InterventionFormValues, // Cast esplicito dell'intero oggetto
   });
 
   const handleSubmit = (values: InterventionFormValues) => {
