@@ -26,7 +26,6 @@ export default function ConcludeInterventionPage({ params }: ConcludeInterventio
   }
 
   const handleSubmit = (data: InterventionConclusionFormValues) => {
-    // Aggiorna lo stato dell'intervento a 'Completato' se l'utente ha spuntato "Intervento concluso"
     const updatedStatus = data.intervention_concluded ? 'Completato' : interventionToConclude.status;
 
     updateInterventionRequest({
@@ -34,7 +33,7 @@ export default function ConcludeInterventionPage({ params }: ConcludeInterventio
       ...data,
       status: updatedStatus,
     });
-    router.push('/interventions'); // Reindirizza a una pagina di elenco interventi (da creare)
+    router.push('/interventions');
   };
 
   return (

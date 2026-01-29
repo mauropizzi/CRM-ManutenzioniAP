@@ -26,7 +26,6 @@ export default function EditCustomerPage({ params }: EditCustomerPageProps) {
   }
 
   const handleSubmit = (data: CustomerFormValues) => {
-    // Cast esplicito a Customer per garantire la compatibilità con updateCustomer
     updateCustomer({ ...customerToEdit, ...data } as Customer);
     router.push('/customers');
   };

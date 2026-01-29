@@ -25,7 +25,6 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
   }
 
   const handleSubmit = (data: WorkReportFormValues) => {
-    // Aggiorna l'intervento con i dati della bolla
     updateInterventionRequest({
       ...intervention,
       ...data,
@@ -47,8 +46,8 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
         </div>
 
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
-          <WorkReportForm 
-            initialData={intervention.work_report_data as any} 
+          <WorkReportForm
+            initialData={intervention.work_report_data as any}
             onSubmit={handleSubmit}
             clientName={intervention.client_company_name}
           />
