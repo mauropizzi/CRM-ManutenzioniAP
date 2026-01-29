@@ -20,7 +20,10 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchInterventions();
+    // Only fetch if we're in the browser
+    if (typeof window !== 'undefined') {
+      fetchInterventions();
+    }
   }, []);
 
   const fetchInterventions = async () => {

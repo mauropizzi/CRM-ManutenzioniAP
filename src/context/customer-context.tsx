@@ -20,7 +20,10 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCustomers();
+    // Only fetch if we're in the browser
+    if (typeof window !== 'undefined') {
+      fetchCustomers();
+    }
   }, []);
 
   const fetchCustomers = async () => {
