@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Users, Wrench, ClipboardList, LogOut, User } from "lucide-react"
+import { Home, Users, Wrench, ClipboardList, LogOut, User, Package } from "lucide-react" // Importa l'icona Package
 
 import {
   Sidebar,
@@ -36,6 +36,11 @@ const menuItems = [
     title: "Richieste Intervento",
     url: "/interventions",
     icon: ClipboardList,
+  },
+  {
+    title: "Anagrafica Materiali", // Nuovo elemento del menu
+    url: "/materials",
+    icon: Package, // Icona per i materiali
   },
 ]
 
@@ -77,6 +82,14 @@ export function AppSidebar() {
                 <Link href="/interventions/new" className="flex items-center gap-3">
                   <Wrench className="h-4 w-4" />
                   <span>Nuovo Intervento</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Nuovo Materiale">
+                <Link href="/materials/new" className="flex items-center gap-3">
+                  <Package className="h-4 w-4" />
+                  <span>Nuovo Materiale</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
