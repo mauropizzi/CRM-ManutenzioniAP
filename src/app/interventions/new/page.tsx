@@ -6,14 +6,23 @@ import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
+import { toast } from 'sonner';
 
 export default function NewInterventionPage() {
   const { addInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
   const handleSubmit = async (data: InterventionFormValues) => {
-    await addInterventionRequest(data);
-    router.push('/interventions');
+    console.log('Form submitted with data:', data);
+    try {
+      await addInterventionRequest(data);
+      console.log('Intervention added successfully');
+      toast.success("Intervento registrato con successo!");
+      router.push('/interventions');
+    } catch (error: any) {
+      console.error('Error adding intervention:', error);
+      toast.error(`Errore: ${error.message || 'Impossibile registrare l\'intervento'}`);
+    }
   };
 
   return (

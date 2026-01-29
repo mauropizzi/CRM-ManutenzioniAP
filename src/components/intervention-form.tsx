@@ -73,8 +73,16 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
   });
 
   const handleSubmit = (values: InterventionFormValues) => {
+    console.log('InterventionForm handleSubmit called with:', values);
     onSubmit(values);
   };
+
+  // Debug: log form errors
+  React.useEffect(() => {
+    if (Object.keys(form.formState.errors).length > 0) {
+      console.error('Form validation errors:', form.formState.errors);
+    }
+  }, [form.formState.errors]);
 
   return (
     <Form {...form}>
@@ -88,7 +96,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               name="client_company_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">Ragione sociale / Nome</FormLabel>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Ragione sociale / Nome *</FormLabel>
                   <FormControl>
                     <Input placeholder="Ragione sociale o nome" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
@@ -101,7 +109,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               name="client_email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">Email cliente</FormLabel>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Email cliente *</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="cliente@email.it" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
@@ -114,7 +122,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               name="client_phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">Telefono</FormLabel>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Telefono *</FormLabel>
                   <FormControl>
                     <Input type="tel" placeholder="1234567890" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
@@ -127,7 +135,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               name="client_address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">Indirizzo</FormLabel>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Indirizzo *</FormLabel>
                   <FormControl>
                     <Input placeholder="Via Roma 1, Milano" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
@@ -147,7 +155,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               name="system_type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">Tipo impianto</FormLabel>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Tipo impianto *</FormLabel>
                   <FormControl>
                     <Input placeholder="Tipo impianto" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
@@ -160,7 +168,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               name="brand"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">Marca</FormLabel>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Marca *</FormLabel>
                   <FormControl>
                     <Input placeholder="Marca" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
@@ -173,7 +181,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               name="model"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">Modello</FormLabel>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Modello *</FormLabel>
                   <FormControl>
                     <Input placeholder="Modello" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
@@ -188,7 +196,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               name="serial_number"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">Matricola</FormLabel>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Matricola *</FormLabel>
                   <FormControl>
                     <Input placeholder="Matricola" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
@@ -201,7 +209,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               name="system_location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">Ubicazione impianto</FormLabel>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Ubicazione impianto *</FormLabel>
                   <FormControl>
                     <Input placeholder="Ubicazione impianto" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
@@ -285,7 +293,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">Stato</FormLabel>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Stato *</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
@@ -334,14 +342,30 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
           </div>
         </div>
 
+        {/* Errori di validazione */}
+        {Object.keys(form.formState.errors).length > 0 && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+            <p className="font-semibold">Correggi i seguenti errori:</p>
+            <ul className="mt-2 list-disc list-inside text-sm">
+              {Object.entries(form.formState.errors).map(([field, error]) => (
+                <li key={field}>{error?.message}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="flex justify-end gap-2 pt-4">
           <Link href="/interventions" passHref>
             <Button type="button" variant="outline" className="rounded-md px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
               Annulla
             </Button>
           </Link>
-          <Button type="submit" className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2">
-            {initialData ? 'Salva Modifiche' : 'Registra Richiesta'}
+          <Button 
+            type="submit" 
+            className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? 'Registrazione...' : (initialData ? 'Salva Modifiche' : 'Registra Richiesta')}
           </Button>
         </div>
       </form>
