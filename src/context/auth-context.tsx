@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        await fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user);
       }
       setLoading(false);
     };
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        await fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user);
       } else {
         setUser(null);
       }
@@ -50,20 +50,74 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+  const fetchUserProfile = async (authUser: any) => {
+    try {
+      // Try to fetch profile
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
 
-    if (data) {
+      if (error) {
+        // If profile doesn't exist, create it
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating...');
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert([{
+              id: authUser.id,
+              first_name: authUser.user_metadata?.first_name || '',
+              last_name: authUser.user_metadata?.last_name || '',
+            }])
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            // Still set user without profile data
+            setUser({
+              id: authUser.id,
+              email: authUser.email || '',
+            });
+            return;
+          }
+
+          if (newProfile) {
+            setUser({
+              id: authUser.id,
+              email: authUser.email || '',
+              first_name: newProfile.first_name,
+              last_name: newProfile.last_name,
+              role: newProfile.role,
+            });
+            return;
+          }
+        } else {
+          console.error('Error fetching profile:', error);
+        }
+      }
+
+      if (data) {
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+          first_name: data.first_name,
+          last_name: data.last_name,
+          role: data.role,
+        });
+      } else {
+        // Fallback if no profile data
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+        });
+      }
+    } catch (error) {
+      console.error('Exception fetching profile:', error);
       setUser({
-        id: userId,
-        email: data.email || '',
-        first_name: data.first_name,
-        last_name: data.last_name,
-        role: data.role,
+        id: authUser.id,
+        email: authUser.email || '',
       });
     }
   };
