@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CustomerProvider } from "@/context/customer-context";
-import { InterventionProvider } from "@/context/intervention-context"; // Importa il nuovo provider
+import { InterventionProvider } from "@/context/intervention-context";
 import { Toaster } from "@/components/ui/sonner";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
+import { cn } from "@/lib/utils";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Anagrafica Clienti",
-  description: "Gestione dell'anagrafica clienti",
+  title: "Gestione Interventi",
+  description: "Gestione anagrafica clienti e richieste di intervento",
 };
 
 export default function RootLayout({
@@ -26,14 +29,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="it">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={cn(
+          `${geistSans.variable} ${geistMono.variable} antialiased`,
+          "min-h-screen bg-background"
+        )}
       >
         <CustomerProvider>
-          <InterventionProvider> {/* Avvolgi i children con il nuovo provider */}
-            {children}
-            <Toaster />
+          <InterventionProvider>
+            <SidebarProvider>
+              <div className="flex min-h-screen">
+                <AppSidebar />
+                <main className="flex-1 overflow-auto">
+                  <div className="flex items-center border-b p-4 lg:hidden">
+                    <SidebarTrigger />
+                    <span className="ml-2 font-semibold">Menu</span>
+                  </div>
+                  <div className="p-4 sm:p-8">
+                    {children}
+                  </div>
+                </main>
+              </div>
+              <Toaster />
+            </SidebarProvider>
           </InterventionProvider>
         </CustomerProvider>
       </body>
