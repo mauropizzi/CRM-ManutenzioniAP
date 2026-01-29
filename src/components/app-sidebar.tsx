@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { Home, Users, Wrench, ClipboardList, UserCog, LogOut } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { Home, Users, Wrench, ClipboardList } from "lucide-react"
 
 import {
   Sidebar,
@@ -15,14 +15,12 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar"
-import { useProfile } from "@/context/profile-context"
-import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 const menuItems = [
   {
     title: "Dashboard",
-    url: "/dashboard",
+    url: "/",
     icon: Home,
   },
   {
@@ -39,23 +37,6 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const router = useRouter()
-  const { canManageUsers, profile } = useProfile()
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut()
-      toast.success("Logout effettuato")
-      router.push('/')
-    } catch (error) {
-      toast.error("Errore durante il logout")
-    }
-  }
-
-  // Non mostrare sidebar se non loggato (sulla pagina login)
-  if (!profile) {
-    return null
-  }
 
   return (
     <Sidebar>
@@ -92,43 +73,6 @@ export function AppSidebar() {
                   <Wrench className="h-4 w-4" />
                   <span>Nuovo Intervento</span>
                 </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-
-        {canManageUsers && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Amministrazione</SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton 
-                  asChild 
-                  isActive={pathname === "/users"}
-                  tooltip="Gestione Utenti"
-                >
-                  <Link href="/users" className="flex items-center gap-3">
-                    <UserCog className="h-4 w-4" />
-                    <span>Gestione Utenti</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        )}
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Account</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                onClick={handleLogout}
-                tooltip="Logout"
-              >
-                <div className="flex items-center gap-3 text-red-600">
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
