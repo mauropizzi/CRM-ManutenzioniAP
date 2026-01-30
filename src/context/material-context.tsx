@@ -55,16 +55,9 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
 
   const addMaterial = async (newMaterial: Omit<Material, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
-      console.log('Attempting to get user for addMaterial...');
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (authError) {
-        console.error('Supabase Auth error during getUser in addMaterial:', authError);
-        toast.error(`Errore di autenticazione: ${authError.message}. Riprova il login.`);
-        await supabase.auth.signOut(); // Force sign out if auth session is truly broken
-        return;
-      }
-
       if (!user) {
         toast.error("Devi essere autenticato per aggiungere un materiale");
         return;
@@ -75,29 +68,28 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
         user_id: user.id,
       };
 
-      console.log('User obtained, proceeding to insert material with user_id:', materialWithUserId.user_id);
+      console.log('Adding material:', materialWithUserId);
       
-      const { data, error: dbError } = await supabase
+      const { data, error } = await supabase
         .from('materials')
         .insert([materialWithUserId])
         .select()
         .single();
 
-      if (dbError) {
-        console.error('Supabase DB error during insert in addMaterial:', dbError);
-        console.error('Full Supabase DB error object:', JSON.stringify(dbError, null, 2));
-        toast.error(`Errore nell'aggiunta del materiale: ${dbError.message}`);
+      if (error) {
+        console.error('Supabase error adding material:', error);
+        toast.error(`Errore nell'aggiunta del materiale: ${error.message}`);
         return;
       }
 
-      console.log('Material added successfully:', data);
+      console.log('Material added:', data);
 
       if (data) {
         setMaterials((prev) => [data as Material, ...prev]);
         toast.success("Materiale aggiunto con successo!");
       }
     } catch (error: any) {
-      console.error('General exception in addMaterial:', error);
+      console.error('Exception adding material:', error);
       toast.error(`Errore nell'aggiunta del materiale: ${error?.message || 'Unknown error'}`);
     }
   };
