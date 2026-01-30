@@ -97,7 +97,9 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
   const selectedCustomerId = form.watch('customer_id');
   const isCustomerSelected = !!selectedCustomerId;
 
+  // Effect to handle initial data and customer selection changes
   useEffect(() => {
+    // Handle initial data if a customer_id is present
     if (initialData?.customer_id && customers.length > 0) {
       const customer = customers.find(c => c.id === initialData.customer_id);
       if (customer) {
@@ -110,9 +112,9 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
     }
   }, [initialData, customers, form]);
 
-  const handleCustomerSelectChange = (customerId: string) => {
-    form.setValue('customer_id', customerId);
-    if (customerId === '') {
+  // Effect to handle changes when a customer is selected from the dropdown
+  useEffect(() => {
+    if (selectedCustomerId === '') {
       // "Nuovo Cliente" selected, clear and enable fields
       form.setValue('client_company_name', '');
       form.setValue('client_email', '');
@@ -120,7 +122,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
       form.setValue('client_address', '');
       form.setValue('client_referent', '');
     } else {
-      const selectedCustomer = customers.find(c => c.id === customerId);
+      const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
       if (selectedCustomer) {
         form.setValue('client_company_name', selectedCustomer.ragione_sociale);
         form.setValue('client_email', selectedCustomer.email);
@@ -129,7 +131,8 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
         form.setValue('client_referent', selectedCustomer.referente || '');
       }
     }
-  };
+  }, [selectedCustomerId, customers, form]);
+
 
   const handleSubmit = (values: InterventionFormValues) => {
     console.log('InterventionForm handleSubmit called with:', values);
@@ -156,7 +159,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-700 dark:text-gray-300">Seleziona Cliente Esistente (opz.)</FormLabel>
-                <Select onValueChange={handleCustomerSelectChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}> {/* Use field.onChange directly */}
                   <FormControl>
                     <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Seleziona un cliente o inserisci i dati manualmente" />
