@@ -159,7 +159,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-700 dark:text-gray-300">Seleziona Cliente Esistente (opz.)</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}> {/* Use field.onChange directly */}
+                <Select onValueChange={field.onChange} value={field.value ?? ''}> {/* Aggiunto ?? '' per garantire una stringa */}
                   <FormControl>
                     <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Seleziona un cliente o inserisci i dati manualmente" />
