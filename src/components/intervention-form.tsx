@@ -114,7 +114,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
 
   // Effect to handle changes when a customer is selected from the dropdown
   useEffect(() => {
-    if (selectedCustomerId === '') {
+    if (selectedCustomerId === 'new-customer' || selectedCustomerId === '') { // Modificato per 'new-customer'
       // "Nuovo Cliente" selected, clear and enable fields
       form.setValue('client_company_name', '');
       form.setValue('client_email', '');
@@ -159,14 +159,14 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-700 dark:text-gray-300">Seleziona Cliente Esistente (opz.)</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value ?? ''}> {/* Aggiunto ?? '' per garantire una stringa */}
+                <Select onValueChange={field.onChange} value={field.value ?? ''}>
                   <FormControl>
                     <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Seleziona un cliente o inserisci i dati manualmente" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
-                    <SelectItem value="">Nuovo Cliente</SelectItem> {/* Opzione per inserire manualmente */}
+                    <SelectItem value="new-customer">Nuovo Cliente</SelectItem> {/* Modificato il valore */}
                     {customersLoading ? (
                       <SelectItem value="loading" disabled>Caricamento clienti...</SelectItem>
                     ) : (
@@ -194,7 +194,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Ragione sociale / Nome *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ragione sociale o nome" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
+                    <Input placeholder="Ragione sociale o nome" {...field} disabled={isCustomerSelected && selectedCustomerId !== 'new-customer'} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -207,7 +207,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Email cliente *</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="cliente@email.it" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
+                    <Input type="email" placeholder="cliente@email.it" {...field} disabled={isCustomerSelected && selectedCustomerId !== 'new-customer'} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -220,7 +220,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Telefono *</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="1234567890" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
+                    <Input type="tel" placeholder="1234567890" {...field} disabled={isCustomerSelected && selectedCustomerId !== 'new-customer'} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -233,7 +233,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Indirizzo *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Via Roma 1, Milano" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
+                    <Input placeholder="Via Roma 1, Milano" {...field} disabled={isCustomerSelected && selectedCustomerId !== 'new-customer'} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -246,7 +246,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Referente cliente (opz.)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome Referente" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
+                    <Input placeholder="Nome Referente" {...field} disabled={isCustomerSelected && selectedCustomerId !== 'new-customer'} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
