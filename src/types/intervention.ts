@@ -25,6 +25,7 @@ export interface WorkReportData {
 
 export interface InterventionRequest {
   id: string;
+  customer_id?: string; // Nuovo campo per collegare l'intervento a un cliente esistente
   // Anagrafica cliente
   client_company_name: string;
   client_email: string;

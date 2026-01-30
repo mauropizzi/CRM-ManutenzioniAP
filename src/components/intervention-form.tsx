@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -25,13 +25,15 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { InterventionRequest } from '@/types/intervention';
+import { useCustomers } from '@/context/customer-context'; // Importa il contesto clienti
 
 export const interventionFormSchema = z.object({
+  customer_id: z.string().optional(), // Nuovo campo per la selezione del cliente
   client_company_name: z.string().min(2, { message: "La ragione sociale deve contenere almeno 2 caratteri." }),
   client_email: z.string().email({ message: "Inserisci un'email valida." }),
   client_phone: z.string().min(10, { message: "Il numero di telefono deve contenere almeno 10 cifre." }),
   client_address: z.string().min(5, { message: "L'indirizzo deve contenere almeno 5 caratteri." }),
-  client_referent: z.string().optional().or(z.literal('')), // Nuovo campo Referente
+  client_referent: z.string().optional().or(z.literal('')),
   system_type: z.string().min(2, { message: "Il tipo di impianto deve contenere almeno 2 caratteri." }),
   brand: z.string().min(2, { message: "La marca deve contenere almeno 2 caratteri." }),
   model: z.string().min(2, { message: "Il modello deve contenere almeno 2 caratteri." }),
@@ -68,14 +70,16 @@ const generateTimeOptions = () => {
 const timeOptions = generateTimeOptions();
 
 export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProps) => {
+  const { customers, loading: customersLoading } = useCustomers(); // Usa il contesto clienti
   const form = useForm<InterventionFormValues>({
     resolver: zodResolver(interventionFormSchema),
     defaultValues: {
+      customer_id: initialData?.customer_id ?? '', // Inizializzazione del nuovo campo
       client_company_name: initialData?.client_company_name ?? '',
       client_email: initialData?.client_email ?? '',
       client_phone: initialData?.client_phone ?? '',
       client_address: initialData?.client_address ?? '',
-      client_referent: initialData?.client_referent ?? '', // Inizializzazione del nuovo campo
+      client_referent: initialData?.client_referent ?? '',
       system_type: initialData?.system_type ?? '',
       brand: initialData?.brand ?? '',
       model: initialData?.model ?? '',
@@ -89,6 +93,43 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
       office_notes: initialData?.office_notes ?? '',
     },
   });
+
+  const selectedCustomerId = form.watch('customer_id');
+  const isCustomerSelected = !!selectedCustomerId;
+
+  useEffect(() => {
+    if (initialData?.customer_id && customers.length > 0) {
+      const customer = customers.find(c => c.id === initialData.customer_id);
+      if (customer) {
+        form.setValue('client_company_name', customer.ragione_sociale);
+        form.setValue('client_email', customer.email);
+        form.setValue('client_phone', customer.telefono);
+        form.setValue('client_address', customer.indirizzo);
+        form.setValue('client_referent', customer.referente || '');
+      }
+    }
+  }, [initialData, customers, form]);
+
+  const handleCustomerSelectChange = (customerId: string) => {
+    form.setValue('customer_id', customerId);
+    if (customerId === '') {
+      // "Nuovo Cliente" selected, clear and enable fields
+      form.setValue('client_company_name', '');
+      form.setValue('client_email', '');
+      form.setValue('client_phone', '');
+      form.setValue('client_address', '');
+      form.setValue('client_referent', '');
+    } else {
+      const selectedCustomer = customers.find(c => c.id === customerId);
+      if (selectedCustomer) {
+        form.setValue('client_company_name', selectedCustomer.ragione_sociale);
+        form.setValue('client_email', selectedCustomer.email);
+        form.setValue('client_phone', selectedCustomer.telefono);
+        form.setValue('client_address', selectedCustomer.indirizzo);
+        form.setValue('client_referent', selectedCustomer.referente || '');
+      }
+    }
+  };
 
   const handleSubmit = (values: InterventionFormValues) => {
     console.log('InterventionForm handleSubmit called with:', values);
@@ -108,6 +149,40 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
         {/* Anagrafica cliente */}
         <div className="grid gap-6 rounded-lg border p-4 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Anagrafica cliente</h3>
+          
+          <FormField
+            control={form.control}
+            name="customer_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-gray-700 dark:text-gray-300">Seleziona Cliente Esistente (opz.)</FormLabel>
+                <Select onValueChange={handleCustomerSelectChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Seleziona un cliente o inserisci i dati manualmente" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
+                    <SelectItem value="">Nuovo Cliente</SelectItem> {/* Opzione per inserire manualmente */}
+                    {customersLoading ? (
+                      <SelectItem value="loading" disabled>Caricamento clienti...</SelectItem>
+                    ) : (
+                      customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.ragione_sociale}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormDescription className="text-gray-600 dark:text-gray-400">
+                  Seleziona un cliente esistente per pre-compilare i campi sottostanti.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -116,7 +191,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Ragione sociale / Nome *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ragione sociale o nome" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+                    <Input placeholder="Ragione sociale o nome" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -129,7 +204,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Email cliente *</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="cliente@email.it" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+                    <Input type="email" placeholder="cliente@email.it" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -142,7 +217,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Telefono *</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="1234567890" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+                    <Input type="tel" placeholder="1234567890" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -155,7 +230,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Indirizzo *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Via Roma 1, Milano" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+                    <Input placeholder="Via Roma 1, Milano" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -168,7 +243,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Referente cliente (opz.)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome Referente" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+                    <Input placeholder="Nome Referente" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
