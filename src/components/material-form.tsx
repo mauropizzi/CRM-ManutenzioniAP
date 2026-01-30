@@ -21,8 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Material, Unit, UNITS } from '@/types/material'; // Import Unit and UNITS from types
+import { Material } from '@/types/material';
 import Link from 'next/link';
+
+const UNITS = ['PZ', 'MT', 'KG', 'LT', 'NR'] as const;
 
 export const materialFormSchema = z.object({
   unit: z.enum(UNITS, { required_error: "Seleziona un'unità di misura." }),
