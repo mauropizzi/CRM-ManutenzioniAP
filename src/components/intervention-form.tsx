@@ -95,7 +95,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
   });
 
   const selectedCustomerId = form.watch('customer_id');
-  const isCustomerSelected = !!selectedCustomerId && selectedCustomerId !== 'new-customer';
+  const isCustomerSelected = !!selectedCustomerId;
 
   // Effect to handle initial data and customer selection changes
   useEffect(() => {
@@ -194,7 +194,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Ragione sociale / Nome *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ragione sociale o nome" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
+                    <Input placeholder="Ragione sociale o nome" {...field} disabled={isCustomerSelected && selectedCustomerId !== 'new-customer'} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -207,7 +207,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Email cliente *</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="cliente@email.it" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
+                    <Input type="email" placeholder="cliente@email.it" {...field} disabled={isCustomerSelected && selectedCustomerId !== 'new-customer'} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -220,7 +220,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Telefono *</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="1234567890" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
+                    <Input type="tel" placeholder="1234567890" {...field} disabled={isCustomerSelected && selectedCustomerId !== 'new-customer'} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -233,7 +233,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Indirizzo *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Via Roma 1, Milano" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
+                    <Input placeholder="Via Roma 1, Milano" {...field} disabled={isCustomerSelected && selectedCustomerId !== 'new-customer'} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -246,7 +246,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Referente cliente (opz.)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome Referente" {...field} disabled={isCustomerSelected} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
+                    <Input placeholder="Nome Referente" {...field} disabled={isCustomerSelected && selectedCustomerId !== 'new-customer'} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
