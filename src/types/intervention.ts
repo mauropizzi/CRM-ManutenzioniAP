@@ -25,12 +25,13 @@ export interface WorkReportData {
 
 export interface InterventionRequest {
   id: string;
+  customer_id?: string; // Nuovo campo per collegare l'intervento a un cliente esistente
   // Anagrafica cliente
   client_company_name: string;
   client_email: string;
   client_phone: string;
   client_address: string;
-  referente?: string; // Nuovo campo aggiunto
+  client_referent?: string; // Nuovo campo Referente
   // Impianto / Modello macchina
   system_type: string;
   brand: string;

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Technician } from '@/types/technician';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './auth-context';
 
 interface TechnicianContextType {
   technicians: Technician[];
@@ -18,16 +19,20 @@ const TechnicianContext = createContext<TechnicianContextType | undefined>(undef
 export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && user) {
       fetchTechnicians();
+    } else if (!user) {
+      setTechnicians([]);
+      setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const fetchTechnicians = async () => {
     try {
-      console.log('[TechnicianContext] Fetching technicians from Supabase...');
+      console.log('Fetching technicians from Supabase...');
       
       const { data, error } = await supabase
         .from('technicians')
@@ -35,18 +40,18 @@ export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('[TechnicianContext] Supabase error fetching technicians:', error);
+        console.error('Supabase error fetching technicians:', error);
         toast.error(`Errore nel caricamento dei tecnici: ${error.message}`);
         return;
       }
 
-      console.log('[TechnicianContext] Technicians fetched:', data);
+      console.log('Technicians fetched:', data);
       
       if (data) {
         setTechnicians(data as Technician[]);
       }
     } catch (error: any) {
-      console.error('[TechnicianContext] Exception fetching technicians:', error);
+      console.error('Exception fetching technicians:', error);
       toast.error(`Errore nel caricamento dei tecnici: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
@@ -55,16 +60,6 @@ export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
 
   const addTechnician = async (newTechnician: Omit<Technician, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
-      console.log('[TechnicianContext] Attempting to get user for addTechnician...');
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
-      if (authError) {
-        console.error('[TechnicianContext] Supabase Auth error during getUser in addTechnician:', authError);
-        toast.error(`Errore di autenticazione: ${authError.message}. Riprova il login.`);
-        await supabase.auth.signOut();
-        return;
-      }
-
       if (!user) {
         toast.error("Devi essere autenticato per aggiungere un tecnico");
         return;
@@ -75,36 +70,35 @@ export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
         user_id: user.id,
       };
 
-      console.log('[TechnicianContext] User obtained, proceeding to insert technician with user_id:', technicianWithUserId.user_id);
+      console.log('Adding technician:', technicianWithUserId);
       
-      const { data, error: dbError } = await supabase
+      const { data, error } = await supabase
         .from('technicians')
         .insert([technicianWithUserId])
         .select()
         .single();
 
-      if (dbError) {
-        console.error('[TechnicianContext] Supabase DB error during insert in addTechnician:', dbError);
-        console.error('[TechnicianContext] Full Supabase DB error object:', JSON.stringify(dbError, null, 2));
-        toast.error(`Errore nell'aggiunta del tecnico: ${dbError.message}`);
+      if (error) {
+        console.error('Supabase error adding technician:', error);
+        toast.error(`Errore nell'aggiunta del tecnico: ${error.message}`);
         return;
       }
 
-      console.log('[TechnicianContext] Technician added successfully:', data);
+      console.log('Technician added:', data);
 
       if (data) {
         setTechnicians((prev) => [data as Technician, ...prev]);
         toast.success("Tecnico aggiunto con successo!");
       }
     } catch (error: any) {
-      console.error('[TechnicianContext] General exception in addTechnician:', error);
+      console.error('Exception adding technician:', error);
       toast.error(`Errore nell'aggiunta del tecnico: ${error?.message || 'Unknown error'}`);
     }
   };
 
   const updateTechnician = async (updatedTechnician: Technician) => {
     try {
-      console.log('[TechnicianContext] Updating technician:', updatedTechnician);
+      console.log('Updating technician:', updatedTechnician);
       
       const { data, error } = await supabase
         .from('technicians')
@@ -114,12 +108,12 @@ export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) {
-        console.error('[TechnicianContext] Supabase error updating technician:', error);
+        console.error('Supabase error updating technician:', error);
         toast.error(`Errore nell'aggiornamento del tecnico: ${error.message}`);
         return;
       }
 
-      console.log('[TechnicianContext] Technician updated:', data);
+      console.log('Technician updated:', data);
 
       if (data) {
         setTechnicians((prev) =>
@@ -130,14 +124,14 @@ export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
         toast.success("Tecnico aggiornato con successo!");
       }
     } catch (error: any) {
-      console.error('[TechnicianContext] Exception updating technician:', error);
+      console.error('Exception updating technician:', error);
       toast.error(`Errore nell'aggiornamento del tecnico: ${error?.message || 'Unknown error'}`);
     }
   };
 
   const deleteTechnician = async (id: string) => {
     try {
-      console.log('[TechnicianContext] Deleting technician:', id);
+      console.log('Deleting technician:', id);
       
       const { error } = await supabase
         .from('technicians')
@@ -145,7 +139,7 @@ export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', id);
 
       if (error) {
-        console.error('[TechnicianContext] Supabase error deleting technician:', error);
+        console.error('Supabase error deleting technician:', error);
         toast.error(`Errore nell'eliminazione del tecnico: ${error.message}`);
         return;
       }
@@ -153,7 +147,7 @@ export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
       setTechnicians((prev) => prev.filter((technician) => technician.id !== id));
       toast.success("Tecnico eliminato con successo!");
     } catch (error: any) {
-      console.error('[TechnicianContext] Exception deleting technician:', error);
+      console.error('Exception deleting technician:', error);
       toast.error(`Errore nell'eliminazione del tecnico: ${error?.message || 'Unknown error'}`);
     }
   };

@@ -57,15 +57,15 @@ export const TechnicianTable = () => {
                 <TableRow key={technician.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{technician.first_name}</TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{technician.last_name}</TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{technician.email || 'N/D'}</TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{technician.phone || 'N/D'}</TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{technician.specialization || 'N/D'}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{technician.email}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{technician.phone}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{technician.specialization}</TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
                     <Badge className={`rounded-full px-2 py-1 text-xs font-semibold ${technician.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
                       {technician.is_active ? 'Sì' : 'No'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate">{technician.notes || 'N/D'}</TableCell>
+                  <TableCell className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate">{technician.notes}</TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
                     <Link href={`/technicians/${technician.id}/edit`} passHref>
                       <Button

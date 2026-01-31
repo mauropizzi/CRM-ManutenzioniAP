@@ -25,9 +25,9 @@ export const technicianFormSchema = z.object({
   last_name: z.string().min(2, { message: "Il cognome deve contenere almeno 2 caratteri." }),
   email: z.string().email({ message: "Inserisci un'email valida." }).optional().or(z.literal('')),
   phone: z.string().min(10, { message: "Il numero di telefono deve contenere almeno 10 cifre." }).optional().or(z.literal('')),
-  specialization: z.string().optional().or(z.literal('')),
+  specialization: z.string().optional(),
   is_active: z.boolean(),
-  notes: z.string().optional().or(z.literal('')),
+  notes: z.string().optional(),
 });
 
 export type TechnicianFormValues = z.infer<typeof technicianFormSchema>;
@@ -70,9 +70,9 @@ export const TechnicianForm = ({ initialData, onSubmit }: TechnicianFormProps) =
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 p-4">
-        {/* Sezione Dati Personali */}
+        {/* Sezione Dati Anagrafici */}
         <div className="grid gap-6 rounded-lg border p-4 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Dati Personali</h3>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Dati Anagrafici Tecnico</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -109,7 +109,7 @@ export const TechnicianForm = ({ initialData, onSubmit }: TechnicianFormProps) =
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Email (opz.)</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="tecnico@email.it" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+                    <Input type="email" placeholder="tecnico@email.com" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -129,6 +129,11 @@ export const TechnicianForm = ({ initialData, onSubmit }: TechnicianFormProps) =
               )}
             />
           </div>
+        </div>
+
+        {/* Sezione Dettagli Professionali */}
+        <div className="grid gap-6 rounded-lg border p-4 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Dettagli Professionali</h3>
           <FormField
             control={form.control}
             name="specialization"
@@ -142,11 +147,6 @@ export const TechnicianForm = ({ initialData, onSubmit }: TechnicianFormProps) =
               </FormItem>
             )}
           />
-        </div>
-
-        {/* Sezione Stato e Note */}
-        <div className="grid gap-6 rounded-lg border p-4 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Stato e Note</h3>
           <FormField
             control={form.control}
             name="is_active"
