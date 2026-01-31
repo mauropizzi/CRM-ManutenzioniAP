@@ -31,7 +31,6 @@ export const interventionFormSchema = z.object({
   client_email: z.string().email({ message: "Inserisci un'email valida." }),
   client_phone: z.string().min(10, { message: "Il numero di telefono deve contenere almeno 10 cifre." }),
   client_address: z.string().min(5, { message: "L'indirizzo deve contenere almeno 5 caratteri." }),
-  referente: z.string().optional().or(z.literal('')), // Aggiunto il campo referente
   system_type: z.string().min(2, { message: "Il tipo di impianto deve contenere almeno 2 caratteri." }),
   brand: z.string().min(2, { message: "La marca deve contenere almeno 2 caratteri." }),
   model: z.string().min(2, { message: "Il modello deve contenere almeno 2 caratteri." }),
@@ -75,7 +74,6 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
       client_email: initialData?.client_email ?? '',
       client_phone: initialData?.client_phone ?? '',
       client_address: initialData?.client_address ?? '',
-      referente: initialData?.referente ?? '', // Aggiunto il default value per referente
       system_type: initialData?.system_type ?? '',
       brand: initialData?.brand ?? '',
       model: initialData?.model ?? '',
@@ -156,19 +154,6 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                   <FormLabel className="text-gray-700 dark:text-gray-300">Indirizzo *</FormLabel>
                   <FormControl>
                     <Input placeholder="Via Roma 1, Milano" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="referente"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">Referente (opz.)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome del referente" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
