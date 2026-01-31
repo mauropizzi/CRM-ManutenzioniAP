@@ -92,12 +92,23 @@ export const InterventionTable = () => {
                           variant="outline"
                           size="sm"
                           className="rounded-md text-green-700 border-green-600 hover:bg-green-50 dark:text-green-400 dark:border-green-500 dark:hover:bg-gray-700 flex items-center gap-1"
+                          title="Bolla di Consegna"
                         >
                           <FileText size={16} />
                           <span>Bolla</span>
                         </Button>
                       </Link>
-                      
+                      {/* Link per modificare l'intervento */}
+                      <Link href={`/interventions/${request.id}/edit`} passHref>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-md text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700"
+                          title="Modifica Intervento"
+                        >
+                          <Edit size={18} />
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="icon"
