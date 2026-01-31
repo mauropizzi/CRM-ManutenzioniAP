@@ -19,8 +19,7 @@ import { it } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { InterventionFormValues } from '@/components/intervention-form';
-import { Button } from '@/components/ui/button';
-import { useTechnicians } from '@/context/technician-context'; // Importa il contesto dei tecnici
+import { Button } from '@/components/ui/button'; // Importa il componente Button
 
 interface SchedulingDetailsSectionProps {
   timeOptions: string[];
@@ -28,7 +27,6 @@ interface SchedulingDetailsSectionProps {
 
 export const SchedulingDetailsSection = ({ timeOptions }: SchedulingDetailsSectionProps) => {
   const { control } = useFormContext<InterventionFormValues>();
-  const { technicians, loading: techniciansLoading } = useTechnicians(); // Ottieni i tecnici dal contesto
 
   return (
     <div className="grid gap-6 rounded-lg border p-4 shadow-sm">
@@ -127,25 +125,10 @@ export const SchedulingDetailsSection = ({ timeOptions }: SchedulingDetailsSecti
           name="assigned_technicians"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-gray-700 dark:text-gray-300">Tecnici assegnati (opz.)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Seleziona un tecnico" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
-                  {techniciansLoading ? (
-                    <SelectItem value="loading" disabled>Caricamento tecnici...</SelectItem>
-                  ) : (
-                    technicians.map((technician) => (
-                      <SelectItem key={technician.id} value={`${technician.first_name} ${technician.last_name}`}>
-                        {`${technician.first_name} ${technician.last_name}`}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <FormLabel className="text-gray-700 dark:text-gray-300">Tecnici assegnati (testo)</FormLabel>
+              <FormControl>
+                <Input placeholder="Es. Marco, Luca" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
