@@ -28,7 +28,7 @@ import { InterventionRequest } from '@/types/intervention';
 import { useCustomers } from '@/context/customer-context'; // Importa il contesto clienti
 
 export const interventionFormSchema = z.object({
-  customer_id: z.string().optional(), // Nuovo campo per la selezione del cliente
+  customer_id: z.string().optional(), // Nuovo campo per collegare l'intervento a un cliente esistente
   client_company_name: z.string().min(2, { message: "La ragione sociale deve contenere almeno 2 caratteri." }),
   client_email: z.string().email({ message: "Inserisci un'email valida." }),
   client_phone: z.string().min(10, { message: "Il numero di telefono deve contenere almeno 10 cifre." }),
@@ -391,7 +391,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Ora programmata</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ''}> {/* Modifica qui */}
                     <FormControl>
                       <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue placeholder="Seleziona ora" />
