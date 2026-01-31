@@ -391,7 +391,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Ora programmata</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value ?? ''}> {/* Modifica qui */}
+                  <Select onValueChange={field.onChange} value={field.value ?? ''}>
                     <FormControl>
                       <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue placeholder="Seleziona ora" />
@@ -415,7 +415,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-gray-700 dark:text-gray-300">Stato *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value ?? 'Da fare'}> {/* Changed to value={field.value ?? 'Da fare'} */}
                     <FormControl>
                       <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue placeholder="Seleziona stato" />
