@@ -1,10 +1,12 @@
+"use client";
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CustomerProvider } from "@/context/customer-context";
 import { InterventionProvider } from "@/context/intervention-context";
 import { MaterialProvider } from "@/context/material-context";
-import { TechnicianProvider } from "@/context/technician-context"; // Importa il nuovo provider
+import { TechnicianProvider } from "@/context/technician-context";
 import { AuthProvider } from "@/context/auth-context";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -50,7 +52,7 @@ export default function RootLayout({
             <CustomerProvider>
               <InterventionProvider>
                 <MaterialProvider>
-                  <TechnicianProvider> {/* Includi il TechnicianProvider qui */}
+                  <TechnicianProvider>
                     <SidebarProvider>
                       <div className="flex min-h-screen">
                         <AppSidebar />
