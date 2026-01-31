@@ -60,11 +60,11 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
     resolver: zodResolver(interventionFormSchema),
     defaultValues: {
       customer_id: initialData?.customer_id ?? '',
-      client_company_name: initialData?.client_company_name ?? '',
-      client_email: initialData?.client_email ?? '',
-      client_phone: initialData?.client_phone ?? '',
-      client_address: initialData?.client_address ?? '',
-      client_referent: initialData?.client_referent ?? '',
+      client_company_name: initialData?.client_company_name ?? '', // Imposto il valore iniziale
+      client_email: initialData?.client_email ?? '', // Imposto il valore iniziale
+      client_phone: initialData?.client_phone ?? '', // Imposto il valore iniziale
+      client_address: initialData?.client_address ?? '', // Imposto il valore iniziale
+      client_referent: initialData?.client_referent ?? '', // Imposto il valore iniziale
       system_type: initialData?.system_type ?? '',
       brand: initialData?.brand ?? '',
       model: initialData?.model ?? '',
