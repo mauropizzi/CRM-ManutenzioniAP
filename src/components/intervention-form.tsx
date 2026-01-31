@@ -74,7 +74,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
   const form = useForm<InterventionFormValues>({
     resolver: zodResolver(interventionFormSchema),
     defaultValues: {
-      customer_id: initialData?.customer_id ?? '', // Inizializzazione del nuovo campo
+      customer_id: initialData?.customer_id ?? '',
       client_company_name: initialData?.client_company_name ?? '',
       client_email: initialData?.client_email ?? '',
       client_phone: initialData?.client_phone ?? '',
@@ -97,41 +97,52 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
   const selectedCustomerId = form.watch('customer_id');
   const isCustomerSelected = !!selectedCustomerId;
 
-  // Effect to handle initial data and customer selection changes
-  useEffect(() => {
-    // Handle initial data if a customer_id is present
-    if (initialData?.customer_id && customers.length > 0) {
-      const customer = customers.find(c => c.id === initialData.customer_id);
-      if (customer) {
-        form.setValue('client_company_name', customer.ragione_sociale);
-        form.setValue('client_email', customer.email);
-        form.setValue('client_phone', customer.telefono);
-        form.setValue('client_address', customer.indirizzo);
-        form.setValue('client_referent', customer.referente || '');
-      }
-    }
-  }, [initialData, customers, form]);
-
   // Effect to handle changes when a customer is selected from the dropdown
+  // This runs on initial render (if selectedCustomerId is set) and on subsequent changes.
   useEffect(() => {
-    if (selectedCustomerId === 'new-customer' || selectedCustomerId === '') { // Modificato per 'new-customer'
-      // "Nuovo Cliente" selected, clear and enable fields
+    // Only proceed if customers data is loaded
+    if (customersLoading) {
+      console.log('Customers still loading, deferring client data population.');
+      return;
+    }
+
+    if (selectedCustomerId === 'new-customer' || selectedCustomerId === '') {
+      // User selected "Nuovo Cliente" or cleared selection, clear fields
       form.setValue('client_company_name', '');
       form.setValue('client_email', '');
       form.setValue('client_phone', '');
       form.setValue('client_address', '');
       form.setValue('client_referent', '');
     } else {
+      // User selected an existing customer
       const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
       if (selectedCustomer) {
+        // Populate fields with selected customer's current data
         form.setValue('client_company_name', selectedCustomer.ragione_sociale);
         form.setValue('client_email', selectedCustomer.email);
         form.setValue('client_phone', selectedCustomer.telefono);
         form.setValue('client_address', selectedCustomer.indirizzo);
         form.setValue('client_referent', selectedCustomer.referente || '');
+      } else {
+        // If a customer_id is set (e.g., from initialData) but the customer is not found in the list,
+        // fall back to initialData's client details. This handles cases where a customer might have been deleted.
+        if (initialData && initialData.customer_id === selectedCustomerId) {
+          form.setValue('client_company_name', initialData.client_company_name ?? '');
+          form.setValue('client_email', initialData.client_email ?? '');
+          form.setValue('client_phone', initialData.client_phone ?? '');
+          form.setValue('client_address', initialData.client_address ?? '');
+          form.setValue('client_referent', initialData.client_referent ?? '');
+        } else {
+          // If selectedCustomerId is an unknown ID (not initialData's and not found), clear fields
+          form.setValue('client_company_name', '');
+          form.setValue('client_email', '');
+          form.setValue('client_phone', '');
+          form.setValue('client_address', '');
+          form.setValue('client_referent', '');
+        }
       }
     }
-  }, [selectedCustomerId, customers, form]);
+  }, [selectedCustomerId, customers, customersLoading, form, initialData]);
 
 
   const handleSubmit = (values: InterventionFormValues) => {
@@ -166,7 +177,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
-                    <SelectItem value="new-customer">Nuovo Cliente</SelectItem> {/* Modificato il valore */}
+                    <SelectItem value="new-customer">Nuovo Cliente</SelectItem>
                     {customersLoading ? (
                       <SelectItem value="loading" disabled>Caricamento clienti...</SelectItem>
                     ) : (
