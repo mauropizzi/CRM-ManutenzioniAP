@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/form';
 import { PlusCircle } from 'lucide-react';
 import { TimeEntryRow } from './time-entry-row';
-import { calculateHours } from '@/lib/time-utils';
+import { calculateHours } from '@/lib/time-utils'; // Importa calculateHours
 import { WorkReportFormValues } from '@/components/work-report-form';
 
 export const TimeEntriesSection = () => {

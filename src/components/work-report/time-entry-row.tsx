@@ -15,6 +15,8 @@ import { Trash2, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WorkReportFormValues } from '@/components/work-report-form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Importa i componenti Select
+import { timeOptions } from '@/lib/time-utils'; // Importa le opzioni orarie
 
 interface TimeEntryRowProps {
   index: number;
@@ -38,7 +40,7 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
-                      variant="outline"
+                      variant={"outline"}
                       className={cn(
                         "w-full pl-3 text-left font-normal",
                         !field.value && "text-muted-foreground"
@@ -89,9 +91,20 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs">Fascia 1 Inizio</FormLabel>
-              <FormControl>
-                <Input placeholder="--:--" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="--:--" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {timeOptions.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />
@@ -101,9 +114,20 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs">Fascia 1 Fine</FormLabel>
-              <FormControl>
-                <Input placeholder="--:--" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="--:--" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {timeOptions.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />
@@ -116,9 +140,20 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs">Fascia 2 Inizio (opz.)</FormLabel>
-              <FormControl>
-                <Input placeholder="--:--" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="--:--" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {timeOptions.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />
@@ -128,9 +163,20 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs">Fascia 2 Fine (opz.)</FormLabel>
-              <FormControl>
-                <Input placeholder="--:--" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="--:--" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {timeOptions.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />
