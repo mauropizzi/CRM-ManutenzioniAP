@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/form';
 import Link from 'next/link';
 import { InterventionRequest } from '@/types/intervention';
-import { ClientDetailsSection, SystemDetailsSection, SchedulingDetailsSection } from './intervention-form'; // Importo i nuovi componenti
+import { ClientDetailsSection, SystemDetailsSection, SchedulingDetailsSection } from './intervention-form/'; // Importo i nuovi componenti dalla sottocartella
 
 export const interventionFormSchema = z.object({
   customer_id: z.string().optional(),
