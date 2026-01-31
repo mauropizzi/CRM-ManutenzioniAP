@@ -24,7 +24,7 @@ import { InterventionFormValues } from '@/components/intervention-form';
 interface ClientDetailsSectionProps {} // Rimosso initialData dalla prop
 
 export const ClientDetailsSection = () => {
-  const { control, watch, setValue } = useFormContext<InterventionFormValues>();
+  const { control, watch, setValue, getValues } = useFormContext<InterventionFormValues>(); // Aggiunto getValues
   const { customers, loading: customersLoading } = useCustomers();
 
   const selectedCustomerId = watch('customer_id');
@@ -59,14 +59,10 @@ export const ClientDetailsSection = () => {
         setValue('client_phone', selectedCustomer.telefono);
         setValue('client_address', selectedCustomer.indirizzo);
         setValue('client_referent', selectedCustomer.referente || '');
-      } else {
-        // L'ID cliente è impostato, ma il cliente non è stato trovato nell'elenco dei clienti caricati.
-        // Questo può accadere se il cliente è stato eliminato, o se i dati iniziali avevano dettagli
-        // del cliente che non corrispondono a un cliente esistente nell'elenco attuale.
-        // In questo caso, NON dobbiamo cancellare i campi. Dovrebbero mantenere i valori
-        // che sono stati impostati dai defaultValues del form padre.
-        console.warn(`Cliente con ID ${selectedCustomerId} non trovato nell'elenco attuale. Mantenimento dei dettagli cliente esistenti.`);
       }
+      // IMPORTANTE: Se selectedCustomerId è presente ma il cliente NON viene trovato (es. eliminato, o race condition di caricamento asincrono),
+      // NON cancelliamo i campi qui. Dovrebbero mantenere i valori impostati da defaultValues dal form padre.
+      // Questo impedisce di cancellare i dati pre-popolati nelle pagine di modifica se l'elenco dei clienti si carica più tardi o se il cliente è mancante.
     }
   }, [selectedCustomerId, customers, customersLoading, setValue]); // Dipendenze
 
@@ -84,10 +80,8 @@ export const ClientDetailsSection = () => {
               <FormControl>
                 <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue placeholder="Seleziona un cliente o inserisci i dati manualmente">
-                    {/* Visualizza il nome del cliente selezionato se disponibile */}
-                    {field.value && field.value !== 'new-customer' && !customersLoading
-                      ? customers.find(c => c.id === field.value)?.ragione_sociale || "Cliente non trovato"
-                      : null}
+                    {/* Visualizza il nome del cliente attualmente monitorato dallo stato del form */}
+                    {getValues('client_company_name') || "Seleziona un cliente o inserisci i dati manualmente"}
                   </SelectValue>
                 </SelectTrigger>
               </FormControl>
