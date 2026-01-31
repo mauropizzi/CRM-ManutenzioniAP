@@ -27,7 +27,8 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchCustomers = async () => {
     try {
-      console.log('Fetching customers from Supabase...');
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('[CustomerContext] Fetching customers for user ID:', user?.id || 'No user logged in');
       
       const { data, error } = await supabase
         .from('customers')
@@ -35,18 +36,18 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase error fetching customers:', error);
+        console.error('[CustomerContext] Supabase error fetching customers:', error);
         toast.error(`Errore nel caricamento dei clienti: ${error.message}`);
         return;
       }
 
-      console.log('Customers fetched:', data);
+      console.log('[CustomerContext] Customers fetched:', data);
       
       if (data) {
         setCustomers(data as Customer[]);
       }
     } catch (error: any) {
-      console.error('Exception fetching customers:', error);
+      console.error('[CustomerContext] Exception fetching customers:', error);
       toast.error(`Errore nel caricamento dei clienti: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
@@ -68,7 +69,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         user_id: user.id,
       };
 
-      console.log('Adding customer:', customerWithUserId);
+      console.log('[CustomerContext] Adding customer:', customerWithUserId);
       
       const { data, error } = await supabase
         .from('customers')
@@ -77,26 +78,26 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) {
-        console.error('Supabase error adding customer:', error);
+        console.error('[CustomerContext] Supabase error adding customer:', error);
         toast.error(`Errore nell'aggiunta del cliente: ${error.message}`);
         return;
       }
 
-      console.log('Customer added:', data);
+      console.log('[CustomerContext] Customer added:', data);
 
       if (data) {
         setCustomers((prev) => [data as Customer, ...prev]);
         toast.success("Cliente aggiunto con successo!");
       }
     } catch (error: any) {
-      console.error('Exception adding customer:', error);
+      console.error('[CustomerContext] Exception adding customer:', error);
       toast.error(`Errore nell'aggiunta del cliente: ${error?.message || 'Unknown error'}`);
     }
   };
 
   const updateCustomer = async (updatedCustomer: Customer) => {
     try {
-      console.log('Updating customer:', updatedCustomer);
+      console.log('[CustomerContext] Updating customer:', updatedCustomer);
       
       const { data, error } = await supabase
         .from('customers')
@@ -106,12 +107,12 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) {
-        console.error('Supabase error updating customer:', error);
+        console.error('[CustomerContext] Supabase error updating customer:', error);
         toast.error(`Errore nell'aggiornamento del cliente: ${error.message}`);
         return;
       }
 
-      console.log('Customer updated:', data);
+      console.log('[CustomerContext] Customer updated:', data);
 
       if (data) {
         setCustomers((prev) =>
@@ -122,14 +123,14 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         toast.success("Cliente aggiornato con successo!");
       }
     } catch (error: any) {
-      console.error('Exception updating customer:', error);
+      console.error('[CustomerContext] Exception updating customer:', error);
       toast.error(`Errore nell'aggiornamento del cliente: ${error?.message || 'Unknown error'}`);
     }
   };
 
   const deleteCustomer = async (id: string) => {
     try {
-      console.log('Deleting customer:', id);
+      console.log('[CustomerContext] Deleting customer:', id);
       
       const { error } = await supabase
         .from('customers')
@@ -137,7 +138,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', id);
 
       if (error) {
-        console.error('Supabase error deleting customer:', error);
+        console.error('[CustomerContext] Supabase error deleting customer:', error);
         toast.error(`Errore nell'eliminazione del cliente: ${error.message}`);
         return;
       }
@@ -145,7 +146,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
       setCustomers((prev) => prev.filter((customer) => customer.id !== id));
       toast.success("Cliente eliminato con successo!");
     } catch (error: any) {
-      console.error('Exception deleting customer:', error);
+      console.error('[CustomerContext] Exception deleting customer:', error);
       toast.error(`Errore nell'eliminazione del cliente: ${error?.message || 'Unknown error'}`);
     }
   };

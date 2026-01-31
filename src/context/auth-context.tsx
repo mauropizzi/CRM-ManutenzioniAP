@@ -30,7 +30,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Check current session
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error('[AuthContext] Error getting session:', sessionError);
+        toast.error(`Errore nel recupero della sessione: ${sessionError.message}`);
+      }
+      console.log('[AuthContext] Initial session:', session?.user?.id ? 'User found' : 'No user session');
+
       if (session?.user) {
         await fetchUserProfile(session.user);
       }
@@ -41,6 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AuthContext] Auth state change:', event, session?.user?.id); // Added log
       if (session?.user) {
         await fetchUserProfile(session.user);
       } else {

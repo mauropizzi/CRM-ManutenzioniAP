@@ -30,6 +30,7 @@ export interface InterventionRequest {
   client_email: string;
   client_phone: string;
   client_address: string;
+  referente?: string; // Nuovo campo aggiunto
   // Impianto / Modello macchina
   system_type: string;
   brand: string;
