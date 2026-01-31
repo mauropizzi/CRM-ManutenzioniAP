@@ -1,1 +1,169 @@
-"use client"; import { useFormContext } from 'react'; import { Button } from '@/components/ui/button'; import { Input } from '@/components/ui/input'; import { FormControl, FormField, FormItem, FormLabel, } from '@/components/ui/form'; import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'; import { Calendar } from '@/components/ui/calendar'; import { Trash2, CalendarIcon } from 'lucide-react'; import { format } from 'date-fns'; import { cn } from '@/lib/utils'; import { WorkReportFormValues } from '@/components/work-report-form'; import { timeOptions } from './time-entries-section'; interface TimeEntryRowProps { index: number; onRemove: () => void; canRemove: boolean; } export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) => { const { control } = useFormContext<WorkReportFormValues>(); return ( <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-4 border rounded-md bg-gray-50 dark:bg-gray-800"> <div className="md:col-span-2"> <FormField control={control} name={`time_entries.${index}.date`} render={({ field }) => ( <FormItem className="flex flex-col"> <FormLabel className="text-xs">Data</FormLabel> <Popover> <PopoverTrigger asChild> <FormControl> <Button variant={"outline"} className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )} > {field.value ? ( format(field.value, "dd/MM/yyyy") ) : ( <span>gg/mm/aaaa</span> )} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> </Button> </FormControl> </PopoverTrigger> <PopoverContent className="w-auto p-0" align="start"> <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus /> </PopoverContent> </Popover> </FormItem> )} /> </div> <div className="md:col-span-2"> <FormField control={control} name={`time_entries.${index}.technician`} render={({ field }) => ( <FormItem> <FormLabel className="text-xs">Tecnico</FormLabel> <FormControl> <Input placeholder="Nome tecnico" {...field} /> </FormControl> </FormItem> )} /> </div> <div className="md:col-span-3 grid grid-cols-2 gap-2"> <FormField control={control} name={`time_entries.${index}.time_slot_1_start`} render={({ field }) => ( <FormItem> <FormLabel className="text-xs">Fascia 1 Inizio</FormLabel> <FormControl> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"> <SelectValue placeholder="Seleziona fascia" /> </SelectTrigger> </FormControl> <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900"> {timeOptions.map((option) => ( <SelectItem key={option} value={option}> {option} </SelectItem> ))} </SelectContent> </Select> </FormControl> </FormItem> )} /> <FormField control={control} name={`time_entries.${index}.time_slot_1_end`} render={({ field }) => ( <FormItem> <FormLabel className="text-xs">Fascia 1 Fine</FormLabel> <FormControl> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"> <SelectValue placeholder="Seleziona fascia" /> </SelectTrigger> </FormControl> <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900"> {timeOptions.map((option) => ( <SelectItem key={option} value={option}> {option} </SelectItem> ))} </SelectContent> </Select> </FormControl> </FormItem> )} /> </div> <div className="md:col-span-3 grid grid-cols-2 gap-2"> <FormField control={control} name={`time_entries.${index}.time_slot_2_start`} render={({ field }) => ( <FormItem> <FormLabel className="text-xs">Fascia 2 Inizio (opz.)</FormLabel> <FormControl> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"> <SelectValue placeholder="Seleziona fascia" /> </SelectTrigger> </FormControl> <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900"> {timeOptions.map((option) => ( <SelectItem key={option} value={option}> {option} </SelectItem> ))} </SelectContent> </Select> </FormControl> </FormItem> )} /> <FormField control={control} name={`time_entries.${index}.time_slot_2_end`} render={({ field }) => ( <FormItem> <FormLabel className="text-xs">Fascia 2 Fine (opz.)</FormLabel> <FormControl> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"> <SelectValue placeholder="Seleziona fascia" /> </SelectTrigger> </FormControl> <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900"> {timeOptions.map((option) => ( <SelectItem key={option} value={option}> {option} </SelectItem> ))} </SelectContent> </Select> </FormControl> </FormItem> )} /> </div> <FormField control={control} name={`time_entries.${index}.total_hours`} render={({ field }) => ( <FormItem className="md:col-span-1"> <FormLabel className="text-xs">Ore</FormLabel> <FormControl> <Input type="number" step="0.01" placeholder="0.00" {...field} disabled className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" /> </FormControl> </FormItem> )} /> <Button type="button" variant="ghost" size="icon" onClick={() => onRemove()} className="rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700" > <Trash2 size={18} /> </Button> </div> ); };
+"use client";
+
+import { useFormContext } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from '@/components/ui/form';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Trash2, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { WorkReportFormValues } from '@/components/work-report-form';
+
+interface TimeEntryRowProps {
+  index: number;
+  onRemove: () => void;
+  canRemove: boolean;
+}
+
+export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) => {
+  const { control } = useFormContext<WorkReportFormValues>();
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-4 border rounded-md bg-gray-50 dark:bg-gray-800">
+      <div className="md:col-span-2">
+        <FormField
+          control={control}
+          name={`time_entries.${index}.date`}
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel className="text-xs">Data</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "dd/MM/yyyy")
+                      ) : (
+                        <span>gg/mm/aaaa</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <FormField
+          control={control}
+          name={`time_entries.${index}.technician`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Tecnico</FormLabel>
+              <FormControl>
+                <Input placeholder="Nome tecnico" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="md:col-span-3 grid grid-cols-2 gap-2">
+        <FormField
+          control={control}
+          name={`time_entries.${index}.time_slot_1_start`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Fascia 1 Inizio</FormLabel>
+              <FormControl>
+                <Input placeholder="--:--" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name={`time_entries.${index}.time_slot_1_end`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Fascia 1 Fine</FormLabel>
+              <FormControl>
+                <Input placeholder="--:--" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="md:col-span-3 grid grid-cols-2 gap-2">
+        <FormField
+          control={control}
+          name={`time_entries.${index}.time_slot_2_start`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Fascia 2 Inizio (opz.)</FormLabel>
+              <FormControl>
+                <Input placeholder="--:--" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name={`time_entries.${index}.time_slot_2_end`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Fascia 2 Fine (opz.)</FormLabel>
+              <FormControl>
+                <Input placeholder="--:--" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="md:col-span-1">
+        <FormField
+          control={control}
+          name={`time_entries.${index}.total_hours`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Ore</FormLabel>
+              <FormControl>
+                <Input type="number" step="0.01" disabled {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="md:col-span-1">
+        {canRemove && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onRemove}
+            className="text-red-600 hover:text-red-800"
+          >
+            <Trash2 size={18} />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};
