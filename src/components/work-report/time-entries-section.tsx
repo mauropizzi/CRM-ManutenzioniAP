@@ -26,17 +26,7 @@ export const TimeEntriesSection = () => {
   const timeEntries = watch("time_entries");
   const totalHours = timeEntries?.reduce((sum, entry) => sum + (entry.total_hours || 0), 0) || 0;
 
-  // Calcolo automatico ore
-  useEffect(() => {
-    fields.forEach((_, index) => {
-      const start1 = getValues(`time_entries.${index}.time_slot_1_start`);
-      const end1 = getValues(`time_entries.${index}.time_slot_1_end`);
-      const start2 = getValues(`time_entries.${index}.time_slot_2_start`);
-      const end2 = getValues(`time_entries.${index}.time_slot_2_end`);
-      const calculated = calculateHours(start1, end1, start2, end2);
-      setValue(`time_entries.${index}.total_hours`, calculated, { shouldValidate: false });
-    });
-  }, [timeEntries, fields, getValues, setValue]);
+  // Rimosso il useEffect di calcolo delle ore, ora gestito in TimeEntryRow
 
   const handleAddEntry = () => {
     append({

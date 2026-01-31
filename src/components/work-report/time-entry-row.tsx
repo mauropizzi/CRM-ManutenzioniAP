@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react'; // Importo useEffect
 import { useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,8 +16,8 @@ import { Trash2, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WorkReportFormValues } from '@/components/work-report-form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Importa i componenti Select
-import { timeOptions } from '@/lib/time-utils'; // Importa le opzioni orarie
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { timeOptions, calculateHours } from '@/lib/time-utils'; // Importa calculateHours
 
 interface TimeEntryRowProps {
   index: number;
@@ -25,7 +26,24 @@ interface TimeEntryRowProps {
 }
 
 export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) => {
-  const { control } = useFormContext<WorkReportFormValues>();
+  const { control, watch, setValue } = useFormContext<WorkReportFormValues>();
+
+  // Watch per le fasce orarie di questa riga
+  const timeSlot1Start = watch(`time_entries.${index}.time_slot_1_start`);
+  const timeSlot1End = watch(`time_entries.${index}.time_slot_1_end`);
+  const timeSlot2Start = watch(`time_entries.${index}.time_slot_2_start`);
+  const timeSlot2End = watch(`time_entries.${index}.time_slot_2_end`);
+
+  // Calcola le ore totali ogni volta che una fascia oraria cambia
+  useEffect(() => {
+    const calculated = calculateHours(
+      timeSlot1Start,
+      timeSlot1End,
+      timeSlot2Start,
+      timeSlot2End
+    );
+    setValue(`time_entries.${index}.total_hours`, calculated, { shouldValidate: false });
+  }, [timeSlot1Start, timeSlot1End, timeSlot2Start, timeSlot2End, index, setValue]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-4 border rounded-md bg-gray-50 dark:bg-gray-800">
