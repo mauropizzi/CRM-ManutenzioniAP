@@ -28,7 +28,7 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
     await updateInterventionRequest({
       ...intervention,
       ...data,
-      status: 'Completato',
+      status: data.status, // Usa lo stato dal form data
     });
     router.push('/interventions');
   };
@@ -50,6 +50,7 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
             initialData={intervention.work_report_data as any}
             onSubmit={handleSubmit}
             clientName={intervention.client_company_name}
+            currentStatus={intervention.status} // Passo lo stato attuale dell'intervento
           />
         </div>
       </div>
