@@ -11,6 +11,7 @@ import { MaterialProvider } from "@/context/material-context";
 import { TechnicianProvider } from "@/context/technician-context";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { SidebarProvider } from "@/components/ui/sidebar"; // Import SidebarProvider
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,7 +48,9 @@ export default function RootLayoutClient({
                 <MaterialProvider>
                   <TechnicianProvider>
                     <div className="flex min-h-screen">
-                      <AppSidebar />
+                      <SidebarProvider> {/* Wrap AppSidebar with SidebarProvider */}
+                        <AppSidebar />
+                      </SidebarProvider>
                       <main className="flex-1 flex flex-col">
                         {children}
                       </main>
