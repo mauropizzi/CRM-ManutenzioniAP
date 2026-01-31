@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Users, Wrench, ClipboardList, LogOut, User, Package, HardHat } from "lucide-react" // Importa l'icona HardHat per i tecnici
+import { Home, Users, Wrench, ClipboardList, LogOut, User, Package } from "lucide-react" // Importa l'icona Package
 
 import {
   Sidebar,
@@ -38,14 +38,9 @@ const menuItems = [
     icon: ClipboardList,
   },
   {
-    title: "Anagrafica Materiali",
+    title: "Anagrafica Materiali", // Nuovo elemento del menu
     url: "/materials",
-    icon: Package,
-  },
-  {
-    title: "Anagrafica Tecnici", // Nuovo elemento del menu
-    url: "/technicians",
-    icon: HardHat, // Icona per i tecnici
+    icon: Package, // Icona per i materiali
   },
 ]
 
@@ -95,14 +90,6 @@ export function AppSidebar() {
                 <Link href="/materials/new" className="flex items-center gap-3">
                   <Package className="h-4 w-4" />
                   <span>Nuovo Materiale</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Nuovo Tecnico">
-                <Link href="/technicians/new" className="flex items-center gap-3">
-                  <HardHat className="h-4 w-4" />
-                  <span>Nuovo Tecnico</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
