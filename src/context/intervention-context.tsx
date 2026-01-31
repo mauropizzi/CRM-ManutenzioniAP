@@ -4,7 +4,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { InterventionRequest } from '@/types/intervention';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './auth-context'; // Importo useAuth
 
 interface InterventionContextType {
   interventionRequests: InterventionRequest[];
@@ -19,16 +18,12 @@ const InterventionContext = createContext<InterventionContextType | undefined>(u
 export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const [interventionRequests, setInterventionRequests] = useState<InterventionRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); // Ottengo l'utente dal contesto di autenticazione
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && user) { // Recupero gli interventi solo se l'utente è autenticato
+    if (typeof window !== 'undefined') {
       fetchInterventions();
-    } else if (!user) {
-      setInterventionRequests([]);
-      setLoading(false);
     }
-  }, [user]); // Dipendenza dall'oggetto utente
+  }, []);
 
   const fetchInterventions = async () => {
     try {

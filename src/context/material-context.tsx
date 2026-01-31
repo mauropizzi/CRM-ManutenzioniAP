@@ -4,7 +4,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Material } from '@/types/material';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './auth-context'; // Importo useAuth
 
 interface MaterialContextType {
   materials: Material[];
@@ -19,16 +18,12 @@ const MaterialContext = createContext<MaterialContextType | undefined>(undefined
 export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); // Ottengo l'utente dal contesto di autenticazione
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && user) { // Recupero i materiali solo se l'utente è autenticato
+    if (typeof window !== 'undefined') {
       fetchMaterials();
-    } else if (!user) {
-      setMaterials([]);
-      setLoading(false);
     }
-  }, [user]); // Dipendenza dall'oggetto utente
+  }, []);
 
   const fetchMaterials = async () => {
     try {

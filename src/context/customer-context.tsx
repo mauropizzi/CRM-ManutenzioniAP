@@ -4,7 +4,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Customer } from '@/types/customer';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './auth-context'; // Importo useAuth
 
 interface CustomerContextType {
   customers: Customer[];
@@ -19,16 +18,12 @@ const CustomerContext = createContext<CustomerContextType | undefined>(undefined
 export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); // Ottengo l'utente dal contesto di autenticazione
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && user) { // Recupero i clienti solo se l'utente è autenticato
+    if (typeof window !== 'undefined') {
       fetchCustomers();
-    } else if (!user) {
-      setCustomers([]);
-      setLoading(false);
     }
-  }, [user]); // Dipendenza dall'oggetto utente
+  }, []);
 
   const fetchCustomers = async () => {
     try {
