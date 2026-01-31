@@ -15,12 +15,22 @@ import { Trash2, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WorkReportFormValues } from '@/components/work-report-form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { generateTimeOptions } from '@/lib/time-utils';
 
 interface TimeEntryRowProps {
   index: number;
   onRemove: () => void;
   canRemove: boolean;
 }
+
+const timeOptions = generateTimeOptions();
 
 export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) => {
   const { control } = useFormContext<WorkReportFormValues>();
@@ -89,9 +99,20 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs">Fascia 1 Inizio</FormLabel>
-              <FormControl>
-                <Input placeholder="--:--" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="--:--" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {timeOptions.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />
@@ -101,9 +122,20 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs">Fascia 1 Fine</FormLabel>
-              <FormControl>
-                <Input placeholder="--:--" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="--:--" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {timeOptions.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />
@@ -116,9 +148,20 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs">Fascia 2 Inizio (opz.)</FormLabel>
-              <FormControl>
-                <Input placeholder="--:--" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="--:--" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {timeOptions.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />
@@ -128,9 +171,20 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs">Fascia 2 Fine (opz.)</FormLabel>
-              <FormControl>
-                <Input placeholder="--:--" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="--:--" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {timeOptions.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />
