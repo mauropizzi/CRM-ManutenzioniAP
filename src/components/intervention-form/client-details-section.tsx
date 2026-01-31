@@ -20,13 +20,10 @@ import {
 } from '@/components/ui/select';
 import { useCustomers } from '@/context/customer-context';
 import { InterventionFormValues } from '@/components/intervention-form';
-import { InterventionRequest } from '@/types/intervention';
 
-interface ClientDetailsSectionProps {
-  initialData?: InterventionRequest;
-}
+interface ClientDetailsSectionProps {} // Rimosso initialData dalla prop
 
-export const ClientDetailsSection = ({ initialData }: ClientDetailsSectionProps) => {
+export const ClientDetailsSection = () => {
   const { control, watch, setValue } = useFormContext<InterventionFormValues>();
   const { customers, loading: customersLoading } = useCustomers();
 
@@ -34,42 +31,44 @@ export const ClientDetailsSection = ({ initialData }: ClientDetailsSectionProps)
   const isCustomerSelected = !!selectedCustomerId;
 
   useEffect(() => {
+    // Questo effetto dovrebbe reagire ai cambiamenti di selectedCustomerId (dall'interazione utente)
+    // o quando i dati dei clienti sono finalmente caricati.
+    // Il popolamento iniziale dei campi è gestito dai defaultValues nel form padre.
+
     if (customersLoading) {
-      console.log('Customers still loading, deferring client data population.');
+      // Se i clienti sono ancora in caricamento, non possiamo risolvere l'ID del cliente.
+      // I campi dovrebbero mantenere i loro valori attuali (dai defaultValues o input precedente).
       return;
     }
 
-    if (selectedCustomerId === 'new-customer' || selectedCustomerId === '') {
+    if (selectedCustomerId === 'new-customer' || !selectedCustomerId) {
+      // L'utente ha selezionato esplicitamente "Nuovo Cliente" o ha cancellato la selezione.
+      // Pulisci tutti i campi dei dettagli del cliente per consentire l'input manuale.
       setValue('client_company_name', '');
       setValue('client_email', '');
       setValue('client_phone', '');
       setValue('client_address', '');
       setValue('client_referent', '');
     } else {
+      // È selezionato un ID cliente esistente. Cerca di trovarlo nei clienti caricati.
       const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
       if (selectedCustomer) {
+        // Trovato il cliente, popola i campi con i suoi dati.
         setValue('client_company_name', selectedCustomer.ragione_sociale);
         setValue('client_email', selectedCustomer.email);
         setValue('client_phone', selectedCustomer.telefono);
         setValue('client_address', selectedCustomer.indirizzo);
         setValue('client_referent', selectedCustomer.referente || '');
       } else {
-        if (initialData && initialData.customer_id === selectedCustomerId) {
-          setValue('client_company_name', initialData.client_company_name ?? '');
-          setValue('client_email', initialData.client_email ?? '');
-          setValue('client_phone', initialData.client_phone ?? '');
-          setValue('client_address', initialData.client_address ?? '');
-          setValue('client_referent', initialData.client_referent ?? '');
-        } else {
-          setValue('client_company_name', '');
-          setValue('client_email', '');
-          setValue('client_phone', '');
-          setValue('client_address', '');
-          setValue('client_referent', '');
-        }
+        // L'ID cliente è impostato, ma il cliente non è stato trovato nell'elenco dei clienti caricati.
+        // Questo può accadere se il cliente è stato eliminato, o se i dati iniziali avevano dettagli
+        // del cliente che non corrispondono a un cliente esistente nell'elenco attuale.
+        // In questo caso, NON dobbiamo cancellare i campi. Dovrebbero mantenere i valori
+        // che sono stati impostati dai defaultValues del form padre.
+        console.warn(`Cliente con ID ${selectedCustomerId} non trovato nell'elenco attuale. Mantenimento dei dettagli cliente esistenti.`);
       }
     }
-  }, [selectedCustomerId, customers, customersLoading, setValue, initialData]);
+  }, [selectedCustomerId, customers, customersLoading, setValue]); // Dipendenze
 
   return (
     <div className="grid gap-6 rounded-lg border p-4 shadow-sm">
@@ -84,7 +83,12 @@ export const ClientDetailsSection = ({ initialData }: ClientDetailsSectionProps)
             <Select onValueChange={field.onChange} value={field.value ?? ''}>
               <FormControl>
                 <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Seleziona un cliente o inserisci i dati manualmente" />
+                  <SelectValue placeholder="Seleziona un cliente o inserisci i dati manualmente">
+                    {/* Visualizza il nome del cliente selezionato se disponibile */}
+                    {field.value && field.value !== 'new-customer' && !customersLoading
+                      ? customers.find(c => c.id === field.value)?.ragione_sociale || "Cliente non trovato"
+                      : null}
+                  </SelectValue>
                 </SelectTrigger>
               </FormControl>
               <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">

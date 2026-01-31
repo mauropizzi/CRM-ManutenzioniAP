@@ -95,7 +95,7 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
     <FormProvider {...methods}>
       <Form {...methods}>
         <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8 p-4">
-          <ClientDetailsSection initialData={initialData} />
+          <ClientDetailsSection /> {/* Rimosso initialData prop */}
           <SystemDetailsSection />
           <SchedulingDetailsSection timeOptions={timeOptions} />
 
