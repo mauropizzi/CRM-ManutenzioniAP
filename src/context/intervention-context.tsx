@@ -43,7 +43,12 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       console.log('Interventions fetched:', data);
       
       if (data) {
-        setInterventionRequests(data as InterventionRequest[]);
+        // Mappa i dati per convertire le stringhe di scheduled_date in oggetti Date
+        const parsedData = data.map(item => ({
+          ...item,
+          scheduled_date: item.scheduled_date ? new Date(item.scheduled_date) : undefined,
+        })) as InterventionRequest[];
+        setInterventionRequests(parsedData);
       }
     } catch (error: any) {
       console.error('Exception fetching interventions:', error);
