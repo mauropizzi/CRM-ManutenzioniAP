@@ -27,7 +27,8 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchInterventions = async () => {
     try {
-      console.log('Fetching interventions from Supabase...');
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('[InterventionContext] Fetching interventions for user ID:', user?.id || 'No user logged in');
       
       const { data, error } = await supabase
         .from('interventions')
@@ -35,18 +36,18 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase error fetching interventions:', error);
+        console.error('[InterventionContext] Supabase error fetching interventions:', error);
         toast.error(`Errore nel caricamento degli interventi: ${error.message}`);
         return;
       }
 
-      console.log('Interventions fetched:', data);
+      console.log('[InterventionContext] Interventions fetched:', data);
       
       if (data) {
         setInterventionRequests(data as InterventionRequest[]);
       }
     } catch (error: any) {
-      console.error('Exception fetching interventions:', error);
+      console.error('[InterventionContext] Exception fetching interventions:', error);
       toast.error(`Errore nel caricamento degli interventi: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
@@ -68,7 +69,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         user_id: user.id,
       };
 
-      console.log('Adding intervention:', requestWithUserId);
+      console.log('[InterventionContext] Adding intervention:', requestWithUserId);
       
       const { data, error } = await supabase
         .from('interventions')
@@ -77,26 +78,26 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) {
-        console.error('Supabase error adding intervention:', error);
+        console.error('[InterventionContext] Supabase error adding intervention:', error);
         toast.error(`Errore nell'aggiunta dell'intervento: ${error.message}`);
         return;
       }
 
-      console.log('Intervention added:', data);
+      console.log('[InterventionContext] Intervention added:', data);
 
       if (data) {
         setInterventionRequests((prev) => [data as InterventionRequest, ...prev]);
         toast.success("Richiesta di intervento aggiunta con successo!");
       }
     } catch (error: any) {
-      console.error('Exception adding intervention:', error);
+      console.error('[InterventionContext] Exception adding intervention:', error);
       toast.error(`Errore nell'aggiunta dell'intervento: ${error?.message || 'Unknown error'}`);
     }
   };
 
   const updateInterventionRequest = async (updatedRequest: InterventionRequest) => {
     try {
-      console.log('Updating intervention:', updatedRequest);
+      console.log('[InterventionContext] Updating intervention:', updatedRequest);
       
       const { data, error } = await supabase
         .from('interventions')
@@ -106,12 +107,12 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) {
-        console.error('Supabase error updating intervention:', error);
+        console.error('[InterventionContext] Supabase error updating intervention:', error);
         toast.error(`Errore nell'aggiornamento dell'intervento: ${error.message}`);
         return;
       }
 
-      console.log('Intervention updated:', data);
+      console.log('[InterventionContext] Intervention updated:', data);
 
       if (data) {
         setInterventionRequests((prev) =>
@@ -122,14 +123,14 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         toast.success("Richiesta di intervento aggiornata con successo!");
       }
     } catch (error: any) {
-      console.error('Exception updating intervention:', error);
+      console.error('[InterventionContext] Exception updating intervention:', error);
       toast.error(`Errore nell'aggiornamento dell'intervento: ${error?.message || 'Unknown error'}`);
     }
   };
 
   const deleteInterventionRequest = async (id: string) => {
     try {
-      console.log('Deleting intervention:', id);
+      console.log('[InterventionContext] Deleting intervention:', id);
       
       const { error } = await supabase
         .from('interventions')
@@ -137,7 +138,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', id);
 
       if (error) {
-        console.error('Supabase error deleting intervention:', error);
+        console.error('[InterventionContext] Supabase error deleting intervention:', error);
         toast.error(`Errore nell'eliminazione dell'intervento: ${error.message}`);
         return;
       }
@@ -145,7 +146,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       setInterventionRequests((prev) => prev.filter((request) => request.id !== id));
       toast.success("Richiesta di intervento eliminata con successo!");
     } catch (error: any) {
-      console.error('Exception deleting intervention:', error);
+      console.error('[InterventionContext] Exception deleting intervention:', error);
       toast.error(`Errore nell'eliminazione dell'intervento: ${error?.message || 'Unknown error'}`);
     }
   };
