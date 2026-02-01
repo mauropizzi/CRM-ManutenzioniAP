@@ -9,13 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button'; // Importa buttonVariants
 import { Customer } from '@/types/customer';
 import { useCustomers } from '@/context/customer-context';
-import { Edit, Trash2, PlusCircle, Eye } from 'lucide-react'; // Importa l'icona Eye
+import { Edit, Trash2, PlusCircle, Eye } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { cn } from '@/lib/utils'; // Importa cn per unire le classi
 
 export const CustomerTable = () => {
   const { customers, deleteCustomer } = useCustomers();
@@ -44,7 +45,7 @@ export const CustomerTable = () => {
               <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800">
                 <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tl-md">Ragione Sociale</TableHead>
                 <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Indirizzo</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Città</TableHead> {/* Nuova colonna */}
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Città</TableHead>
                 <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Telefono</TableHead>
                 <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Referente</TableHead>
                 <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Attivo</TableHead>
@@ -56,7 +57,7 @@ export const CustomerTable = () => {
                 <TableRow key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{customer.ragione_sociale}</TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.indirizzo}</TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.citta}</TableCell> {/* Dati per la nuova colonna */}
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.citta}</TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.telefono}</TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{customer.referente}</TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
@@ -65,15 +66,15 @@ export const CustomerTable = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
-                    <Link href={`/customers/${customer.id}`} passHref> {/* Link per la navigazione */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-md text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700"
-                        title="Visualizza Cliente"
-                      >
-                        <Eye size={18} />
-                      </Button>
+                    <Link
+                      href={`/customers/${customer.id}`}
+                      className={cn(
+                        buttonVariants({ variant: "ghost", size: "icon" }),
+                        "rounded-md text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700"
+                      )}
+                      title="Visualizza Cliente"
+                    >
+                      <Eye size={18} />
                     </Link>
                     <Link href={`/customers/${customer.id}/edit`} passHref>
                       <Button
