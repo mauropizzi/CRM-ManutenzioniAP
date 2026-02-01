@@ -16,7 +16,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { InterventionRequest } from '@/types/intervention';
-import { InterventionOutcomeSection } from './intervention-outcome-section'; // Importo solo la sezione esito
+import { InterventionOutcomeSection } from './intervention-outcome-section'; // Importazione diretta per evitare cicli
 
 // Definisco lo schema e i tipi qui per evitare dipendenze circolari
 export const interventionConclusionFormSchema = z.object({
