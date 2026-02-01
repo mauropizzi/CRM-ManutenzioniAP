@@ -67,9 +67,9 @@ const timeEntrySchema = z.object({
 });
 
 const materialUsedSchema = z.object({
-  unit: z.string().optional(), // Reso opzionale
-  quantity: z.coerce.number().min(0, { message: "La quantità non può essere negativa." }).default(0), // Default a 0, ma opzionale
-  description: z.string().optional(), // Reso opzionale
+  unit: z.string().min(1, { message: "Seleziona un'unità." }),
+  quantity: z.coerce.number().min(0, { message: "La quantità non può essere negativa." }),
+  description: z.string().min(2, { message: "Inserisci una descrizione del materiale." }),
 });
 
 export const interventionConclusionFormSchema = z.object({
@@ -81,10 +81,7 @@ export const interventionConclusionFormSchema = z.object({
   operative_notes_conclusion: z.string().optional(),
   time_entries: z.array(timeEntrySchema).optional(),
   kilometers: z.coerce.number().min(0, { message: "I Km non possono essere negativi." }).optional(),
-  materials_used: z.array(materialUsedSchema).optional().transform((materials) => {
-    // Filtra i materiali che hanno una descrizione vuota o solo spazi bianchi
-    return materials?.filter(material => material.description && material.description.trim() !== '') || [];
-  }),
+  materials_used: z.array(materialUsedSchema).optional(),
 });
 
 export type InterventionConclusionFormValues = z.infer<typeof interventionConclusionFormSchema>;
