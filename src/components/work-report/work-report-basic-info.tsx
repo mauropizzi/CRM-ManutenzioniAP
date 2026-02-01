@@ -61,9 +61,16 @@ export const WorkReportBasicInfo = ({ clientName, interventionId }: WorkReportBa
         {/* Pulsante Stampa Bolla */}
         {interventionId && (
           <Link href={`/interventions/${interventionId}/print-work-report`} passHref>
-            <Button type="button" variant="outline" className="ml-auto flex items-center gap-2">
-              <Printer size={16} />
-              Stampa bolla
+            <Button 
+              asChild // Use asChild to pass props to the child <a> tag
+              variant="outline" 
+              className="ml-auto flex items-center gap-2"
+              // type="button" is not needed when asChild is true and it's a link
+            >
+              <a className="flex items-center gap-2"> {/* This <a> tag will receive the href */}
+                <Printer size={16} />
+                Stampa bolla
+              </a>
             </Button>
           </Link>
         )}
