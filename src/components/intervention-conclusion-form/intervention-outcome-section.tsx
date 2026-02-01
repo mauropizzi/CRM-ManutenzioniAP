@@ -10,7 +10,7 @@ import {
   FormLabel,
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
-import { InterventionConclusionFormValues } from '@/components/intervention-conclusion-form';
+import { InterventionConclusionFormValues } from '../intervention-conclusion-form'; // Importo i tipi dal componente principale
 
 export const InterventionOutcomeSection = () => {
   const { control } = useFormContext<InterventionConclusionFormValues>();
