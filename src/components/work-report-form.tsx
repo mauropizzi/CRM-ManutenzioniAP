@@ -24,6 +24,7 @@ const materialSchema = z.object({
 });
 
 export const workReportSchema = z.object({
+  id: z.string().optional(), // Aggiunto il campo ID, reso opzionale
   client_absent: z.boolean(),
   work_description: z.string().min(10, { message: "Descrivi i lavori svolti (min. 10 caratteri)." }),
   operative_notes: z.string().optional(),
@@ -61,6 +62,7 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, currentStatu
   const methods = useForm<WorkReportFormValues>({
     resolver: zodResolver(workReportSchema),
     defaultValues: {
+      id: initialData?.id ?? undefined, // Inizializza l'ID
       client_absent: initialData?.client_absent ?? false,
       work_description: initialData?.work_description ?? '',
       operative_notes: initialData?.operative_notes ?? '',
