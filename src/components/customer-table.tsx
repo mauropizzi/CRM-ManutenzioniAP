@@ -12,7 +12,7 @@ import {
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Customer } from '@/types/customer';
 import { useCustomers } from '@/context/customer-context';
-import { Edit, Trash2, PlusCircle, Eye, MapPin } from 'lucide-react'; // Importa l'icona MapPin
+import { Edit, Trash2, PlusCircle, MapPin } from 'lucide-react'; // Rimosso l'import di Eye
 import { Toaster } from '@/components/ui/sonner';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -73,9 +73,9 @@ export const CustomerTable = () => {
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
                     <Link
-                      href={getGoogleMapsLink(customer)} // Usa la funzione per generare il link
-                      target="_blank" // Apre in una nuova scheda
-                      rel="noopener noreferrer" // Buona pratica di sicurezza
+                      href={getGoogleMapsLink(customer)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className={cn(
                         buttonVariants({ variant: "ghost", size: "icon" }),
                         "rounded-md text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-700"
@@ -83,16 +83,6 @@ export const CustomerTable = () => {
                       title="Naviga con Google Maps"
                     >
                       <MapPin size={18} />
-                    </Link>
-                    <Link
-                      href={`/customers/${customer.id}`}
-                      className={cn(
-                        buttonVariants({ variant: "ghost", size: "icon" }),
-                        "rounded-md text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700"
-                      )}
-                      title="Visualizza Cliente"
-                    >
-                      <Eye size={18} />
                     </Link>
                     <Link href={`/customers/${customer.id}/edit`} passHref>
                       <Button
