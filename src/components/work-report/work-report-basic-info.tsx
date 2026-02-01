@@ -2,7 +2,7 @@
 
 import { useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from '@/components/ui/checkbox'; // Importa il componente Checkbox di Shadcn/UI
 import {
   FormControl,
   FormField,
@@ -13,15 +13,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Printer } from 'lucide-react';
 import { WorkReportFormValues } from '@/components/work-report-form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Link from 'next/link'; // Importa Link
+import Link from 'next/link';
 
 interface WorkReportBasicInfoProps {
   clientName?: string;
-  interventionId?: string; // Aggiungo interventionId come prop
+  interventionId?: string;
 }
 
 export const WorkReportBasicInfo = ({ clientName, interventionId }: WorkReportBasicInfoProps) => {
-  const { control, getValues } = useFormContext<WorkReportFormValues>(); // Destruttura getValues qui
+  const { control, getValues, setValue } = useFormContext<WorkReportFormValues>(); // Destruttura setValue qui
 
   return (
     <div className="space-y-4 rounded-lg border p-6 bg-white dark:bg-gray-900">
@@ -43,9 +43,10 @@ export const WorkReportBasicInfo = ({ clientName, interventionId }: WorkReportBa
           render={({ field }) => (
             <FormItem className="flex flex-row items-start space-x-3 space-y-0">
               <FormControl>
-                <Checkbox
+                <Checkbox // Usa il componente Checkbox di Shadcn/UI
                   checked={field.value}
                   onCheckedChange={field.onChange}
+                  className="rounded-sm data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=checked]:bg-blue-500 dark:data-[state=unchecked]:bg-gray-700"
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
@@ -59,8 +60,8 @@ export const WorkReportBasicInfo = ({ clientName, interventionId }: WorkReportBa
 
         {/* Pulsante Stampa Bolla */}
         {interventionId && (
-          <Link 
-            href={`/interventions/${interventionId}/print-work-report`} 
+          <Link
+            href={`/interventions/${interventionId}/print-work-report`}
             className="ml-auto flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <Printer size={16} />
@@ -68,9 +69,9 @@ export const WorkReportBasicInfo = ({ clientName, interventionId }: WorkReportBa
           </Link>
         )}
 
-        <Select onValueChange={(value) => control.setValue('status', value as any)} defaultValue={getValues('status')} className="ml-auto">
+        <Select onValueChange={(value) => setValue('status', value as any)} defaultValue={getValues('status')}> {/* Corretto setValue, rimosso className da Select */}
           <FormControl>
-            <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+            <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 ml-auto"> {/* Aggiunto className a SelectTrigger */}
               <SelectValue placeholder="Seleziona stato" />
             </SelectTrigger>
           </FormControl>

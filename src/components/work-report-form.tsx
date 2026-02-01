@@ -5,7 +5,6 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { WorkReportBasicInfo, TimeEntriesSection, MaterialsSection } from './work-report';
-import { calculateHours } from '@/lib/time-utils';
 
 const timeEntrySchema = z.object({
   date: z.date({ required_error: "Seleziona una data." }),
@@ -18,22 +17,19 @@ const timeEntrySchema = z.object({
 });
 
 const materialSchema = z.object({
-  unit: z.string().optional().or(z.literal('')), // Reso opzionale e accetta stringa vuota
-  quantity: z.coerce.number().min(0, { message: "Quantità non valida." }).default(0),
-  description: z.string().optional().or(z.literal('')), // Reso opzionale e accetta stringa vuota
+  unit: z.string().optional().or(z.literal('')),
+  quantity: z.coerce.number().min(0, { message: "Quantità non valida." }), // Rimosso .default(0)
+  description: z.string().optional().or(z.literal('')),
 });
 
 export const workReportSchema = z.object({
-  id: z.string().optional(), // Aggiunto il campo ID, reso opzionale
+  id: z.string().optional(),
   client_absent: z.boolean(),
   work_description: z.string().min(10, { message: "Descrivi i lavori svolti (min. 10 caratteri)." }),
   operative_notes: z.string().optional(),
   time_entries: z.array(timeEntrySchema).optional(),
   kilometers: z.coerce.number().min(0).optional(),
-  materials: z.array(materialSchema).optional().transform((materials) => {
-    // Filtra i materiali che hanno una descrizione vuota o solo spazi bianchi
-    return materials?.filter(material => material.description && material.description.trim() !== '') || [];
-  }),
+  materials: z.array(materialSchema).optional(), // Rimosso .transform()
   status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']),
 });
 
@@ -62,31 +58,31 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, currentStatu
   const methods = useForm<WorkReportFormValues>({
     resolver: zodResolver(workReportSchema),
     defaultValues: {
-      id: initialData?.id ?? undefined, // Inizializza l'ID
+      id: initialData?.id ?? undefined,
       client_absent: initialData?.client_absent ?? false,
       work_description: initialData?.work_description ?? '',
       operative_notes: initialData?.operative_notes ?? '',
-      time_entries: initialData?.time_entries?.length 
-        ? initialData.time_entries 
+      time_entries: initialData?.time_entries?.length
+        ? initialData.time_entries
         : [DEFAULT_TIME_ENTRY],
       kilometers: initialData?.kilometers ?? 0,
-      materials: initialData?.materials?.length 
-        ? initialData.materials 
+      materials: initialData?.materials?.length
+        ? initialData.materials
         : Array(6).fill(DEFAULT_MATERIAL),
       status: initialData?.status ?? currentStatus,
     } as WorkReportFormValues,
   });
 
-  const { control } = methods;
-
   const handleSubmit = (values: WorkReportFormValues) => {
-    onSubmit(values);
+    // Applica la logica di filtro qui invece che nello schema Zod
+    const filteredMaterials = values.materials?.filter(material => material.description && material.description.trim() !== '') || [];
+    onSubmit({ ...values, materials: filteredMaterials });
   };
 
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8">
-        <WorkReportBasicInfo clientName={clientName} interventionId={initialData?.id} /> {/* Passo l'ID qui */}
+        <WorkReportBasicInfo clientName={clientName} interventionId={initialData?.id} />
         <TimeEntriesSection />
         <MaterialsSection />
 
@@ -102,6 +98,3 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, currentStatu
     </FormProvider>
   );
 };
-
-// Re-export per backward compatibility
-export { calculateHours };
