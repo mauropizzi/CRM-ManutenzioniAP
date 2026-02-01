@@ -23,43 +23,36 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
     serial_number,
     system_location,
     internal_ref,
-    scheduled_date,
-    scheduled_time,
-    status,
-    assigned_technicians,
-    office_notes,
     work_report_data,
   } = intervention;
 
   const totalHours = work_report_data?.time_entries?.reduce((sum, entry) => sum + (entry.total_hours || 0), 0) || 0;
 
   return (
-    <div className="p-8 bg-white text-gray-900 print:p-0 print:text-black">
+    <div className="p-8 bg-white text-gray-900 print:p-0 print:text-black print:font-sans">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8 border-b pb-4 print:border-black">
-        <div className="flex items-center">
+      <div className="flex justify-between items-start mb-8 print:mb-6 border-b pb-4 print:border-black">
+        <div className="flex flex-col items-start">
           <Image
             src="/logo-crm-antonelli-zani.jpg"
             alt="Antonelli & Zani Logo"
-            width={150}
-            height={90}
-            className="mr-4"
+            width={180} // Slightly larger logo for prominence
+            height={100}
+            className="mb-2"
           />
-          <div>
-            <h1 className="text-2xl font-bold">Antonelli & Zani</h1>
-            <p className="text-lg">Refrigerazioni</p>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900 print:text-black">Antonelli & Zani</h1>
+          <p className="text-lg text-gray-700 print:text-black">Refrigerazioni</p>
         </div>
-        <div className="text-right">
-          <h2 className="text-3xl font-bold mb-2">Bolla di Consegna</h2>
-          <p className="text-sm">Data: {format(new Date(), 'dd/MM/yyyy', { locale: it })}</p>
-          <p className="text-sm">Intervento ID: {intervention.id.substring(0, 8).toUpperCase()}</p>
+        <div className="text-right mt-4">
+          <h2 className="text-3xl font-bold text-blue-700 print:text-blue-900 mb-2">Bolla di Consegna</h2>
+          <p className="text-sm text-gray-700 print:text-black">Data: {format(new Date(), 'dd/MM/yyyy', { locale: it })}</p>
+          <p className="text-sm text-gray-700 print:text-black">Intervento ID: {intervention.id.substring(0, 8).toUpperCase()}</p>
         </div>
       </div>
 
       {/* Dati Cliente */}
-      <div className="mb-8 border rounded-lg p-4 print:border-black">
-        <h3 className="text-xl font-semibold mb-4">Dati Cliente</h3>
+      <div className="mb-8 print:mb-6 border rounded-lg p-4 print:border-black break-inside-avoid">
+        <h3 className="text-xl font-semibold mb-4 text-gray-800 print:text-black">Dati Cliente</h3>
         <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
           <div>
             <p><span className="font-medium">Ragione Sociale:</span> {client_company_name}</p>
@@ -74,8 +67,8 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
       </div>
 
       {/* Dati Impianto */}
-      <div className="mb-8 border rounded-lg p-4 print:border-black">
-        <h3 className="text-xl font-semibold mb-4">Dati Impianto</h3>
+      <div className="mb-8 print:mb-6 border rounded-lg p-4 print:border-black break-inside-avoid">
+        <h3 className="text-xl font-semibold mb-4 text-gray-800 print:text-black">Dati Impianto</h3>
         <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
           <div>
             <p><span className="font-medium">Tipo Impianto:</span> {system_type}</p>
@@ -91,19 +84,19 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
       </div>
 
       {/* Dettagli Lavoro Svolto */}
-      <div className="mb-8 border rounded-lg p-4 print:border-black">
-        <h3 className="text-xl font-semibold mb-4">Dettagli Lavoro Svolto</h3>
+      <div className="mb-8 print:mb-6 border rounded-lg p-4 print:border-black break-inside-avoid">
+        <h3 className="text-xl font-semibold mb-4 text-gray-800 print:text-black">Dettagli Lavoro Svolto</h3>
         <p className="text-sm mb-2"><span className="font-medium">Descrizione:</span> {work_report_data?.work_description || 'Nessuna descrizione fornita.'}</p>
         <p className="text-sm"><span className="font-medium">Note Operative:</span> {work_report_data?.operative_notes || 'Nessuna nota operativa.'}</p>
       </div>
 
       {/* Ore di Lavoro */}
       {work_report_data?.time_entries && work_report_data.time_entries.length > 0 && (
-        <div className="mb-8 border rounded-lg p-4 print:border-black">
-          <h3 className="text-xl font-semibold mb-4">Ore di Lavoro</h3>
+        <div className="mb-8 print:mb-6 border rounded-lg p-4 print:border-black break-inside-avoid">
+          <h3 className="text-xl font-semibold mb-4 text-gray-800 print:text-black">Ore di Lavoro</h3>
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b print:border-black">
+              <tr className="border-b border-gray-300 print:border-black">
                 <th className="text-left py-2">Data</th>
                 <th className="text-left py-2">Tecnico</th>
                 <th className="text-left py-2">Fascia 1</th>
@@ -123,11 +116,11 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
               ))}
             </tbody>
           </table>
-          <div className="text-right mt-4 text-base font-semibold">
+          <div className="text-right mt-4 text-base font-semibold text-gray-900 print:text-black">
             Totale Ore: {totalHours.toFixed(2)}
           </div>
           {work_report_data.kilometers !== undefined && (
-            <div className="text-right mt-2 text-base font-semibold">
+            <div className="text-right mt-2 text-base font-semibold text-gray-900 print:text-black">
               Km percorsi: {work_report_data.kilometers}
             </div>
           )}
@@ -136,11 +129,11 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
 
       {/* Materiali Utilizzati */}
       {work_report_data?.materials && work_report_data.materials.length > 0 && (
-        <div className="mb-8 border rounded-lg p-4 print:border-black">
-          <h3 className="text-xl font-semibold mb-4">Materiali Utilizzati</h3>
+        <div className="mb-8 print:mb-6 border rounded-lg p-4 print:border-black break-inside-avoid">
+          <h3 className="text-xl font-semibold mb-4 text-gray-800 print:text-black">Materiali Utilizzati</h3>
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b print:border-black">
+              <tr className="border-b border-gray-300 print:border-black">
                 <th className="text-left py-2">U.M.</th>
                 <th className="text-left py-2">Quantità</th>
                 <th className="text-left py-2">Descrizione</th>
@@ -160,13 +153,13 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
       )}
 
       {/* Firme */}
-      <div className="grid grid-cols-2 gap-8 mt-12 text-sm">
+      <div className="grid grid-cols-2 gap-8 mt-12 text-sm print:mt-8 break-inside-avoid">
         <div>
-          <p className="font-medium mb-2">Firma Cliente:</p>
+          <p className="font-medium mb-2 text-gray-900 print:text-black">Firma Cliente:</p>
           <div className="border-b border-gray-400 w-full h-16 print:border-black"></div>
         </div>
         <div>
-          <p className="font-medium mb-2">Firma Tecnico:</p>
+          <p className="font-medium mb-2 text-gray-900 print:text-black">Firma Tecnico:</p>
           <div className="border-b border-gray-400 w-full h-16 print:border-black"></div>
         </div>
       </div>
