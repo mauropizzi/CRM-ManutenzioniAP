@@ -18,14 +18,14 @@ import {
 } from '@/components/ui/select';
 import { Trash2 } from 'lucide-react';
 import { WorkReportFormValues } from '@/components/work-report-form';
-import { MaterialSearchInput } from './material-search-input'; // Import the new component
-import { UNITS } from '@/types/material'; // Import UNITS from material types
 
 interface MaterialRowProps {
   index: number;
   onRemove: () => void;
   canRemove: boolean;
 }
+
+const UNITS = ['PZ', 'MT', 'KG', 'LT', 'NR'] as const;
 
 export const MaterialRow = ({ index, onRemove, canRemove }: MaterialRowProps) => {
   const { control } = useFormContext<WorkReportFormValues>();
@@ -87,7 +87,7 @@ export const MaterialRow = ({ index, onRemove, canRemove }: MaterialRowProps) =>
                 Descrizione materiale
               </FormLabel>
               <FormControl>
-                <MaterialSearchInput index={index} field={field} /> {/* Use the new component */}
+                <Input placeholder="Descrizione" {...field} />
               </FormControl>
             </FormItem>
           )}
