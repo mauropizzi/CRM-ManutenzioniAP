@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from 'react'; // Importo useEffect
+import { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { WorkReportFormValues } from '@/components/work-report-form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { timeOptions, calculateHours } from '@/lib/time-utils'; // Importa calculateHours
+import { useTechnicians } from '@/context/technician-context'; // Importa il contesto dei tecnici
 
 interface TimeEntryRowProps {
   index: number;
@@ -27,6 +28,7 @@ interface TimeEntryRowProps {
 
 export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) => {
   const { control, watch, setValue } = useFormContext<WorkReportFormValues>();
+  const { technicians, loading: techniciansLoading } = useTechnicians(); // Ottieni i tecnici dal contesto
 
   // Watch per le fasce orarie di questa riga
   const timeSlot1Start = watch(`time_entries.${index}.time_slot_1_start`);
@@ -94,9 +96,24 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs">Tecnico</FormLabel>
-              <FormControl>
-                <Input placeholder="Nome tecnico" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona tecnico" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {techniciansLoading ? (
+                    <SelectItem value="loading" disabled>Caricamento tecnici...</SelectItem>
+                  ) : (
+                    technicians.map((technician) => (
+                      <SelectItem key={technician.id} value={`${technician.first_name} ${technician.last_name}`}>
+                        {`${technician.first_name} ${technician.last_name}`}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />
