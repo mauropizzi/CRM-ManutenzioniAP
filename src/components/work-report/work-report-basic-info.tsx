@@ -21,8 +21,7 @@ interface WorkReportBasicInfoProps {
 }
 
 export const WorkReportBasicInfo = ({ clientName, interventionId }: WorkReportBasicInfoProps) => {
-  const { control } = useFormContext<WorkReportFormValues>();
-  // Rimosso: const interventionId = getValues('id'); // Ora viene passato come prop
+  const { control, getValues } = useFormContext<WorkReportFormValues>(); // Destruttura getValues qui
 
   return (
     <div className="space-y-4 rounded-lg border p-6 bg-white dark:bg-gray-900">
@@ -60,22 +59,16 @@ export const WorkReportBasicInfo = ({ clientName, interventionId }: WorkReportBa
 
         {/* Pulsante Stampa Bolla */}
         {interventionId && (
-          <Link href={`/interventions/${interventionId}/print-work-report`} passHref>
-            <Button 
-              asChild // Use asChild to pass props to the child <a> tag
-              variant="outline" 
-              className="ml-auto flex items-center gap-2"
-              // type="button" is not needed when asChild is true and it's a link
-            >
-              <a className="flex items-center gap-2"> {/* This <a> tag will receive the href */}
-                <Printer size={16} />
-                Stampa bolla
-              </a>
-            </Button>
+          <Link 
+            href={`/interventions/${interventionId}/print-work-report`} 
+            className="ml-auto flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            <Printer size={16} />
+            Stampa bolla
           </Link>
         )}
 
-        <Select onValueChange={(value) => control.setValue('status', value as any)} defaultValue={control.getValues('status')} className="ml-auto">
+        <Select onValueChange={(value) => control.setValue('status', value as any)} defaultValue={getValues('status')} className="ml-auto">
           <FormControl>
             <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
               <SelectValue placeholder="Seleziona stato" />
