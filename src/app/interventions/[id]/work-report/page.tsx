@@ -49,7 +49,7 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
 
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
           <WorkReportForm
-            initialData={intervention.work_report_data || {}} // Passa work_report_data o un oggetto vuoto
+            initialData={{ ...intervention.work_report_data, id: intervention.id } || { id: intervention.id }} // Passo work_report_data e l'ID dell'intervento
             onSubmit={handleSubmit}
             clientName={intervention.client_company_name}
             currentStatus={intervention.status}
