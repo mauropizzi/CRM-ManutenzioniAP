@@ -17,11 +17,12 @@ import Link from 'next/link'; // Importa Link
 
 interface WorkReportBasicInfoProps {
   clientName?: string;
+  interventionId?: string; // Aggiungo interventionId come prop
 }
 
-export const WorkReportBasicInfo = ({ clientName }: WorkReportBasicInfoProps) => {
-  const { control, getValues } = useFormContext<WorkReportFormValues>();
-  const interventionId = getValues('id'); // Assumo che l'ID dell'intervento sia disponibile nel form context
+export const WorkReportBasicInfo = ({ clientName, interventionId }: WorkReportBasicInfoProps) => {
+  const { control } = useFormContext<WorkReportFormValues>();
+  // Rimosso: const interventionId = getValues('id'); // Ora viene passato come prop
 
   return (
     <div className="space-y-4 rounded-lg border p-6 bg-white dark:bg-gray-900">

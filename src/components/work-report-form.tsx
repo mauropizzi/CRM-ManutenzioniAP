@@ -86,7 +86,7 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, currentStatu
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8">
-        <WorkReportBasicInfo clientName={clientName} />
+        <WorkReportBasicInfo clientName={clientName} interventionId={initialData?.id} /> {/* Passo l'ID qui */}
         <TimeEntriesSection />
         <MaterialsSection />
 
