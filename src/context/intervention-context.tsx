@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { InterventionRequest } from '@/types/intervention';
+import { InterventionRequest, WorkReportData, TimeEntry } from '@/types/intervention';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './auth-context'; // Importo useAuth
@@ -15,6 +15,33 @@ interface InterventionContextType {
 }
 
 const InterventionContext = createContext<InterventionContextType | undefined>(undefined);
+
+// Helper per deserializzare work_report_data
+const parseWorkReportData = (data: any): WorkReportData | undefined => {
+  if (!data) return undefined;
+  const parsed: WorkReportData = {
+    ...data,
+    time_entries: data.time_entries?.map((entry: any) => ({
+      ...entry,
+      date: entry.date ? new Date(entry.date) : undefined,
+    })),
+  };
+  return parsed;
+};
+
+// Helper per serializzare work_report_data
+const serializeWorkReportData = (data: WorkReportData | undefined): any | undefined => {
+  if (!data) return undefined;
+  const serialized: any = {
+    ...data,
+    time_entries: data.time_entries?.map((entry: TimeEntry) => ({
+      ...entry,
+      date: entry.date ? entry.date.toISOString().split('T')[0] : undefined, // Formato 'YYYY-MM-DD' per il database
+    })),
+  };
+  return serialized;
+};
+
 
 export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const [interventionRequests, setInterventionRequests] = useState<InterventionRequest[]>([]);
@@ -52,6 +79,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         const parsedData = data.map(item => ({
           ...item,
           scheduled_date: item.scheduled_date ? new Date(item.scheduled_date) : undefined,
+          work_report_data: parseWorkReportData(item.work_report_data), // Deserializza work_report_data
         })) as InterventionRequest[];
         setInterventionRequests(parsedData);
       }
@@ -76,6 +104,8 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       const requestWithUserId = {
         ...newRequest,
         user_id: user.id,
+        // Serializza work_report_data prima dell'inserimento
+        work_report_data: serializeWorkReportData(newRequest.work_report_data),
       };
 
       console.log('Adding intervention:', requestWithUserId);
@@ -95,7 +125,13 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       console.log('Intervention added:', data);
 
       if (data) {
-        setInterventionRequests((prev) => [data as InterventionRequest, ...prev]);
+        // Deserializza work_report_data dopo l'inserimento per mantenere la coerenza nel frontend
+        const parsedData = {
+          ...data,
+          scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
+          work_report_data: parseWorkReportData(data.work_report_data),
+        } as InterventionRequest;
+        setInterventionRequests((prev) => [parsedData, ...prev]);
         toast.success("Richiesta di intervento aggiunta con successo!");
       }
     } catch (error: any) {
@@ -108,9 +144,16 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Updating intervention:', updatedRequest);
       
+      // Prepara l'oggetto per l'aggiornamento, serializzando work_report_data
+      const updatePayload = {
+        ...updatedRequest,
+        scheduled_date: updatedRequest.scheduled_date ? updatedRequest.scheduled_date.toISOString().split('T')[0] : null,
+        work_report_data: serializeWorkReportData(updatedRequest.work_report_data),
+      };
+
       const { data, error } = await supabase
         .from('interventions')
-        .update(updatedRequest)
+        .update(updatePayload)
         .eq('id', updatedRequest.id)
         .select()
         .single();
@@ -124,9 +167,15 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       console.log('Intervention updated:', data);
 
       if (data) {
+        // Deserializza work_report_data dopo l'aggiornamento per mantenere la coerenza nel frontend
+        const parsedData = {
+          ...data,
+          scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
+          work_report_data: parseWorkReportData(data.work_report_data),
+        } as InterventionRequest;
         setInterventionRequests((prev) =>
           prev.map((request) =>
-            request.id === updatedRequest.id ? (data as InterventionRequest) : request
+            request.id === updatedRequest.id ? parsedData : request
           )
         );
         toast.success("Richiesta di intervento aggiornata con successo!");
