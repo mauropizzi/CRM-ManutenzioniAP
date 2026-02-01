@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Material } from '@/types/material';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './auth-context'; // Importo useAuth
+import { useAuth } from './auth-context';
 
 interface MaterialContextType {
   materials: Material[];
@@ -19,16 +19,16 @@ const MaterialContext = createContext<MaterialContextType | undefined>(undefined
 export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); // Ottengo l'utente dal contesto di autenticazione
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && user) { // Recupero i materiali solo se l'utente è autenticato
+    if (typeof window !== 'undefined' && user) {
       fetchMaterials();
     } else if (!user) {
       setMaterials([]);
       setLoading(false);
     }
-  }, [user]); // Dipendenza dall'oggetto utente
+  }, [user]);
 
   const fetchMaterials = async () => {
     try {
@@ -60,7 +60,6 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
 
   const addMaterial = async (newMaterial: Omit<Material, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -156,12 +155,12 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <MaterialContext.Provider value={{ 
-      materials, 
-      addMaterial, 
-      updateMaterial, 
+    <MaterialContext.Provider value={{
+      materials,
+      addMaterial,
+      updateMaterial,
       deleteMaterial,
-      loading 
+      loading
     }}>
       {children}
     </MaterialContext.Provider>
