@@ -9,18 +9,18 @@ export interface TimeEntry {
 }
 
 export interface MaterialUsed {
-  unit: string; // e.g., "PZ", "MT", "KG"
+  unit?: string; // e.g., "PZ", "MT", "KG" - reso opzionale
   quantity: number;
-  description: string;
+  description?: string; // reso opzionale
 }
 
 export interface WorkReportData {
   client_absent?: boolean;
   work_description?: string;
-  operative_notes?: string;
+  operative_notes?: string; // Rinominato per coerenza con WorkReportForm
   time_entries?: TimeEntry[];
   kilometers?: number;
-  materials?: MaterialUsed[];
+  materials?: MaterialUsed[]; // Rinominato per coerenza con WorkReportForm
 }
 
 export interface InterventionRequest {
@@ -46,17 +46,11 @@ export interface InterventionRequest {
   assigned_technicians?: string; // Opzionale, testo libero
   office_notes?: string; // Opzionale
 
-  // Dati di conclusione intervento (nuovi campi)
+  // Dati di conclusione intervento (specifici per l'esito, non per la bolla di lavoro)
   intervention_concluded?: boolean;
   request_quote?: boolean;
-  client_absent?: boolean;
-  work_description?: string;
-  operative_notes_conclusion?: string; // Rinominato per evitare conflitto con office_notes
-  time_entries?: TimeEntry[];
-  kilometers?: number;
-  materials_used?: MaterialUsed[];
   
-  // Bolla di lavoro
+  // Bolla di lavoro (ora un oggetto annidato)
   work_report_data?: WorkReportData;
   
   // Metadata

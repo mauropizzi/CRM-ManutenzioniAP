@@ -30,7 +30,9 @@ export default function ConcludeInterventionPage({ params }: ConcludeInterventio
 
     await updateInterventionRequest({
       ...interventionToConclude,
-      ...data,
+      intervention_concluded: data.intervention_concluded,
+      request_quote: data.request_quote,
+      office_notes: data.office_notes,
       status: updatedStatus,
     });
     router.push('/interventions');

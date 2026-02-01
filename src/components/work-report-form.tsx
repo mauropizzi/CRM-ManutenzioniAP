@@ -1,5 +1,3 @@
-"use client";
-
 import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,18 +18,22 @@ const timeEntrySchema = z.object({
 });
 
 const materialSchema = z.object({
-  unit: z.string().min(1, { message: "Seleziona U.M." }),
-  quantity: z.coerce.number().min(0, { message: "Quantità non valida." }),
-  description: z.string().min(1, { message: "Inserisci descrizione." }),
+  unit: z.string().optional().or(z.literal('')), // Reso opzionale e accetta stringa vuota
+  quantity: z.coerce.number().min(0, { message: "Quantità non valida." }).default(0),
+  description: z.string().optional().or(z.literal('')), // Reso opzionale e accetta stringa vuota
 });
 
 export const workReportSchema = z.object({
   client_absent: z.boolean(),
   work_description: z.string().min(10, { message: "Descrivi i lavori svolti (min. 10 caratteri)." }),
   operative_notes: z.string().optional(),
-  time_entries: z.array(timeEntrySchema).min(1, { message: "Aggiungi almeno una riga ore." }),
+  time_entries: z.array(timeEntrySchema).optional(),
   kilometers: z.coerce.number().min(0).optional(),
-  materials: z.array(materialSchema),
+  materials: z.array(materialSchema).optional().transform((materials) => {
+    // Filtra i materiali che hanno una descrizione vuota o solo spazi bianchi
+    return materials?.filter(material => material.description && material.description.trim() !== '') || [];
+  }),
+  status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']),
 });
 
 export type WorkReportFormValues = z.infer<typeof workReportSchema>;
@@ -40,6 +42,7 @@ interface WorkReportFormProps {
   initialData?: Partial<WorkReportFormValues>;
   onSubmit: (data: WorkReportFormValues) => void;
   clientName?: string;
+  currentStatus: 'Da fare' | 'In corso' | 'Completato' | 'Annullato';
 }
 
 const DEFAULT_TIME_ENTRY = {
@@ -54,7 +57,7 @@ const DEFAULT_TIME_ENTRY = {
 
 const DEFAULT_MATERIAL = { unit: 'PZ', quantity: 0, description: '' };
 
-export const WorkReportForm = ({ initialData, onSubmit, clientName }: WorkReportFormProps) => {
+export const WorkReportForm = ({ initialData, onSubmit, clientName, currentStatus }: WorkReportFormProps) => {
   const methods = useForm<WorkReportFormValues>({
     resolver: zodResolver(workReportSchema),
     defaultValues: {
@@ -68,8 +71,11 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName }: WorkReport
       materials: initialData?.materials?.length 
         ? initialData.materials 
         : Array(6).fill(DEFAULT_MATERIAL),
+      status: initialData?.status ?? currentStatus,
     } as WorkReportFormValues,
   });
+
+  const { control } = methods;
 
   const handleSubmit = (values: WorkReportFormValues) => {
     onSubmit(values);
@@ -83,7 +89,7 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName }: WorkReport
         <MaterialsSection />
 
         <div className="flex justify-end gap-4 pt-4">
-          <Link href="/interventions">
+          <Link href="/interventions" passHref>
             <Button type="button" variant="outline">Annulla</Button>
           </Link>
           <Button type="submit" className="bg-blue-600 hover:bg-blue-700">

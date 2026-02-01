@@ -25,10 +25,12 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
   }
 
   const handleSubmit = async (data: WorkReportFormValues) => {
+    const { status, ...workReportDataFields } = data; // Estrai status e raggruppa gli altri campi per work_report_data
+
     await updateInterventionRequest({
-      ...intervention,
-      ...data,
-      status: 'Completato',
+      ...intervention, // Mantieni i campi esistenti dell'intervento
+      work_report_data: workReportDataFields, // Assegna i campi raggruppati a work_report_data
+      status: status, // Aggiorna lo stato a livello radice
     });
     router.push('/interventions');
   };
@@ -47,9 +49,10 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
 
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
           <WorkReportForm
-            initialData={intervention.work_report_data as any}
+            initialData={intervention.work_report_data || {}} // Passa work_report_data o un oggetto vuoto
             onSubmit={handleSubmit}
             clientName={intervention.client_company_name}
+            currentStatus={intervention.status}
           />
         </div>
       </div>

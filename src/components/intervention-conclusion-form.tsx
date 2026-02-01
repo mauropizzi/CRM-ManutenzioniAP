@@ -7,53 +7,23 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
   FormMessage,
 } from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { InterventionRequest } from '@/types/intervention';
-import { calculateHours } from '@/lib/time-utils';
 import {
   InterventionOutcomeSection,
-  WorkReportDetailsSection,
-  TimeEntriesConclusionSection,
-  MaterialsUsedConclusionSection,
-} from './intervention-conclusion-form'; // Importo i nuovi componenti
-
-// Schemi Zod per le sottosezioni
-const timeEntrySchema = z.object({
-  date: z.date({ required_error: "Seleziona una data." }),
-  technician: z.string().min(2, { message: "Inserisci il nome del tecnico." }),
-  time_slot_1_start: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "Formato ora non valido (HH:MM)." }),
-  time_slot_1_end: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "Formato ora non valido (HH:MM)." }),
-  time_slot_2_start: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "Formato ora non valido (HH:MM)." }).optional().or(z.literal('')),
-  time_slot_2_end: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "Formato ora non valido (HH:MM)." }).optional().or(z.literal('')),
-  total_hours: z.number().min(0),
-}).refine(data => {
-  const hours = calculateHours(data.time_slot_1_start, data.time_slot_1_end, data.time_slot_2_start, data.time_slot_2_end);
-  return hours > 0 || (data.time_slot_1_start === '' && data.time_slot_1_end === '' && data.time_slot_2_start === '' && data.time_slot_2_end === '');
-}, {
-  message: "Le ore di lavoro devono essere maggiori di zero se inserite.",
-  path: ["total_hours"],
-});
-
-const materialUsedSchema = z.object({
-  unit: z.string().optional(), // Reso opzionale
-  quantity: z.coerce.number().min(0, { message: "La quantità non può essere negativa." }).default(0), // Default a 0, ma opzionale
-  description: z.string().optional(), // Reso opzionale
-});
+} from './intervention-conclusion-form'; // Importo solo la sezione esito
 
 export const interventionConclusionFormSchema = z.object({
   intervention_concluded: z.boolean().optional(),
   request_quote: z.boolean().optional(),
-  client_absent: z.boolean().optional(),
-  work_description: z.string().min(10, { message: "Descrivi i lavori svolti (almeno 10 caratteri)." }).optional(),
-  operative_notes_conclusion: z.string().optional(),
-  time_entries: z.array(timeEntrySchema).optional(),
-  kilometers: z.coerce.number().min(0, { message: "I Km non possono essere negativi." }).optional(),
-  materials_used: z.array(materialUsedSchema).optional().transform((materials) => {
-    // Filtra i materiali che hanno una descrizione vuota o solo spazi bianchi
-    return materials?.filter(material => material.description && material.description.trim() !== '') || [];
-  }),
+  office_notes: z.string().optional().or(z.literal('')), // Ora gestisce solo office_notes
 });
 
 export type InterventionConclusionFormValues = z.infer<typeof interventionConclusionFormSchema>;
@@ -63,26 +33,13 @@ interface InterventionConclusionFormProps {
   onSubmit: (data: InterventionConclusionFormValues) => void;
 }
 
-const DEFAULT_TIME_ENTRY = { date: new Date(), technician: '', time_slot_1_start: '', time_slot_1_end: '', time_slot_2_start: '', time_slot_2_end: '', total_hours: 0 };
-const DEFAULT_MATERIAL = { unit: 'PZ', quantity: 0, description: '' };
-
 export const InterventionConclusionForm = ({ initialData, onSubmit }: InterventionConclusionFormProps) => {
   const methods = useForm<InterventionConclusionFormValues>({
     resolver: zodResolver(interventionConclusionFormSchema),
     defaultValues: {
       intervention_concluded: initialData?.intervention_concluded ?? false,
       request_quote: initialData?.request_quote ?? false,
-      client_absent: initialData?.client_absent ?? false,
-      work_description: initialData?.work_description ?? '',
-      operative_notes_conclusion: initialData?.operative_notes_conclusion ?? '',
-      time_entries: initialData?.time_entries?.map(entry => ({
-        ...entry,
-        date: new Date(entry.date),
-      })) ?? [DEFAULT_TIME_ENTRY], // Assicurati che ci sia almeno una riga di default
-      kilometers: initialData?.kilometers ?? 0,
-      materials_used: initialData?.materials_used?.length
-        ? initialData.materials_used
-        : Array(6).fill(DEFAULT_MATERIAL), // 6 righe di default
+      office_notes: initialData?.office_notes ?? '',
     },
   });
 
@@ -95,9 +52,24 @@ export const InterventionConclusionForm = ({ initialData, onSubmit }: Interventi
       <Form {...methods}>
         <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8 p-4">
           <InterventionOutcomeSection />
-          <WorkReportDetailsSection />
-          <TimeEntriesConclusionSection />
-          <MaterialsUsedConclusionSection />
+
+          {/* Sezione Note Ufficio */}
+          <div className="grid gap-6 rounded-lg border p-4 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Note Ufficio</h3>
+            <FormField
+              control={methods.control}
+              name="office_notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Note Ufficio (opz.)</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Aggiungi note per l'ufficio..." {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[100px]" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <div className="flex justify-end gap-2 pt-4">
             <Link href="/interventions" passHref>
