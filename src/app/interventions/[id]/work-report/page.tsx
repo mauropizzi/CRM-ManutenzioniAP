@@ -43,13 +43,14 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
             Bolla di Consegna
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Intervento per: {intervention.client_company_name} - {intervention.system_type} {intervention.brand} {intervention.model}
+            Intervento per: {intervention.client_company_name} - {intervention.system_type}{" "}
+            {intervention.brand} {intervention.model}
           </p>
         </div>
 
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
           <WorkReportForm
-            initialData={{ ...intervention.work_report_data, id: intervention.id } || { id: intervention.id }} // Passo work_report_data e l'ID dell'intervento
+            initialData={{ ...(intervention.work_report_data ?? {}), id: intervention.id }} // Corretto l'uso di ?? e aggiunto l'ID
             onSubmit={handleSubmit}
             clientName={intervention.client_company_name}
             currentStatus={intervention.status}
