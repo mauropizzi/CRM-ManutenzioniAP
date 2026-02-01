@@ -1,7 +1,7 @@
 "use client";
 
 import React, { use } from 'react';
-import { InterventionConclusionForm, InterventionConclusionFormValues } from '../../../components/intervention-conclusion-form/intervention-conclusion-form'; // Percorso relativo corretto
+import { InterventionConclusionForm, InterventionConclusionFormValues } from '@/components/intervention-conclusion-form'; // Utilizzo l'alias e il barrel file
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
