@@ -9,14 +9,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button, buttonVariants } from '@/components/ui/button'; // Importa buttonVariants
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Customer } from '@/types/customer';
 import { useCustomers } from '@/context/customer-context';
-import { Edit, Trash2, PlusCircle, Eye } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Eye, MapPin } from 'lucide-react'; // Importa l'icona MapPin
 import { Toaster } from '@/components/ui/sonner';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { cn } from '@/lib/utils'; // Importa cn per unire le classi
+import { cn } from '@/lib/utils';
+
+// Funzione per generare il link di Google Maps
+const getGoogleMapsLink = (customer: Customer) => {
+  const address = `${customer.indirizzo}, ${customer.citta}, ${customer.cap}, ${customer.provincia}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+};
 
 export const CustomerTable = () => {
   const { customers, deleteCustomer } = useCustomers();
@@ -66,6 +72,18 @@ export const CustomerTable = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
+                    <Link
+                      href={getGoogleMapsLink(customer)} // Usa la funzione per generare il link
+                      target="_blank" // Apre in una nuova scheda
+                      rel="noopener noreferrer" // Buona pratica di sicurezza
+                      className={cn(
+                        buttonVariants({ variant: "ghost", size: "icon" }),
+                        "rounded-md text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-700"
+                      )}
+                      title="Naviga con Google Maps"
+                    >
+                      <MapPin size={18} />
+                    </Link>
                     <Link
                       href={`/customers/${customer.id}`}
                       className={cn(
