@@ -18,14 +18,14 @@ import {
 } from '@/components/ui/select';
 import { Trash2 } from 'lucide-react';
 import { WorkReportFormValues } from '@/components/work-report-form';
-import { MaterialSearchInput } from './material-search-input'; // Import the new component
-import { UNITS } from '@/types/material'; // Import UNITS from material types
 
 interface MaterialRowProps {
   index: number;
   onRemove: () => void;
   canRemove: boolean;
 }
+
+const UNITS = ['PZ', 'MT', 'KG', 'LT', 'NR'] as const;
 
 export const MaterialRow = ({ index, onRemove, canRemove }: MaterialRowProps) => {
   const { control } = useFormContext<WorkReportFormValues>();
@@ -41,9 +41,9 @@ export const MaterialRow = ({ index, onRemove, canRemove }: MaterialRowProps) =>
               <FormLabel className={`text-xs ${index > 0 ? 'sr-only' : ''}`}>
                 U.M.
               </FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger ref={field.ref}> {/* Pass field.ref here */}
+                  <SelectTrigger>
                     <SelectValue placeholder="U.M." />
                   </SelectTrigger>
                 </FormControl>
@@ -87,7 +87,7 @@ export const MaterialRow = ({ index, onRemove, canRemove }: MaterialRowProps) =>
                 Descrizione materiale
               </FormLabel>
               <FormControl>
-                <MaterialSearchInput index={index} field={field} /> {/* Use the new component */}
+                <Input placeholder="Descrizione" {...field} />
               </FormControl>
             </FormItem>
           )}

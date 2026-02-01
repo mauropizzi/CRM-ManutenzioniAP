@@ -21,12 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Material, Unit, UNITS } from '@/types/material';
+import { Material, Unit, UNITS } from '@/types/material'; // Import Unit and UNITS from types
 import Link from 'next/link';
 
 export const materialFormSchema = z.object({
   unit: z.enum(UNITS, { required_error: "Seleziona un'unità di misura." }),
-  // quantity: z.coerce.number().min(0, { message: "La quantità non può essere negativa." }), // Rimosso
+  quantity: z.coerce.number().min(0, { message: "La quantità non può essere negativa." }),
   description: z.string().min(2, { message: "La descrizione deve contenere almeno 2 caratteri." }),
 });
 
@@ -42,7 +42,7 @@ export const MaterialForm = ({ initialData, onSubmit }: MaterialFormProps) => {
     resolver: zodResolver(materialFormSchema),
     defaultValues: {
       unit: initialData?.unit ?? 'PZ',
-      // quantity: initialData?.quantity ?? 0, // Rimosso
+      quantity: initialData?.quantity ?? 0,
       description: initialData?.description ?? '',
     },
   });
@@ -50,7 +50,7 @@ export const MaterialForm = ({ initialData, onSubmit }: MaterialFormProps) => {
   useEffect(() => {
     form.reset({
       unit: initialData?.unit ?? 'PZ',
-      // quantity: initialData?.quantity ?? 0, // Rimosso
+      quantity: initialData?.quantity ?? 0,
       description: initialData?.description ?? '',
     });
   }, [initialData, form]);
@@ -88,7 +88,19 @@ export const MaterialForm = ({ initialData, onSubmit }: MaterialFormProps) => {
               </FormItem>
             )}
           />
-          {/* Campo Quantità rimosso */}
+          <FormField
+            control={form.control}
+            name="quantity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-gray-700 dark:text-gray-300">Quantità *</FormLabel>
+                <FormControl>
+                  <Input type="number" min="0" placeholder="0" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="description"

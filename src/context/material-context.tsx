@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Material } from '@/types/material';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './auth-context';
+import { useAuth } from './auth-context'; // Importo useAuth
 
 interface MaterialContextType {
   materials: Material[];
@@ -19,16 +19,16 @@ const MaterialContext = createContext<MaterialContextType | undefined>(undefined
 export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user } = useAuth(); // Ottengo l'utente dal contesto di autenticazione
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && user) {
+    if (typeof window !== 'undefined' && user) { // Recupero i materiali solo se l'utente è autenticato
       fetchMaterials();
     } else if (!user) {
       setMaterials([]);
       setLoading(false);
     }
-  }, [user]);
+  }, [user]); // Dipendenza dall'oggetto utente
 
   const fetchMaterials = async () => {
     try {
@@ -60,6 +60,7 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
 
   const addMaterial = async (newMaterial: Omit<Material, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -77,10 +78,8 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
       const { data, error } = await supabase
         .from('materials')
         .insert([materialWithUserId])
-        .select(); // Rimosso .single()
-
-      console.log('Supabase insert response - data:', data); // Log dettagliato
-      console.log('Supabase insert response - error:', error); // Log dettagliato
+        .select()
+        .single();
 
       if (error) {
         console.error('Supabase error adding material:', error);
@@ -88,12 +87,11 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (data && data.length > 0) { // Verifica se data è un array e contiene elementi
-        setMaterials((prev) => [data[0] as Material, ...prev]); // Prendi il primo elemento
+      console.log('Material added:', data);
+
+      if (data) {
+        setMaterials((prev) => [data as Material, ...prev]);
         toast.success("Materiale aggiunto con successo!");
-      } else {
-        console.warn('Supabase insert ha restituito nessun dato e nessun errore. Questo potrebbe indicare un problema di RLS o una query che non ha trovato righe corrispondenti.');
-        toast.error("Impossibile aggiungere il materiale. Verifica i permessi o riprova.");
       }
     } catch (error: any) {
       console.error('Exception adding material:', error);
@@ -158,12 +156,12 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <MaterialContext.Provider value={{
-      materials,
-      addMaterial,
-      updateMaterial,
+    <MaterialContext.Provider value={{ 
+      materials, 
+      addMaterial, 
+      updateMaterial, 
       deleteMaterial,
-      loading
+      loading 
     }}>
       {children}
     </MaterialContext.Provider>
