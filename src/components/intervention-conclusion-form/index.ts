@@ -1,2 +1,2 @@
-export { interventionConclusionFormSchema, InterventionConclusionFormValues, InterventionConclusionForm } from './InterventionConclusionForm';
+export { interventionConclusionFormSchema, InterventionConclusionFormValues, InterventionConclusionForm } from './intervention-conclusion-form';
 export { InterventionOutcomeSection } from './intervention-outcome-section';

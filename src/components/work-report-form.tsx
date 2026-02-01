@@ -5,7 +5,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { WorkReportBasicInfo, TimeEntriesSection, MaterialsSection } from './work-report';
-import { calculateHours } from '@/lib/time-utils'; // Importa calculateHours direttamente
+import { calculateHours } from '@/lib/time-utils';
 
 const timeEntrySchema = z.object({
   date: z.date({ required_error: "Seleziona una data." }),
@@ -102,3 +102,6 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, currentStatu
     </FormProvider>
   );
 };
+
+// Re-export per backward compatibility
+export { calculateHours };
