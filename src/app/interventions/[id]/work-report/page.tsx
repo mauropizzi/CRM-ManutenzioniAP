@@ -25,14 +25,20 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
   }
 
   const handleSubmit = async (data: WorkReportFormValues) => {
-    const { status, ...workReportDataFields } = data; // Estrai status e raggruppa gli altri campi per work_report_data
+    const { status, ...workReportDataFields } = data;
 
     await updateInterventionRequest({
-      ...intervention, // Mantieni i campi esistenti dell'intervento
-      work_report_data: workReportDataFields, // Assegna i campi raggruppati a work_report_data
-      status: status, // Aggiorna lo stato a livello radice
+      ...intervention,
+      work_report_data: workReportDataFields,
+      status: status,
     });
     router.push('/interventions');
+  };
+
+  const initialWorkReportData = intervention.work_report_data ?? {};
+  const formInitialData = {
+    ...initialWorkReportData,
+    id: intervention.id,
   };
 
   return (
@@ -50,7 +56,7 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
 
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
           <WorkReportForm
-            initialData={{ ...(intervention.work_report_data ?? {}), id: intervention.id }} // Corretto l'uso di ?? e aggiunto l'ID
+            initialData={formInitialData} // Utilizzo l'oggetto formInitialData esplicitamente costruito
             onSubmit={handleSubmit}
             clientName={intervention.client_company_name}
             currentStatus={intervention.status}
