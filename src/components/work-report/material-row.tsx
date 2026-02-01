@@ -41,9 +41,9 @@ export const MaterialRow = ({ index, onRemove, canRemove }: MaterialRowProps) =>
               <FormLabel className={`text-xs ${index > 0 ? 'sr-only' : ''}`}>
                 U.M.
               </FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger ref={field.ref}> {/* Pass field.ref here */}
                     <SelectValue placeholder="U.M." />
                   </SelectTrigger>
                 </FormControl>
