@@ -12,6 +12,7 @@ import {
 import Link from 'next/link';
 import { InterventionRequest } from '@/types/intervention';
 import { ClientDetailsSection, SystemDetailsSection, SchedulingDetailsSection } from './intervention-form/'; // Importo i nuovi componenti dalla sottocartella
+import { generateTimeOptions } from '@/lib/time-utils'; // Importa generateTimeOptions da time-utils
 
 export const interventionFormSchema = z.object({
   customer_id: z.string().optional(),
@@ -41,19 +42,7 @@ interface InterventionFormProps {
 }
 
 // Funzione per generare le opzioni dell'ora
-const generateTimeOptions = () => {
-  const times = [];
-  for (let h = 0; h < 24; h++) {
-    for (let m = 0; m < 60; m += 30) {
-      const hour = h.toString().padStart(2, '0');
-      const minute = m.toString().padStart(2, '0');
-      times.push(`${hour}:${minute}`);
-    }
-  }
-  return times;
-};
-
-const timeOptions = generateTimeOptions();
+const timeOptions = generateTimeOptions(); // Usa la funzione importata
 
 export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProps) => {
   const methods = useForm<InterventionFormValues>({

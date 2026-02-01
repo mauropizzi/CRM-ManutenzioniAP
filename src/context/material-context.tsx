@@ -77,7 +77,8 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
       const { data, error } = await supabase
         .from('materials')
         .insert([materialWithUserId])
-        .select(); // Rimosso .single()
+        .select()
+        .single(); // Aggiunto .single()
 
       console.log('Supabase insert response - data:', data); // Log dettagliato
       console.log('Supabase insert response - error:', error); // Log dettagliato
@@ -88,8 +89,8 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (data && data.length > 0) { // Verifica se data è un array e contiene elementi
-        setMaterials((prev) => [data[0] as Material, ...prev]); // Prendi il primo elemento
+      if (data) { // Ora data è un singolo oggetto
+        setMaterials((prev) => [data as Material, ...prev]);
         toast.success("Materiale aggiunto con successo!");
       } else {
         console.warn('Supabase insert ha restituito nessun dato e nessun errore. Questo potrebbe indicare un problema di RLS o una query che non ha trovato righe corrispondenti.');

@@ -18,14 +18,13 @@ import {
 } from '@/components/ui/select';
 import { Trash2 } from 'lucide-react';
 import { WorkReportFormValues } from '@/components/work-report-form';
+import { UNITS } from '@/types/material'; // Importa UNITS da types/material
 
 interface MaterialRowProps {
   index: number;
   onRemove: () => void;
   canRemove: boolean;
 }
-
-const UNITS = ['PZ', 'MT', 'KG', 'LT', 'NR'] as const;
 
 export const MaterialRow = ({ index, onRemove, canRemove }: MaterialRowProps) => {
   const { control } = useFormContext<WorkReportFormValues>();

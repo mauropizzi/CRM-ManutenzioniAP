@@ -72,63 +72,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('Profile fetch result:', { data, error });
 
       if (error) {
-        console.log('Profile fetch error code:', error.code);
-        
-        // If profile doesn't exist (PGRST116 = not found), create it
-        if (error.code === 'PGRST116' || error.message?.includes('not found') || error.message?.includes('No rows found')) {
-          console.log('Profile not found, creating new profile...');
-          
-          const newProfileData = {
-            id: authUser.id,
-            first_name: authUser.user_metadata?.first_name || '',
-            last_name: authUser.user_metadata?.last_name || '',
-          };
-          
-          console.log('Inserting profile data:', newProfileData);
-          
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert([newProfileData])
-            .select()
-            .single();
-
-          if (createError) {
-            console.error('Error creating profile:', createError);
-            
-            // If user doesn't exist in auth.users table (database reset), force logout
-            if (createError.code === '23503') {
-              console.error('User does not exist in database, forcing logout...');
-              toast.error("Sessione non valida. Effettua nuovamente il login.");
-              await signOut();
-              return;
-            }
-            
-            // Still set user without profile data for other errors
-            setUser({
-              id: authUser.id,
-              email: authUser.email || '',
-            });
-            return;
-          }
-
-          console.log('New profile created:', newProfile);
-
-          if (newProfile) {
-            setUser({
-              id: authUser.id,
-              email: authUser.email || '',
-              first_name: newProfile.first_name,
-              last_name: newProfile.last_name,
-              role: newProfile.role,
-            });
-            return;
-          }
-        } else {
-          console.error('Error fetching profile (not 404):', error);
-        }
-      }
-
-      if (data) {
+        console.error('Error fetching profile:', error);
+        // If profile doesn't exist or other error, set user with basic info
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+        });
+        // If the error is due to the user not existing in the database (e.g., after a database reset),
+        // it might be appropriate to force a logout or prompt re-login.
+        // For now, we just log the error and set basic user info.
+      } else if (data) {
         console.log('Profile found:', data);
         setUser({
           id: authUser.id,
@@ -138,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: data.role,
         });
       } else {
-        // Fallback if no profile data
+        // Fallback if no profile data but no error (shouldn't happen with .single())
         console.log('No profile data, using fallback');
         setUser({
           id: authUser.id,
