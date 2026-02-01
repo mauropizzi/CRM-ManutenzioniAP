@@ -59,8 +59,11 @@ export const MaterialSearchInput = ({ index, field }: MaterialSearchInputProps) 
           aria-expanded={open}
           className="w-full justify-between rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
         >
-          {currentDescription ? currentDescription : "Cerca o inserisci materiale..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          {/* Ensure Button has a single child when used with asChild */}
+          <span className="flex items-center justify-between w-full">
+            <span>{currentDescription ? currentDescription : "Cerca o inserisci materiale..."}</span>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
