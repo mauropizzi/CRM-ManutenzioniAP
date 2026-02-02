@@ -10,7 +10,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
 export default function EditTechnicianPage({ params }: { params: { id: string } }) {
-  const { id } = React.use(params); // Reintroduced React.use()
+  const { id } = params; // Corretto da React.use(params)
   const { technicians, updateTechnician } = useTechnicians();
   const router = useRouter();
 

@@ -9,7 +9,7 @@ import { Customer } from '@/types/customer';
 import { Toaster } from '@/components/ui/sonner';
 
 export default function EditCustomerPage({ params }: { params: { id: string } }) {
-  const { id } = React.use(params); // Reintroduced React.use()
+  const { id } = params; // Corretto da React.use(params)
   const { customers, updateCustomer } = useCustomers();
   const router = useRouter();
 
