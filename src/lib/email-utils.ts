@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { InterventionRequest } from '@/types/intervention'; // Import InterventionRequest
+import { InterventionRequest } from '@/types/intervention';
 
 export const sendWorkReportEmail = async (intervention: InterventionRequest, recipientEmails: string[]) => {
   try {
@@ -19,7 +19,14 @@ export const sendWorkReportEmail = async (intervention: InterventionRequest, rec
 
     if (responseBody.error) {
       console.error('Error from Edge Function:', responseBody.error);
-      toast.error(`Errore nell'invio dell'email: ${responseBody.error}`);
+      
+      // Messaggio specifico per l'errore del dominio di test
+      if (responseBody.error.includes('Dominio di test limitato')) {
+        toast.error(responseBody.error, { duration: 6000 });
+      } else {
+        toast.error(`Errore nell'invio dell'email: ${responseBody.error}`);
+      }
+      
       throw new Error(responseBody.error);
     }
 
@@ -27,7 +34,10 @@ export const sendWorkReportEmail = async (intervention: InterventionRequest, rec
     return responseBody;
   } catch (error: any) {
     console.error('Exception in sendWorkReportEmail:', error);
-    toast.error(`Errore nell'invio dell'email: ${error.message || 'Errore sconosciuto'}`);
+    // Non mostrare toast qui se già mostrato sopra
+    if (!error.message?.includes('Dominio di test limitato')) {
+      toast.error(`Errore nell'invio dell'email: ${error.message || 'Errore sconosciuto'}`);
+    }
     throw error;
   }
 };

@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { Resend } from 'https://esm.sh/resend@1.1.0';
-import { format } from 'https://esm.sh/date-fns@3.6.0'; // Importa format da date-fns
-import { it } from 'https://esm.sh/date-fns@3.6.0/locale/it'; // Importa la locale italiana
+import { format } from 'https://esm.sh/date-fns@3.6.0';
+import { it } from 'https://esm.sh/date-fns@3.6.0/locale/it';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const { intervention: rawIntervention, recipientEmails } = await req.json(); // Ora riceve un array
+    const { intervention: rawIntervention, recipientEmails } = await req.json();
     console.log("[send-work-report-email] Received request for interventionId:", rawIntervention.id, "recipientEmails:", recipientEmails);
 
     if (!rawIntervention || !recipientEmails || recipientEmails.length === 0) {
@@ -146,23 +146,38 @@ serve(async (req) => {
           </table>
         ` : ''}
 
-        <p style="margin-top: 30px;">Cordiali saluti,<br/>Antonelli & Pellizzari Refrigerazioni</p>
+        <p style="margin-top: 30px;">Cordiali saluti,<br/>Antonelli & Zani Refrigerazioni</p>
         <p style="font-size: 0.8em; color: #777; margin-top: 15px;">Questa è un'email generata automaticamente, non è possibile rispondere.</p>
       </div>
     `;
 
-    const fromEmail = 'Antonelli & Pellizzari Refrigerazioni <onboarding@resend.dev>';
+    // IMPORTANTE: Per inviare a più destinatari o ad indirizzi diversi dal tuo,
+    // devi verificare un dominio personalizzato su Resend e sostituire qui sotto:
+    // const fromEmail = 'tuo-nome@tuodominio.com'; // Dominio verificato richiesto
+    
+    const fromEmail = 'Antonelli & Zani Refrigerazioni <onboarding@resend.dev>';
     console.log("[send-work-report-email] Attempting to send email from:", fromEmail, "to:", recipientEmails);
 
     const { data, error: resendError } = await resend.emails.send({
       from: fromEmail,
-      to: recipientEmails, // Passa l'array di destinatari
+      to: recipientEmails,
       subject: `Bolla di Consegna Intervento ${intervention.client_company_name}`,
       html: emailHtml,
     });
 
     if (resendError) {
       console.error("[send-work-report-email] Error sending email via Resend. Status: 500. Error:", resendError);
+      
+      // Gestione specifica per l'errore del dominio di test
+      if (resendError.message?.includes('can only send to the email address associated with your account')) {
+        return new Response(JSON.stringify({ 
+          error: 'Dominio di test limitato: con onboarding@resend.dev puoi inviare solo al tuo indirizzo email verificato. Verifica un dominio personalizzato su Resend per inviare a chiunque.' 
+        }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       return new Response(JSON.stringify({ error: resendError.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
