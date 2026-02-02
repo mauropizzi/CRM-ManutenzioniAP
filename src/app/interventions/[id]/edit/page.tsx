@@ -11,7 +11,7 @@ import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 
 export default function EditInterventionPage({ params }: { params: { id: string } }) {
-  const { id } = React.use(params); // Reintroduced React.use()
+  const { id } = params; // Corretto da React.use(params)
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

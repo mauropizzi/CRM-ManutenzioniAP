@@ -10,7 +10,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
 export default function EditMaterialPage({ params }: { params: { id: string } }) {
-  const { id } = React.use(params); // Reintroduced React.use()
+  const { id } = params; // Corretto da React.use(params)
   const { materials, updateMaterial } = useMaterials();
   const router = useRouter();
 

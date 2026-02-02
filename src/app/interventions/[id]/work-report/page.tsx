@@ -8,7 +8,7 @@ import { notFound } from 'next/navigation';
 import { Toaster } from '@/components/ui/sonner';
 
 export default function WorkReportPage({ params }: { params: { id: string } }) {
-  const { id } = React.use(params); // Reintroduced React.use()
+  const { id } = params; // Corretto da React.use(params)
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

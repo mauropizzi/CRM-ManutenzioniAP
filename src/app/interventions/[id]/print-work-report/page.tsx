@@ -14,7 +14,7 @@ interface PrintWorkReportPageProps {
 }
 
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
-  const { id } = React.use(params); // Reintroduced React.use()
+  const { id } = params; // Corretto da React.use(params)
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
   const router = useRouter();
 
