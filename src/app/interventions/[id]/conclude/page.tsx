@@ -8,13 +8,7 @@ import { notFound } from 'next/navigation';
 import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
 
-type ConcludeInterventionPageProps = {
-  params: {
-    id: string;
-  };
-};
-
-export default function ConcludeInterventionPage({ params }: ConcludeInterventionPageProps) {
+export default async function ConcludeInterventionPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();

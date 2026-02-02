@@ -8,13 +8,7 @@ import { notFound } from 'next/navigation';
 import { Customer } from '@/types/customer';
 import { Toaster } from '@/components/ui/sonner';
 
-type EditCustomerPageProps = {
-  params: {
-    id: string;
-  };
-};
-
-export default function EditCustomerPage({ params }: EditCustomerPageProps) {
+export default async function EditCustomerPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const { customers, updateCustomer } = useCustomers();
   const router = useRouter();
