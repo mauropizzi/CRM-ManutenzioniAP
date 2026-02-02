@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { use } from 'react';
 import { CustomerForm, CustomerFormValues } from '@/components/customer-form';
 import { useCustomers } from '@/context/customer-context';
 import { useRouter } from 'next/navigation';
@@ -13,7 +13,7 @@ interface EditCustomerPageProps {
 }
 
 export default function EditCustomerPage({ params }: EditCustomerPageProps) {
-  const { id } = React.use(params);
+  const { id } = use(params);
   const { customers, updateCustomer } = useCustomers();
   const router = useRouter();
 
