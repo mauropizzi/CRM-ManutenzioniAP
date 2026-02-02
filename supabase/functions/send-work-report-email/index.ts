@@ -12,29 +12,48 @@ const corsHeaders = {
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 serve(async (req) => {
+  console.log("[send-work-report-email] Function invoked with method:", req.method);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { intervention: rawIntervention, recipientEmails } = await req.json();
-    console.log("[send-work-report-email] Received request for interventionId:", rawIntervention.id, "recipientEmails:", recipientEmails);
+    const body = await req.json();
+    console.log("[send-work-report-email] Request body received:", JSON.stringify(body, null, 2));
+    
+    const { intervention: rawIntervention, recipientEmails } = body;
 
     if (!rawIntervention || !recipientEmails || recipientEmails.length === 0) {
-      console.error("[send-work-report-email] Missing intervention data or recipientEmails. Status: 400");
+      console.error("[send-work-report-email] Missing intervention data or recipientEmails");
       return new Response(JSON.stringify({ error: 'Missing intervention data or recipientEmails' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    console.log("[send-work-report-email] Processing intervention:", rawIntervention.id);
+    console.log("[send-work-report-email] Recipient emails:", recipientEmails);
+
     // Inizializza il client Supabase per la funzione Edge
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    console.log("[send-work-report-email] SUPABASE_URL exists:", !!supabaseUrl);
+    console.log("[send-work-report-email] SUPABASE_SERVICE_ROLE_KEY exists:", !!supabaseServiceKey);
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("[send-work-report-email] Missing Supabase environment variables");
+      return new Response(JSON.stringify({ error: 'Server configuration error: Missing Supabase credentials' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Recupera i dettagli dell'intervento dal DB per sicurezza e completezza
+    console.log("[send-work-report-email] Fetching intervention from database...");
     const { data: intervention, error: interventionError } = await supabaseClient
       .from('interventions')
       .select('*')
@@ -42,7 +61,7 @@ serve(async (req) => {
       .single();
 
     if (interventionError || !intervention) {
-      console.error("[send-work-report-email] Error fetching intervention or not found. Status: 500. Error:", interventionError?.message);
+      console.error("[send-work-report-email] Error fetching intervention:", interventionError?.message);
       return new Response(JSON.stringify({ error: 'Intervention not found or database error' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -52,20 +71,31 @@ serve(async (req) => {
 
     // Recupera API Key Brevo
     const brevoApiKey = Deno.env.get('BREVO_API_KEY');
+    console.log("[send-work-report-email] BREVO_API_KEY exists:", !!brevoApiKey);
+    
     if (!brevoApiKey) {
-      console.error("[send-work-report-email] BREVO_API_KEY is not set. Status: 500");
-      return new Response(JSON.stringify({ error: 'BREVO_API_KEY not configured. Please add it to Supabase Edge Function secrets.' }), {
+      console.error("[send-work-report-email] BREVO_API_KEY is not set in environment variables");
+      return new Response(JSON.stringify({ 
+        error: 'BREVO_API_KEY not configured. Please add it to Supabase Edge Function secrets in the dashboard: Project Settings > Edge Functions > Secrets' 
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    console.log("[send-work-report-email] BREVO_API_KEY is set.");
 
     // Deserializza work_report_data se presente
-    const workReportData = intervention.work_report_data ? JSON.parse(JSON.stringify(intervention.work_report_data)) : {};
+    let workReportData = {};
+    try {
+      workReportData = intervention.work_report_data ? JSON.parse(JSON.stringify(intervention.work_report_data)) : {};
+      console.log("[send-work-report-email] Work report data parsed successfully");
+    } catch (parseError) {
+      console.error("[send-work-report-email] Error parsing work_report_data:", parseError);
+      workReportData = {};
+    }
 
     // Calcola il totale delle ore
     const totalHours = workReportData.time_entries?.reduce((sum: number, entry: any) => sum + (entry.total_hours || 0), 0) || 0;
+    console.log("[send-work-report-email] Total hours calculated:", totalHours);
 
     // Costruisci il corpo email HTML
     const emailHtml = `
@@ -158,8 +188,10 @@ serve(async (req) => {
       name: intervention.client_company_name || 'Cliente'
     }));
 
+    console.log("[send-work-report-email] Preparing to send email via Brevo to:", toRecipients);
+
     // Invia email tramite API Brevo
-    console.log("[send-work-report-email] Sending email via Brevo to:", recipientEmails);
+    console.log("[send-work-report-email] Sending request to Brevo API...");
     
     const brevoResponse = await fetch(BREVO_API_URL, {
       method: 'POST',
@@ -171,7 +203,7 @@ serve(async (req) => {
       body: JSON.stringify({
         sender: {
           name: 'Antonelli & Zani Refrigerazioni',
-          email: 'noreply@antonellizani.it' // Puoi usare qualsiasi indirizzo qui, anche non verificato nel piano gratuito
+          email: 'noreply@antonellizani.it'
         },
         to: toRecipients,
         subject: `Bolla di Consegna Intervento - ${intervention.client_company_name}`,
@@ -179,12 +211,22 @@ serve(async (req) => {
       }),
     });
 
+    console.log("[send-work-report-email] Brevo response status:", brevoResponse.status);
+
     if (!brevoResponse.ok) {
-      const errorData = await brevoResponse.json();
-      console.error("[send-work-report-email] Brevo API error:", errorData);
+      let errorMessage = 'Unknown Brevo error';
+      try {
+        const errorData = await brevoResponse.json();
+        console.error("[send-work-report-email] Brevo API error response:", errorData);
+        errorMessage = errorData.message || JSON.stringify(errorData);
+      } catch (e) {
+        const errorText = await brevoResponse.text();
+        console.error("[send-work-report-email] Brevo API error text:", errorText);
+        errorMessage = errorText || `HTTP ${brevoResponse.status}`;
+      }
       
       return new Response(JSON.stringify({ 
-        error: `Errore Brevo: ${errorData.message || 'Unknown error'}` 
+        error: `Errore Brevo: ${errorMessage}` 
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -192,7 +234,7 @@ serve(async (req) => {
     }
 
     const responseData = await brevoResponse.json();
-    console.log("[send-work-report-email] Email sent successfully via Brevo:", responseData);
+    console.log("[send-work-report-email] Email sent successfully. MessageId:", responseData.messageId);
 
     return new Response(JSON.stringify({ 
       message: 'Email sent successfully', 
@@ -203,8 +245,8 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error("[send-work-report-email] Generic error in Edge Function. Status: 500. Error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("[send-work-report-email] Unhandled exception:", error.message, error.stack);
+    return new Response(JSON.stringify({ error: `Internal server error: ${error.message}` }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
