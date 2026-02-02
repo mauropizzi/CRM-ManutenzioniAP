@@ -14,10 +14,9 @@ serve(async (req) => {
 
   try {
     const { interventionId, recipientEmail } = await req.json();
-    console.log("[send-work-report-email] Received request for interventionId:", interventionId, "recipientEmail:", recipientEmail);
 
     if (!interventionId || !recipientEmail) {
-      console.error("[send-work-report-email] Missing interventionId or recipientEmail. Status: 400");
+      console.error("[send-work-report-email] Missing interventionId or recipientEmail");
       return new Response(JSON.stringify({ error: 'Missing interventionId or recipientEmail' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -38,23 +37,21 @@ serve(async (req) => {
       .single();
 
     if (interventionError || !intervention) {
-      console.error("[send-work-report-email] Error fetching intervention or not found. Status: 500. Error:", interventionError?.message);
+      console.error("[send-work-report-email] Error fetching intervention:", interventionError);
       return new Response(JSON.stringify({ error: 'Intervention not found or database error' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    console.log("[send-work-report-email] Intervention fetched successfully:", intervention.id);
 
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
-      console.error("[send-work-report-email] RESEND_API_KEY is not set. Status: 500");
+      console.error("[send-work-report-email] RESEND_API_KEY is not set.");
       return new Response(JSON.stringify({ error: 'Email service API key not configured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    console.log("[send-work-report-email] RESEND_API_KEY is set.");
 
     const resend = new Resend(resendApiKey);
 
@@ -73,18 +70,16 @@ serve(async (req) => {
       Cordiali saluti,
       Antonelli & Zani Refrigerazioni
     `;
-    const fromEmail = 'onboarding@resend.dev'; // IMPORTANTE: Sostituisci con un dominio email verificato su Resend
-    console.log("[send-work-report-email] Attempting to send email from:", fromEmail, "to:", recipientEmail);
 
     const { data, error: resendError } = await resend.emails.send({
-      from: fromEmail,
+      from: 'onboarding@resend.dev', // IMPORTANTE: Sostituisci con un dominio email verificato su Resend
       to: recipientEmail,
       subject: `Bolla di Consegna Intervento ${intervention.client_company_name}`,
       html: emailContent.replace(/\n/g, '<br/>'),
     });
 
     if (resendError) {
-      console.error("[send-work-report-email] Error sending email via Resend. Status: 500. Error:", resendError);
+      console.error("[send-work-report-email] Error sending email:", resendError);
       return new Response(JSON.stringify({ error: resendError.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -98,7 +93,7 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error("[send-work-report-email] Generic error in Edge Function. Status: 500. Error:", error.message);
+    console.error("[send-work-report-email] Generic error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
