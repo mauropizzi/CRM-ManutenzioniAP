@@ -27,22 +27,28 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { sendWorkReportEmail } from '@/lib/email-utils'; // Importa la utility per l'invio email
 import { toast } from 'sonner';
+import { useInterventionRequests } from '@/context/intervention-context'; // Import useInterventionRequests
 
 interface WorkReportBasicInfoProps {
   clientName?: string;
-  clientEmail?: string; // Aggiunto clientEmail come prop
+  clientEmail?: string;
   interventionId?: string;
 }
 
 export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }: WorkReportBasicInfoProps) => {
-  const { control, getValues, setValue } = useFormContext<WorkReportFormValues>(); // Destrutturato setValue
+  const { control, getValues, setValue } = useFormContext<WorkReportFormValues>();
+  const { interventionRequests } = useInterventionRequests(); // Get all interventions
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState(clientEmail || '');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
+  const currentIntervention = interventionId 
+    ? interventionRequests.find(i => i.id === interventionId) 
+    : undefined;
+
   const handleSendEmail = async () => {
-    if (!interventionId) {
-      toast.error("ID intervento non disponibile per l'invio dell'email.");
+    if (!currentIntervention) {
+      toast.error("Dettagli intervento non disponibili per l'invio dell'email.");
       return;
     }
     if (!recipientEmail) {
@@ -52,7 +58,7 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
 
     setIsSendingEmail(true);
     try {
-      await sendWorkReportEmail(interventionId, recipientEmail);
+      await sendWorkReportEmail(currentIntervention, recipientEmail); // Pass the full intervention object
       setIsEmailDialogOpen(false);
     } catch (error) {
       // L'errore è già gestito e mostrato dalla utility sendWorkReportEmail
