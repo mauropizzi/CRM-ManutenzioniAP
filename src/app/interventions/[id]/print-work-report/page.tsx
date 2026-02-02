@@ -1,8 +1,7 @@
 "use client";
 
-import React, { use, useEffect } from 'react'; // Reintrodotto 'use'
+import React from 'react';
 import { useInterventionRequests } from '@/context/intervention-context';
-import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { PrintableWorkReport } from '@/components/printable-work-report';
 import { Loader2 } from 'lucide-react';
@@ -14,25 +13,12 @@ interface PrintWorkReportPageProps {
 }
 
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
-  const { id } = use(params); // Srotola i params con React.use()
+  const { id } = React.use(params);
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
-  const router = useRouter();
 
   const intervention = interventionRequests.find((request) => request.id === id);
 
-  useEffect(() => {
-    if (!interventionsLoading && intervention) {
-      const timer = setTimeout(() => {
-        window.print();
-        router.push(`/interventions/${id}/work-report`);
-      }, 500);
-      return () => clearTimeout(timer);
-    } else if (!interventionsLoading && !intervention) {
-      notFound();
-    }
-  }, [interventionsLoading, intervention, router, id]);
-
-  if (interventionsLoading || !intervention) {
+  if (interventionsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -41,8 +27,15 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
     );
   }
 
+  if (!intervention) {
+    notFound();
+  }
+
+  // Rimosso useEffect per window.print() e router.push.
+  // La pagina ora visualizzerà semplicemente il contenuto di PrintableWorkReport.
+
   return (
-    <div className="print:block hidden">
+    <div> {/* Nessuna classe di stampa specifica qui, layout.tsx gestisce gli stili del body */}
       <PrintableWorkReport intervention={intervention} />
     </div>
   );
