@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   webpack: (config) => {
     if (process.env.NODE_ENV === "development") {
       config.module.rules.push({
