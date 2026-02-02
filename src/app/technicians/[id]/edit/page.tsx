@@ -9,8 +9,8 @@ import { Technician } from '@/types/technician';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
-export default async function EditTechnicianPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function EditTechnicianPage({ params }: { params: { id: string } }) {
+  const { id } = params; // Corretto da React.use(params)
   const { technicians, updateTechnician } = useTechnicians();
   const router = useRouter();
 
