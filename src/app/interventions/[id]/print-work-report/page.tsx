@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useInterventionRequests } from '@/context/intervention-context';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { PrintableWorkReport } from '@/components/printable-work-report';
 import { Loader2 } from 'lucide-react';
 
@@ -15,8 +15,22 @@ interface PrintWorkReportPageProps {
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
   const { id } = React.use(params);
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
+  const router = useRouter();
 
   const intervention = interventionRequests.find((request) => request.id === id);
+
+  useEffect(() => {
+    if (!interventionsLoading && intervention) {
+      // Give a small delay to ensure the component is fully rendered before printing
+      const printTimeout = setTimeout(() => {
+        window.print();
+        // After printing (or closing the print dialog), navigate back
+        router.push('/interventions');
+      }, 500); // Adjust delay as needed
+
+      return () => clearTimeout(printTimeout);
+    }
+  }, [interventionsLoading, intervention, router]);
 
   if (interventionsLoading) {
     return (
@@ -31,11 +45,8 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
     notFound();
   }
 
-  // Rimosso useEffect per window.print() e router.push.
-  // La pagina ora visualizzerà semplicemente il contenuto di PrintableWorkReport.
-
   return (
-    <div> {/* Nessuna classe di stampa specifica qui, layout.tsx gestisce gli stili del body */}
+    <div>
       <PrintableWorkReport intervention={intervention} />
     </div>
   );
