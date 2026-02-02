@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-import { Resend } from 'https://esm.sh/resend@1.1.0';
 import { format } from 'https://esm.sh/date-fns@3.6.0';
 import { it } from 'https://esm.sh/date-fns@3.6.0/locale/it';
 
@@ -8,6 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Configurazione Brevo (Sendinblue)
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -48,17 +50,16 @@ serve(async (req) => {
     }
     console.log("[send-work-report-email] Intervention fetched successfully:", intervention.id);
 
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    if (!resendApiKey) {
-      console.error("[send-work-report-email] RESEND_API_KEY is not set. Status: 500");
-      return new Response(JSON.stringify({ error: 'Email service API key not configured' }), {
+    // Recupera API Key Brevo
+    const brevoApiKey = Deno.env.get('BREVO_API_KEY');
+    if (!brevoApiKey) {
+      console.error("[send-work-report-email] BREVO_API_KEY is not set. Status: 500");
+      return new Response(JSON.stringify({ error: 'BREVO_API_KEY not configured. Please add it to Supabase Edge Function secrets.' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    console.log("[send-work-report-email] RESEND_API_KEY is set.");
-
-    const resend = new Resend(resendApiKey);
+    console.log("[send-work-report-email] BREVO_API_KEY is set.");
 
     // Deserializza work_report_data se presente
     const workReportData = intervention.work_report_data ? JSON.parse(JSON.stringify(intervention.work_report_data)) : {};
@@ -66,7 +67,7 @@ serve(async (req) => {
     // Calcola il totale delle ore
     const totalHours = workReportData.time_entries?.reduce((sum: number, entry: any) => sum + (entry.total_hours || 0), 0) || 0;
 
-    // Costruisci un corpo email HTML più ricco
+    // Costruisci il corpo email HTML
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
         <h2 style="color: #0056b3;">Bolla di Consegna Intervento</h2>
@@ -151,41 +152,52 @@ serve(async (req) => {
       </div>
     `;
 
-    // IMPORTANTE: Per inviare a più destinatari o ad indirizzi diversi dal tuo,
-    // devi verificare un dominio personalizzato su Resend e sostituire qui sotto:
-    // const fromEmail = 'tuo-nome@tuodominio.com'; // Dominio verificato richiesto
-    
-    const fromEmail = 'Antonelli & Zani Refrigerazioni <onboarding@resend.dev>';
-    console.log("[send-work-report-email] Attempting to send email from:", fromEmail, "to:", recipientEmails);
+    // Prepara i destinatari nel formato richiesto da Brevo
+    const toRecipients = recipientEmails.map((email: string) => ({
+      email: email,
+      name: intervention.client_company_name || 'Cliente'
+    }));
 
-    const { data, error: resendError } = await resend.emails.send({
-      from: fromEmail,
-      to: recipientEmails,
-      subject: `Bolla di Consegna Intervento ${intervention.client_company_name}`,
-      html: emailHtml,
+    // Invia email tramite API Brevo
+    console.log("[send-work-report-email] Sending email via Brevo to:", recipientEmails);
+    
+    const brevoResponse = await fetch(BREVO_API_URL, {
+      method: 'POST',
+      headers: {
+        'api-key': brevoApiKey,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: {
+          name: 'Antonelli & Zani Refrigerazioni',
+          email: 'noreply@antonellizani.it' // Puoi usare qualsiasi indirizzo qui, anche non verificato nel piano gratuito
+        },
+        to: toRecipients,
+        subject: `Bolla di Consegna Intervento - ${intervention.client_company_name}`,
+        htmlContent: emailHtml,
+      }),
     });
 
-    if (resendError) {
-      console.error("[send-work-report-email] Error sending email via Resend. Status: 500. Error:", resendError);
+    if (!brevoResponse.ok) {
+      const errorData = await brevoResponse.json();
+      console.error("[send-work-report-email] Brevo API error:", errorData);
       
-      // Gestione specifica per l'errore del dominio di test
-      if (resendError.message?.includes('can only send to the email address associated with your account')) {
-        return new Response(JSON.stringify({ 
-          error: 'Dominio di test limitato: con onboarding@resend.dev puoi inviare solo al tuo indirizzo email verificato. Verifica un dominio personalizzato su Resend per inviare a chiunque.' 
-        }), {
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      
-      return new Response(JSON.stringify({ error: resendError.message }), {
+      return new Response(JSON.stringify({ 
+        error: `Errore Brevo: ${errorData.message || 'Unknown error'}` 
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log("[send-work-report-email] Email sent successfully:", data);
-    return new Response(JSON.stringify({ message: 'Email sent successfully', data }), {
+    const responseData = await brevoResponse.json();
+    console.log("[send-work-report-email] Email sent successfully via Brevo:", responseData);
+
+    return new Response(JSON.stringify({ 
+      message: 'Email sent successfully', 
+      messageId: responseData.messageId 
+    }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
