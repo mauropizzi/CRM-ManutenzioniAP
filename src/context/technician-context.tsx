@@ -19,17 +19,16 @@ const TechnicianContext = createContext<TechnicianContextType | undefined>(undef
 export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, loadingAuth } = useAuth(); // Ottengo l'utente e loadingAuth
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Fetch technicians only if user is authenticated and auth loading is complete
-    if (typeof window !== 'undefined' && !loadingAuth && user) {
+    if (typeof window !== 'undefined' && user) {
       fetchTechnicians();
-    } else if (!user && !loadingAuth) { // Clear data if not authenticated and auth loading is complete
+    } else if (!user) {
       setTechnicians([]);
       setLoading(false);
     }
-  }, [user, loadingAuth]); // Dipendenza dall'oggetto utente e dallo stato di caricamento dell'autenticazione
+  }, [user]);
 
   const fetchTechnicians = async () => {
     try {

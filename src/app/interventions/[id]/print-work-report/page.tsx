@@ -2,7 +2,8 @@
 
 import React, { useEffect } from 'react';
 import { useInterventionRequests } from '@/context/intervention-context';
-import { notFound, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { PrintableWorkReport } from '@/components/printable-work-report';
 import { Loader2 } from 'lucide-react';
 
@@ -13,7 +14,7 @@ interface PrintWorkReportPageProps {
 }
 
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
-  const { id } = React.use(params);
+  const { id } = React.use(params); // Reintroduced React.use()
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
   const router = useRouter();
 
@@ -21,18 +22,18 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
 
   useEffect(() => {
     if (!interventionsLoading && intervention) {
-      // Give a small delay to ensure the component is fully rendered before printing
-      const printTimeout = setTimeout(() => {
+      const timer = setTimeout(() => {
         window.print();
-        // After printing (or closing the print dialog), navigate back
-        router.push('/interventions');
-      }, 500); // Adjust delay as needed
-
-      return () => clearTimeout(printTimeout);
+        // Dopo la stampa, reindirizza alla pagina del report di lavoro
+        router.push(`/interventions/${id}/work-report`);
+      }, 500); // Breve ritardo per assicurare il rendering prima della stampa
+      return () => clearTimeout(timer);
+    } else if (!interventionsLoading && !intervention) {
+      notFound();
     }
-  }, [interventionsLoading, intervention, router]);
+  }, [interventionsLoading, intervention, router, id]);
 
-  if (interventionsLoading) {
+  if (interventionsLoading || !intervention) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -41,12 +42,8 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
     );
   }
 
-  if (!intervention) {
-    notFound();
-  }
-
   return (
-    <div>
+    <div className="print:block"> 
       <PrintableWorkReport intervention={intervention} />
     </div>
   );

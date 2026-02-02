@@ -19,17 +19,16 @@ const MaterialContext = createContext<MaterialContextType | undefined>(undefined
 export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, loadingAuth } = useAuth(); // Ottengo l'utente e loadingAuth
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Fetch materials only if user is authenticated and auth loading is complete
-    if (typeof window !== 'undefined' && !loadingAuth && user) {
+    if (typeof window !== 'undefined' && user) {
       fetchMaterials();
-    } else if (!user && !loadingAuth) { // Clear data if not authenticated and auth loading is complete
+    } else if (!user) {
       setMaterials([]);
       setLoading(false);
     }
-  }, [user, loadingAuth]); // Dipendenza dall'oggetto utente e dallo stato di caricamento dell'autenticazione
+  }, [user]);
 
   const fetchMaterials = async () => {
     try {

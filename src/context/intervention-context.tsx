@@ -46,17 +46,16 @@ const serializeWorkReportData = (data: WorkReportData | undefined): any | undefi
 export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const [interventionRequests, setInterventionRequests] = useState<InterventionRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, loadingAuth } = useAuth(); // Ottengo l'utente e loadingAuth dal contesto di autenticazione
+  const { user } = useAuth(); // Ottengo l'utente dal contesto di autenticazione
 
   useEffect(() => {
-    // Fetch interventions only if user is authenticated and auth loading is complete
-    if (typeof window !== 'undefined' && !loadingAuth && user) {
+    if (typeof window !== 'undefined' && user) { // Recupero gli interventi solo se l'utente è autenticato
       fetchInterventions();
-    } else if (!user && !loadingAuth) { // Clear data if not authenticated and auth loading is complete
+    } else if (!user) {
       setInterventionRequests([]);
       setLoading(false);
     }
-  }, [user, loadingAuth]); // Dipendenza dall'oggetto utente e dallo stato di caricamento dell'autenticazione
+  }, [user]); // Dipendenza dall'oggetto utente
 
   const fetchInterventions = async () => {
     try {
