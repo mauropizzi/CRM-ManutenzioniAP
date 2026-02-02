@@ -7,9 +7,14 @@ import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Customer } from '@/types/customer';
 import { Toaster } from '@/components/ui/sonner';
-// Rimosso: import type { PageProps } from 'next';
 
-export default function EditCustomerPage({ params }: { params: { id: string } }) {
+type EditCustomerPageProps = {
+  params: {
+    id: string;
+  };
+};
+
+export default function EditCustomerPage({ params }: EditCustomerPageProps) {
   const { id } = params;
   const { customers, updateCustomer } = useCustomers();
   const router = useRouter();
