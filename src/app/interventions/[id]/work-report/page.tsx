@@ -7,8 +7,10 @@ import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Toaster } from '@/components/ui/sonner';
 
-export default function WorkReportPage({ params }: { params: { id: string } }) {
-  const { id } = params; // Corretto da React.use(params)
+export default function WorkReportPage({ params }: { params: Promise<{ id: string }> }) {
+  // Next.js 15+ richiede di usare React.use() per unwrap params
+  const { id } = React.use(params);
+  
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
