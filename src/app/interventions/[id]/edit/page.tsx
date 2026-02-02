@@ -10,12 +10,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 
-export default function EditInterventionPage({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
-}) {
-  const { id } = React.use(params);
+export default function EditInterventionPage({ params }: { params: { id: string } }) {
+  const { id } = React.use(params); // Reintroduced React.use()
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

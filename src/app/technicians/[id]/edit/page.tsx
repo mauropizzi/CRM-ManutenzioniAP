@@ -9,12 +9,8 @@ import { Technician } from '@/types/technician';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
-export default function EditTechnicianPage({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
-}) {
-  const { id } = React.use(params);
+export default function EditTechnicianPage({ params }: { params: { id: string } }) {
+  const { id } = React.use(params); // Reintroduced React.use()
   const { technicians, updateTechnician } = useTechnicians();
   const router = useRouter();
 

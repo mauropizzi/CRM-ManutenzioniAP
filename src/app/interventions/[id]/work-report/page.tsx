@@ -6,14 +6,9 @@ import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Toaster } from '@/components/ui/sonner';
-import { ProtectedRoute } from '@/components/protected-route';
 
-export default function WorkReportPage({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
-}) {
-  const { id } = React.use(params);
+export default function WorkReportPage({ params }: { params: { id: string } }) {
+  const { id } = React.use(params); // Reintroduced React.use()
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
@@ -35,30 +30,29 @@ export default function WorkReportPage({
   };
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-8">
-        <div className="max-w-5xl mx-auto space-y-6">
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              Bolla di Consegna
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Intervento per: {intervention.client_company_name} - {intervention.system_type}{" "}
-              {intervention.brand} {intervention.model}
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
-            <WorkReportForm
-              initialData={{ ...(intervention.work_report_data ?? {}), id: intervention.id }}
-              onSubmit={handleSubmit}
-              clientName={intervention.client_company_name}
-              currentStatus={intervention.status}
-            />
-          </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-8">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Bolla di Consegna
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Intervento per: {intervention.client_company_name} - {intervention.system_type}{" "}
+            {intervention.brand} {intervention.model}
+          </p>
         </div>
-        <Toaster />
+
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
+          <WorkReportForm
+            initialData={{ ...(intervention.work_report_data ?? {}), id: intervention.id }}
+            onSubmit={handleSubmit}
+            clientName={intervention.client_company_name}
+            clientEmail={intervention.client_email}
+            currentStatus={intervention.status}
+          />
+        </div>
       </div>
-    </ProtectedRoute>
+      <Toaster />
+    </div>
   );
 }

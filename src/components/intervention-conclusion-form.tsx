@@ -16,7 +16,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { InterventionRequest } from '@/types/intervention';
-import { InterventionOutcomeSection } from './intervention-conclusion-form/intervention-outcome-section'; // Corretto: import dal file specifico
+import {
+  InterventionOutcomeSection,
+} from './intervention-conclusion-form'; // Importo solo la sezione esito
 
 export const interventionConclusionFormSchema = z.object({
   intervention_concluded: z.boolean().optional(),
