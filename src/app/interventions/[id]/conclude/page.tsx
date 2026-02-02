@@ -9,7 +9,7 @@ import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
 
 export default function ConcludeInterventionPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+  const { id } = React.use(params); // Reintroduced React.use()
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

@@ -15,12 +15,12 @@ serve(async (req) => {
   }
 
   try {
-    const { intervention: rawIntervention, recipientEmails } = await req.json(); // Ora riceve un array
-    console.log("[send-work-report-email] Received request for interventionId:", rawIntervention.id, "recipientEmails:", recipientEmails);
+    const { intervention: rawIntervention, recipientEmail } = await req.json();
+    console.log("[send-work-report-email] Received request for interventionId:", rawIntervention.id, "recipientEmail:", recipientEmail);
 
-    if (!rawIntervention || !recipientEmails || recipientEmails.length === 0) {
-      console.error("[send-work-report-email] Missing intervention data or recipientEmails. Status: 400");
-      return new Response(JSON.stringify({ error: 'Missing intervention data or recipientEmails' }), {
+    if (!rawIntervention || !recipientEmail) {
+      console.error("[send-work-report-email] Missing intervention data or recipientEmail. Status: 400");
+      return new Response(JSON.stringify({ error: 'Missing intervention data or recipientEmail' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -33,6 +33,7 @@ serve(async (req) => {
     );
 
     // Recupera i dettagli dell'intervento dal DB per sicurezza e completezza
+    // (anche se il client invia i dati, è buona pratica convalidare/recuperare dal server)
     const { data: intervention, error: interventionError } = await supabaseClient
       .from('interventions')
       .select('*')
@@ -59,6 +60,8 @@ serve(async (req) => {
     console.log("[send-work-report-email] RESEND_API_KEY is set.");
 
     const resend = new Resend(resendApiKey);
+
+    const clientPrintPageUrl = `http://localhost:32138/interventions/${intervention.id}/print-work-report`;
 
     // Deserializza work_report_data se presente
     const workReportData = intervention.work_report_data ? JSON.parse(JSON.stringify(intervention.work_report_data)) : {};
@@ -146,19 +149,21 @@ serve(async (req) => {
           </table>
         ` : ''}
 
-        <p style="margin-top: 30px;">Cordiali saluti,<br/>Antonelli & Pellizzari Refrigerazioni</p>
-        <p style="font-size: 0.8em; color: #777; margin-top: 15px;">Questa è un'email generata automaticamente, non è possibile rispondere.</p>
+        <p style="margin-top: 20px;">Può visualizzare e stampare la bolla di consegna completa al seguente link:</p>
+        <p><a href="${clientPrintPageUrl}" style="color: #0056b3; text-decoration: none;">${clientPrintPageUrl}</a></p>
+
+        <p style="margin-top: 30px;">Cordiali saluti,<br/>Antonelli & Zani Refrigerazioni</p>
       </div>
     `;
 
-    const fromEmail = 'Antonelli & Pellizzari Refrigerazioni <onboarding@resend.dev>';
-    console.log("[send-work-report-email] Attempting to send email from:", fromEmail, "to:", recipientEmails);
+    const fromEmail = 'onboarding@resend.dev';
+    console.log("[send-work-report-email] Attempting to send email from:", fromEmail, "to:", recipientEmail);
 
     const { data, error: resendError } = await resend.emails.send({
       from: fromEmail,
-      to: recipientEmails, // Passa l'array di destinatari
+      to: recipientEmail,
       subject: `Bolla di Consegna Intervento ${intervention.client_company_name}`,
-      html: emailHtml,
+      html: emailHtml, // Ora inviamo l'HTML ricco
     });
 
     if (resendError) {

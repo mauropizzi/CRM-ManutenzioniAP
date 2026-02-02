@@ -16,13 +16,14 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { InterventionRequest } from '@/types/intervention';
-import { InterventionOutcomeSection } from './intervention-conclusion-form/intervention-outcome-section'; // Importazione corretta
+import {
+  InterventionOutcomeSection,
+} from './intervention-conclusion-form'; // Importo solo la sezione esito
 
-// Definisco lo schema e i tipi qui per evitare dipendenze circolari
 export const interventionConclusionFormSchema = z.object({
   intervention_concluded: z.boolean().optional(),
   request_quote: z.boolean().optional(),
-  office_notes: z.string().optional().or(z.literal('')),
+  office_notes: z.string().optional().or(z.literal('')), // Ora gestisce solo office_notes
 });
 
 export type InterventionConclusionFormValues = z.infer<typeof interventionConclusionFormSchema>;
@@ -51,6 +52,7 @@ export const InterventionConclusionForm = ({ initialData, onSubmit }: Interventi
       <Form {...methods}>
         <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8 p-4">
           <InterventionOutcomeSection />
+
           {/* Sezione Note Ufficio */}
           <div className="grid gap-6 rounded-lg border p-4 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Note Ufficio</h3>
@@ -68,6 +70,7 @@ export const InterventionConclusionForm = ({ initialData, onSubmit }: Interventi
               )}
             />
           </div>
+
           <div className="flex justify-end gap-2 pt-4">
             <Link href="/interventions" passHref>
               <Button type="button" variant="outline" className="rounded-md px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">

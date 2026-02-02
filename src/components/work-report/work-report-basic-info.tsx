@@ -39,7 +39,7 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
   const { control, getValues, setValue } = useFormContext<WorkReportFormValues>();
   const { interventionRequests } = useInterventionRequests(); // Get all interventions
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-  const [recipientEmailsInput, setRecipientEmailsInput] = useState(clientEmail || ''); // Ora è una stringa per input multipli
+  const [recipientEmail, setRecipientEmail] = useState(clientEmail || '');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const currentIntervention = interventionId 
@@ -51,17 +51,14 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
       toast.error("Dettagli intervento non disponibili per l'invio dell'email.");
       return;
     }
-    
-    const emails = recipientEmailsInput.split(',').map(email => email.trim()).filter(email => email !== '');
-
-    if (emails.length === 0) {
-      toast.error("Inserisci almeno un indirizzo email valido.");
+    if (!recipientEmail) {
+      toast.error("Inserisci un indirizzo email valido.");
       return;
     }
 
     setIsSendingEmail(true);
     try {
-      await sendWorkReportEmail(currentIntervention, emails); // Passa l'array di email
+      await sendWorkReportEmail(currentIntervention, recipientEmail); // Pass the full intervention object
       setIsEmailDialogOpen(false);
     } catch (error) {
       // L'errore è già gestito e mostrato dalla utility sendWorkReportEmail
@@ -123,7 +120,7 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
                 type="button"
                 variant="outline"
                 className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-blue-600 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-gray-700"
-                onClick={() => setRecipientEmailsInput(clientEmail || '')} // Pre-compila con l'email del cliente
+                onClick={() => setRecipientEmail(clientEmail || '')} // Pre-compila con l'email del cliente
               >
                 <Mail size={16} />
                 Invia Email
@@ -133,7 +130,7 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
               <DialogHeader>
                 <DialogTitle className="text-gray-900 dark:text-gray-100">Invia Bolla di Consegna via Email</DialogTitle>
                 <DialogDescription className="text-gray-600 dark:text-gray-400">
-                  Inserisci gli indirizzi email dei destinatari, separati da virgola.
+                  Inserisci l'indirizzo email del destinatario.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -143,10 +140,9 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
                   </FormLabel>
                   <Input
                     id="email"
-                    type="text" // Cambiato a text per permettere la virgola
-                    value={recipientEmailsInput}
-                    onChange={(e) => setRecipientEmailsInput(e.target.value)}
-                    placeholder="email1@example.com, email2@example.com"
+                    type="email"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
                     className="col-span-3 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
