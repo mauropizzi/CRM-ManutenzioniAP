@@ -10,18 +10,56 @@ import {
   FormLabel,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { Printer } from 'lucide-react';
+import { Printer, Mail } from 'lucide-react';
 import { WorkReportFormValues } from '@/components/work-report-form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Link from 'next/link'; // Importa Link
+import Link from 'next/link';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { useState } from 'react';
+import { sendWorkReportEmail } from '@/lib/email-utils'; // Importa la utility per l'invio email
+import { toast } from 'sonner';
 
 interface WorkReportBasicInfoProps {
   clientName?: string;
-  interventionId?: string; // Aggiungo interventionId come prop
+  clientEmail?: string; // Aggiunto clientEmail come prop
+  interventionId?: string;
 }
 
-export const WorkReportBasicInfo = ({ clientName, interventionId }: WorkReportBasicInfoProps) => {
-  const { control, getValues } = useFormContext<WorkReportFormValues>(); // Destruttura getValues qui
+export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }: WorkReportBasicInfoProps) => {
+  const { control, getValues } = useFormContext<WorkReportFormValues>();
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState(clientEmail || '');
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+  const handleSendEmail = async () => {
+    if (!interventionId) {
+      toast.error("ID intervento non disponibile per l'invio dell'email.");
+      return;
+    }
+    if (!recipientEmail) {
+      toast.error("Inserisci un indirizzo email valido.");
+      return;
+    }
+
+    setIsSendingEmail(true);
+    try {
+      await sendWorkReportEmail(interventionId, recipientEmail);
+      setIsEmailDialogOpen(false);
+    } catch (error) {
+      // L'errore è già gestito e mostrato dalla utility sendWorkReportEmail
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   return (
     <div className="space-y-4 rounded-lg border p-6 bg-white dark:bg-gray-900">
@@ -66,6 +104,63 @@ export const WorkReportBasicInfo = ({ clientName, interventionId }: WorkReportBa
             <Printer size={16} />
             Stampa bolla
           </Link>
+        )}
+
+        {/* Pulsante Invia Email */}
+        {interventionId && (
+          <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-blue-600 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-gray-700"
+                onClick={() => setRecipientEmail(clientEmail || '')} // Pre-compila con l'email del cliente
+              >
+                <Mail size={16} />
+                Invia Email
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] rounded-lg bg-white dark:bg-gray-900 p-6 shadow-lg">
+              <DialogHeader>
+                <DialogTitle className="text-gray-900 dark:text-gray-100">Invia Bolla di Consegna via Email</DialogTitle>
+                <DialogDescription className="text-gray-600 dark:text-gray-400">
+                  Inserisci l'indirizzo email del destinatario.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <FormLabel htmlFor="email" className="text-right text-gray-700 dark:text-gray-300">
+                    Email
+                  </FormLabel>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
+                    className="col-span-3 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsEmailDialogOpen(false)}
+                  className="rounded-md px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Annulla
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={handleSendEmail} 
+                  disabled={isSendingEmail}
+                  className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
+                >
+                  {isSendingEmail ? 'Invio...' : 'Invia'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         )}
 
         <Select onValueChange={(value) => control.setValue('status', value as any)} defaultValue={getValues('status')} className="ml-auto">
