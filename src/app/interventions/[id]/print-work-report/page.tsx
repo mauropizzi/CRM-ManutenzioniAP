@@ -6,15 +6,14 @@ import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { PrintableWorkReport } from '@/components/printable-work-report';
 import { Loader2 } from 'lucide-react';
+import { ProtectedRoute } from '@/components/protected-route';
 
-interface PrintWorkReportPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
-  const { id } = React.use(params); // Reintroduced React.use()
+export default function PrintWorkReportPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  const { id } = React.use(params);
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
   const router = useRouter();
 
@@ -24,9 +23,8 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
     if (!interventionsLoading && intervention) {
       const timer = setTimeout(() => {
         window.print();
-        // Dopo la stampa, reindirizza alla pagina del report di lavoro
         router.push(`/interventions/${id}/work-report`);
-      }, 500); // Breve ritardo per assicurare il rendering prima della stampa
+      }, 500);
       return () => clearTimeout(timer);
     } else if (!interventionsLoading && !intervention) {
       notFound();

@@ -9,8 +9,12 @@ import { Material } from '@/types/material';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
-export default function EditMaterialPage({ params }: { params: { id: string } }) {
-  const { id } = React.use(params); // Reintroduced React.use()
+export default function EditMaterialPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  const { id } = React.use(params);
   const { materials, updateMaterial } = useMaterials();
   const router = useRouter();
 
