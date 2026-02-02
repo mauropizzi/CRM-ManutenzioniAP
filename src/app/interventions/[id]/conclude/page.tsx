@@ -1,7 +1,7 @@
 "use client";
 
-import React, { use } from 'react';
-import { InterventionConclusionForm, InterventionConclusionFormValues } from '@/components/intervention-conclusion-form'; // Importazione dal barrel file
+import React from 'react'; // Rimosso '{ use }'
+import { InterventionConclusionForm, InterventionConclusionFormValues } from '@/components/intervention-conclusion-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
@@ -9,13 +9,13 @@ import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
 
 interface ConcludeInterventionPageProps {
-  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
+  params: {
     id: string;
   };
 }
 
 export default function ConcludeInterventionPage({ params }: ConcludeInterventionPageProps) {
-  const { id } = params; // Accesso diretto all'ID
+  const { id } = params;
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

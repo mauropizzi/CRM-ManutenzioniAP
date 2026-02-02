@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react';
+import React from 'react'; // Rimosso '{ use }'
 import { CustomerForm, CustomerFormValues } from '@/components/customer-form';
 import { useCustomers } from '@/context/customer-context';
 import { useRouter } from 'next/navigation';
@@ -9,13 +9,13 @@ import { Customer } from '@/types/customer';
 import { Toaster } from '@/components/ui/sonner';
 
 interface EditCustomerPageProps {
-  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
+  params: {
     id: string;
   };
 }
 
 export default function EditCustomerPage({ params }: EditCustomerPageProps) {
-  const { id } = params; // Accesso diretto all'ID
+  const { id } = params;
   const { customers, updateCustomer } = useCustomers();
   const router = useRouter();
 

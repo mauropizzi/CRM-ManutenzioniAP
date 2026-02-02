@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react';
+import React from 'react'; // Rimosso '{ use }'
 import { WorkReportForm, WorkReportFormValues } from '@/components/work-report-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
@@ -8,13 +8,13 @@ import { notFound } from 'next/navigation';
 import { Toaster } from '@/components/ui/sonner';
 
 interface WorkReportPageProps {
-  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
+  params: {
     id: string;
   };
 }
 
 export default function WorkReportPage({ params }: WorkReportPageProps) {
-  const { id } = params; // Accesso diretto all'ID
+  const { id } = params;
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
@@ -25,12 +25,12 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
   }
 
   const handleSubmit = async (data: WorkReportFormValues) => {
-    const { status, ...workReportDataFields } = data; // Estrai status e raggruppa gli altri campi per work_report_data
+    const { status, ...workReportDataFields } = data;
 
     await updateInterventionRequest({
-      ...intervention, // Mantieni i campi esistenti dell'intervento
-      work_report_data: workReportDataFields, // Assegna i campi raggruppati a work_report_data
-      status: status, // Aggiorna lo stato a livello radice
+      ...intervention,
+      work_report_data: workReportDataFields,
+      status: status,
     });
     router.push('/interventions');
   };
@@ -53,7 +53,7 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
             initialData={{ ...(intervention.work_report_data ?? {}), id: intervention.id }}
             onSubmit={handleSubmit}
             clientName={intervention.client_company_name}
-            clientEmail={intervention.client_email} {/* Passa l'email del cliente qui */}
+            clientEmail={intervention.client_email}
             currentStatus={intervention.status}
           />
         </div>

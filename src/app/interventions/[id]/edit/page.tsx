@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react';
+import React from 'react'; // Rimosso '{ use }'
 import { InterventionForm, InterventionFormValues } from '@/components/intervention-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
@@ -11,13 +11,13 @@ import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 
 interface EditInterventionPageProps {
-  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
+  params: {
     id: string;
   };
 }
 
 export default function EditInterventionPage({ params }: EditInterventionPageProps) {
-  const { id } = params; // Accesso diretto all'ID
+  const { id } = params;
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

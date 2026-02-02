@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react';
+import React from 'react'; // Rimosso '{ use }'
 import { TechnicianForm, TechnicianFormValues } from '@/components/technician-form';
 import { useTechnicians } from '@/context/technician-context';
 import { useRouter } from 'next/navigation';
@@ -10,13 +10,13 @@ import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
 interface EditTechnicianPageProps {
-  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
+  params: {
     id: string;
   };
 }
 
 export default function EditTechnicianPage({ params }: EditTechnicianPageProps) {
-  const { id } = params; // Accesso diretto all'ID
+  const { id } = params;
   const { technicians, updateTechnician } = useTechnicians();
   const router = useRouter();
 

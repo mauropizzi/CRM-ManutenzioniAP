@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react';
+import React from 'react'; // Rimosso '{ use }'
 import { MaterialForm, MaterialFormValues } from '@/components/material-form';
 import { useMaterials } from '@/context/material-context';
 import { useRouter } from 'next/navigation';
@@ -10,13 +10,13 @@ import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
 interface EditMaterialPageProps {
-  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
+  params: {
     id: string;
   };
 }
 
 export default function EditMaterialPage({ params }: EditMaterialPageProps) {
-  const { id } = params; // Accesso diretto all'ID
+  const { id } = params;
   const { materials, updateMaterial } = useMaterials();
   const router = useRouter();
 
