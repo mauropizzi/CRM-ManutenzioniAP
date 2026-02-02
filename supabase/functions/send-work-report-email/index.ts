@@ -15,12 +15,12 @@ serve(async (req) => {
   }
 
   try {
-    const { intervention: rawIntervention, recipientEmail } = await req.json();
-    console.log("[send-work-report-email] Received request for interventionId:", rawIntervention.id, "recipientEmail:", recipientEmail);
+    const { intervention: rawIntervention, recipientEmails } = await req.json(); // Ora riceve un array
+    console.log("[send-work-report-email] Received request for interventionId:", rawIntervention.id, "recipientEmails:", recipientEmails);
 
-    if (!rawIntervention || !recipientEmail) {
-      console.error("[send-work-report-email] Missing intervention data or recipientEmail. Status: 400");
-      return new Response(JSON.stringify({ error: 'Missing intervention data or recipientEmail' }), {
+    if (!rawIntervention || !recipientEmails || recipientEmails.length === 0) {
+      console.error("[send-work-report-email] Missing intervention data or recipientEmails. Status: 400");
+      return new Response(JSON.stringify({ error: 'Missing intervention data or recipientEmails' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -33,7 +33,6 @@ serve(async (req) => {
     );
 
     // Recupera i dettagli dell'intervento dal DB per sicurezza e completezza
-    // (anche se il client invia i dati, è buona pratica convalidare/recuperare dal server)
     const { data: intervention, error: interventionError } = await supabaseClient
       .from('interventions')
       .select('*')
@@ -152,14 +151,14 @@ serve(async (req) => {
       </div>
     `;
 
-    const fromEmail = 'Antonelli & Pellizzari Refrigerazioni <onboarding@resend.dev>'; // Modificato il nome del mittente
-    console.log("[send-work-report-email] Attempting to send email from:", fromEmail, "to:", recipientEmail);
+    const fromEmail = 'Antonelli & Pellizzari Refrigerazioni <onboarding@resend.dev>';
+    console.log("[send-work-report-email] Attempting to send email from:", fromEmail, "to:", recipientEmails);
 
     const { data, error: resendError } = await resend.emails.send({
       from: fromEmail,
-      to: recipientEmail,
+      to: recipientEmails, // Passa l'array di destinatari
       subject: `Bolla di Consegna Intervento ${intervention.client_company_name}`,
-      html: emailHtml, // Ora inviamo l'HTML ricco
+      html: emailHtml,
     });
 
     if (resendError) {

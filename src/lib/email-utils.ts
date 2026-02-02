@@ -2,11 +2,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { InterventionRequest } from '@/types/intervention'; // Import InterventionRequest
 
-export const sendWorkReportEmail = async (intervention: InterventionRequest, recipientEmail: string) => {
+export const sendWorkReportEmail = async (intervention: InterventionRequest, recipientEmails: string[]) => {
   try {
-    // Pass the entire intervention object to the Edge Function
+    // Pass the entire intervention object and the array of recipient emails to the Edge Function
     const { data, error } = await supabase.functions.invoke('send-work-report-email', {
-      body: { intervention, recipientEmail },
+      body: { intervention, recipientEmails },
     });
 
     if (error) {
