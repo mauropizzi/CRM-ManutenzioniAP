@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useEffect } from 'react'; // Reintrodotto 'use'
+import React, { useEffect } from 'react';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
@@ -14,7 +14,7 @@ interface PrintWorkReportPageProps {
 }
 
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
-  const { id } = use(params); // Srotola i params con React.use()
+  const { id } = params; // Directly access id from params
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
   const router = useRouter();
 
@@ -24,8 +24,9 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
     if (!interventionsLoading && intervention) {
       const timer = setTimeout(() => {
         window.print();
+        // Dopo la stampa, reindirizza alla pagina del report di lavoro
         router.push(`/interventions/${id}/work-report`);
-      }, 500);
+      }, 500); // Breve ritardo per assicurare il rendering prima della stampa
       return () => clearTimeout(timer);
     } else if (!interventionsLoading && !intervention) {
       notFound();
@@ -42,7 +43,8 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
   }
 
   return (
-    <div className="print:block hidden">
+    // Rimosso 'hidden' per rendere il contenuto visibile sulla pagina, mantenendo 'print:block' per la stampa
+    <div className="print:block"> 
       <PrintableWorkReport intervention={intervention} />
     </div>
   );
