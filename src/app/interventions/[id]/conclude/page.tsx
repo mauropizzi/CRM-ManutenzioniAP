@@ -9,13 +9,13 @@ import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
 
 interface ConcludeInterventionPageProps {
-  params: Promise<{
+  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
     id: string;
-  }>;
+  };
 }
 
 export default function ConcludeInterventionPage({ params }: ConcludeInterventionPageProps) {
-  const { id } = use(params);
+  const { id } = params; // Accesso diretto all'ID
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

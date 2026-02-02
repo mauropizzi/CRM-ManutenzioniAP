@@ -8,13 +8,13 @@ import { PrintableWorkReport } from '@/components/printable-work-report';
 import { Loader2 } from 'lucide-react';
 
 interface PrintWorkReportPageProps {
-  params: Promise<{
+  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
     id: string;
-  }>;
+  };
 }
 
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
-  const { id } = use(params);
+  const { id } = params; // Accesso diretto all'ID
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
   const router = useRouter();
 

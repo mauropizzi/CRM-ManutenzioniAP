@@ -9,13 +9,13 @@ import { Customer } from '@/types/customer';
 import { Toaster } from '@/components/ui/sonner';
 
 interface EditCustomerPageProps {
-  params: Promise<{
+  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
     id: string;
-  }>;
+  };
 }
 
 export default function EditCustomerPage({ params }: EditCustomerPageProps) {
-  const { id } = use(params);
+  const { id } = params; // Accesso diretto all'ID
   const { customers, updateCustomer } = useCustomers();
   const router = useRouter();
 

@@ -10,13 +10,13 @@ import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
 interface EditMaterialPageProps {
-  params: Promise<{
+  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
     id: string;
-  }>;
+  };
 }
 
 export default function EditMaterialPage({ params }: EditMaterialPageProps) {
-  const { id } = use(params);
+  const { id } = params; // Accesso diretto all'ID
   const { materials, updateMaterial } = useMaterials();
   const router = useRouter();
 

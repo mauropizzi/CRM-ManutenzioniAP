@@ -11,13 +11,13 @@ import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 
 interface EditInterventionPageProps {
-  params: Promise<{
+  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
     id: string;
-  }>;
+  };
 }
 
 export default function EditInterventionPage({ params }: EditInterventionPageProps) {
-  const { id } = use(params);
+  const { id } = params; // Accesso diretto all'ID
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

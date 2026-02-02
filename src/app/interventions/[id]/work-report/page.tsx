@@ -8,13 +8,13 @@ import { notFound } from 'next/navigation';
 import { Toaster } from '@/components/ui/sonner';
 
 interface WorkReportPageProps {
-  params: Promise<{
+  params: { // Modificato da Promise<{ id: string; }> a { id: string; }
     id: string;
-  }>;
+  };
 }
 
 export default function WorkReportPage({ params }: WorkReportPageProps) {
-  const { id } = use(params);
+  const { id } = params; // Accesso diretto all'ID
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
