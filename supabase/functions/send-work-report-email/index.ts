@@ -59,8 +59,8 @@ serve(async (req) => {
     const resend = new Resend(resendApiKey);
 
     // Costruisci l'URL per la pagina di stampa della bolla.
-    // NOTA: Per la produzione, dovrai sostituire 'http://localhost:3000' con l'URL del tuo sito deployato.
-    const clientPrintPageUrl = `http://localhost:3000/interventions/${interventionId}/print-work-report`;
+    // NOTA: Per la produzione, dovrai sostituire 'http://localhost:32138' con l'URL del tuo sito deployato (es. tramite una variabile d'ambiente).
+    const clientPrintPageUrl = `http://localhost:32138/interventions/${interventionId}/print-work-report`;
 
     const emailContent = `
       Gentile Cliente ${intervention.client_company_name},
