@@ -59,7 +59,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchInterventions = async () => {
     try {
-      console.log('Fetching interventions from Supabase...');
+      console.log('[InterventionContext] Fetching interventions from Supabase...');
       
       const { data, error } = await supabase
         .from('interventions')
@@ -67,12 +67,12 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase error fetching interventions:', error);
+        console.error('[InterventionContext] Supabase error fetching interventions:', error);
         toast.error(`Errore nel caricamento degli interventi: ${error.message}`);
         return;
       }
 
-      console.log('Interventions fetched:', data);
+      console.log('[InterventionContext] Interventions fetched:', data);
       
       if (data) {
         // Mappa i dati per convertire le stringhe di scheduled_date in oggetti Date
@@ -84,7 +84,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         setInterventionRequests(parsedData);
       }
     } catch (error: any) {
-      console.error('Exception fetching interventions:', error);
+      console.error('[InterventionContext] Exception fetching interventions:', error);
       toast.error(`Errore nel caricamento degli interventi: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
@@ -108,7 +108,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         work_report_data: serializeWorkReportData(newRequest.work_report_data),
       };
 
-      console.log('Adding intervention:', requestWithUserId);
+      console.log('[InterventionContext] Adding intervention:', requestWithUserId);
       
       const { data, error } = await supabase
         .from('interventions')
@@ -117,12 +117,12 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) {
-        console.error('Supabase error adding intervention:', error);
+        console.error('[InterventionContext] Supabase error adding intervention:', error);
         toast.error(`Errore nell'aggiunta dell'intervento: ${error.message}`);
         return;
       }
 
-      console.log('Intervention added:', data);
+      console.log('[InterventionContext] Intervention added:', data);
 
       if (data) {
         // Deserializza work_report_data dopo l'inserimento per mantenere la coerenza nel frontend
@@ -135,14 +135,14 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         toast.success("Richiesta di intervento aggiunta con successo!");
       }
     } catch (error: any) {
-      console.error('Exception adding intervention:', error);
+      console.error('[InterventionContext] Exception adding intervention:', error);
       toast.error(`Errore nell'aggiunta dell'intervento: ${error?.message || 'Unknown error'}`);
     }
   };
 
   const updateInterventionRequest = async (updatedRequest: InterventionRequest) => {
     try {
-      console.log('Updating intervention:', updatedRequest);
+      console.log('[InterventionContext] Updating intervention:', updatedRequest);
       
       // Prepara l'oggetto per l'aggiornamento, serializzando work_report_data
       const updatePayload = {
@@ -159,12 +159,12 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) {
-        console.error('Supabase error updating intervention:', error);
+        console.error('[InterventionContext] Supabase error updating intervention:', error);
         toast.error(`Errore nell'aggiornamento dell'intervento: ${error.message}`);
         return;
       }
 
-      console.log('Intervention updated:', data);
+      console.log('[InterventionContext] Intervention updated:', data);
 
       if (data) {
         // Deserializza work_report_data dopo l'aggiornamento per mantenere la coerenza nel frontend
@@ -181,14 +181,20 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         toast.success("Richiesta di intervento aggiornata con successo!");
       }
     } catch (error: any) {
-      console.error('Exception updating intervention:', error);
+      console.error('[InterventionContext] Exception updating intervention:', error);
       toast.error(`Errore nell'aggiornamento dell'intervento: ${error?.message || 'Unknown error'}`);
     }
   };
 
   const deleteInterventionRequest = async (id: string) => {
     try {
-      console.log('Deleting intervention:', id);
+      if (!user) {
+        toast.error("Devi essere autenticato per eliminare un intervento.");
+        console.warn('[InterventionContext] Attempted to delete intervention without authenticated user.');
+        return;
+      }
+
+      console.log(`[InterventionContext] Attempting to delete intervention with ID: ${id} by user: ${user.id}`);
       
       const { error } = await supabase
         .from('interventions')
@@ -196,15 +202,16 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .eq('id', id);
 
       if (error) {
-        console.error('Supabase error deleting intervention:', error);
+        console.error(`[InterventionContext] Supabase error deleting intervention ID ${id}:`, error);
         toast.error(`Errore nell'eliminazione dell'intervento: ${error.message}`);
         return;
       }
 
       setInterventionRequests((prev) => prev.filter((request) => request.id !== id));
       toast.success("Richiesta di intervento eliminata con successo!");
+      console.log(`[InterventionContext] Intervention ID ${id} deleted successfully.`);
     } catch (error: any) {
-      console.error('Exception deleting intervention:', error);
+      console.error(`[InterventionContext] Exception deleting intervention ID ${id}:`, error);
       toast.error(`Errore nell'eliminazione dell'intervento: ${error?.message || 'Unknown error'}`);
     }
   };
