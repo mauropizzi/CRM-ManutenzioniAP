@@ -169,8 +169,10 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
           <Printer size={16} /> Stampa
         </Button>
         {customerEmail && (
-          <Button variant="outline" className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 flex items-center gap-2" onClick={() => window.location.href = `mailto:${customerEmail}?subject=Bolla%20di%20Consegna%20${intervention.id.substring(0, 8).toUpperCase()}`}>
-            <Envelope size={16} /> Invia Email
+          <Button variant="outline" className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2" onClick={() => window.location.href = `mailto:${customerEmail}?subject=Bolla%20di%20Consegna%20${intervention.id.substring(0, 8).toUpperCase()}`}>
+            <span className="flex items-center gap-2">
+              <Envelope size={16} /> Invia Email
+            </span>
           </Button>
         )}
       </div>
