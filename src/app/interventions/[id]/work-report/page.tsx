@@ -1,20 +1,16 @@
 "use client";
 
-import React from 'react';
+import React, { use } from 'react';
 import { WorkReportForm, WorkReportFormValues } from '@/components/work-report-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Toaster } from '@/components/ui/sonner';
 
-type WorkReportPageProps = {
-  params: {
-    id: string;
-  };
-};
-
-export default function WorkReportPage({ params }: WorkReportPageProps) {
-  const { id } = params;
+export default function WorkReportPage({ params }: { params: Promise<{ id: string }> }) {
+  // Next.js 15+ richiede di usare React.use() per unwrap params
+  const { id } = use(params);
+  
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
