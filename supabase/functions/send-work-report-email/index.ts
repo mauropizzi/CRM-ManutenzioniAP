@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-import { Resend } from 'https://esm.sh/resend@1.1.0'; // Utilizziamo Resend per l'invio delle email
+import { Resend } from 'https://esm.sh/resend@1.1.0';
+import { format } from 'https://esm.sh/date-fns@3.6.0'; // Importa format da date-fns
+import { it } from 'https://esm.sh/date-fns@3.6.0/locale/it'; // Importa la locale italiana
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,12 +15,12 @@ serve(async (req) => {
   }
 
   try {
-    const { interventionId, recipientEmail } = await req.json();
-    console.log("[send-work-report-email] Received request for interventionId:", interventionId, "recipientEmail:", recipientEmail);
+    const { intervention: rawIntervention, recipientEmail } = await req.json();
+    console.log("[send-work-report-email] Received request for interventionId:", rawIntervention.id, "recipientEmail:", recipientEmail);
 
-    if (!interventionId || !recipientEmail) {
-      console.error("[send-work-report-email] Missing interventionId or recipientEmail. Status: 400");
-      return new Response(JSON.stringify({ error: 'Missing interventionId or recipientEmail' }), {
+    if (!rawIntervention || !recipientEmail) {
+      console.error("[send-work-report-email] Missing intervention data or recipientEmail. Status: 400");
+      return new Response(JSON.stringify({ error: 'Missing intervention data or recipientEmail' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -27,14 +29,15 @@ serve(async (req) => {
     // Inizializza il client Supabase per la funzione Edge
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '' // Usa la service role key per accesso server-side
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Recupera i dettagli dell'intervento
+    // Recupera i dettagli dell'intervento dal DB per sicurezza e completezza
+    // (anche se il client invia i dati, è buona pratica convalidare/recuperare dal server)
     const { data: intervention, error: interventionError } = await supabaseClient
       .from('interventions')
       .select('*')
-      .eq('id', interventionId)
+      .eq('id', rawIntervention.id)
       .single();
 
     if (interventionError || !intervention) {
@@ -58,29 +61,109 @@ serve(async (req) => {
 
     const resend = new Resend(resendApiKey);
 
-    // Costruisci l'URL per la pagina di stampa della bolla.
-    // NOTA: Per la produzione, dovrai sostituire 'http://localhost:3000' con l'URL del tuo sito deployato.
-    const clientPrintPageUrl = `http://localhost:3000/interventions/${interventionId}/print-work-report`;
+    const clientPrintPageUrl = `http://localhost:32138/interventions/${intervention.id}/print-work-report`;
 
-    const emailContent = `
-      Gentile Cliente ${intervention.client_company_name},
+    // Deserializza work_report_data se presente
+    const workReportData = intervention.work_report_data ? JSON.parse(JSON.stringify(intervention.work_report_data)) : {};
 
-      Le inviamo la bolla di consegna relativa all'intervento sul suo impianto ${intervention.system_type} ${intervention.brand} ${intervention.model}.
+    // Calcola il totale delle ore
+    const totalHours = workReportData.time_entries?.reduce((sum: number, entry: any) => sum + (entry.total_hours || 0), 0) || 0;
 
-      Può visualizzare e stampare la bolla di consegna al seguente link:
-      ${clientPrintPageUrl}
+    // Costruisci un corpo email HTML più ricco
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #0056b3;">Bolla di Consegna Intervento</h2>
+        <p>Gentile Cliente <strong>${intervention.client_company_name}</strong>,</p>
+        <p>Le inviamo la bolla di consegna relativa all'intervento sul suo impianto.</p>
+        
+        <h3 style="color: #0056b3;">Dettagli Cliente</h3>
+        <ul>
+          <li><strong>Ragione Sociale:</strong> ${intervention.client_company_name}</li>
+          <li><strong>Indirizzo:</strong> ${intervention.client_address}</li>
+          <li><strong>Email:</strong> ${intervention.client_email}</li>
+          <li><strong>Telefono:</strong> ${intervention.client_phone}</li>
+          <li><strong>Referente:</strong> ${intervention.client_referent || 'N/D'}</li>
+        </ul>
 
-      Cordiali saluti,
-      Antonelli & Zani Refrigerazioni
+        <h3 style="color: #0056b3;">Dettagli Impianto</h3>
+        <ul>
+          <li><strong>Tipo Impianto:</strong> ${intervention.system_type}</li>
+          <li><strong>Marca:</strong> ${intervention.brand}</li>
+          <li><strong>Modello:</strong> ${intervention.model}</li>
+          <li><strong>Matricola:</strong> ${intervention.serial_number}</li>
+          <li><strong>Ubicazione:</strong> ${intervention.system_location}</li>
+          <li><strong>Rif. Interno:</strong> ${intervention.internal_ref || 'N/D'}</li>
+        </ul>
+
+        <h3 style="color: #0056b3;">Lavoro Svolto</h3>
+        <p><strong>Descrizione:</strong> ${workReportData.work_description || 'Nessuna descrizione fornita.'}</p>
+        <p><strong>Note Operative:</strong> ${workReportData.operative_notes || 'Nessuna nota operativa.'}</p>
+
+        ${workReportData.time_entries && workReportData.time_entries.length > 0 ? `
+          <h3 style="color: #0056b3;">Ore di Lavoro</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+            <thead>
+              <tr style="background-color: #f2f2f2;">
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Data</th>
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Tecnico</th>
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Fascia 1</th>
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Fascia 2</th>
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Ore</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${workReportData.time_entries.map((entry: any) => `
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${entry.date ? format(new Date(entry.date), 'dd/MM/yyyy', { locale: it }) : 'N/D'}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${entry.technician}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${entry.time_slot_1_start} - ${entry.time_slot_1_end}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${entry.time_slot_2_start && entry.time_slot_2_end ? `${entry.time_slot_2_start} - ${entry.time_slot_2_end}` : 'N/D'}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${entry.total_hours.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <p style="text-align: right; font-weight: bold;">Totale Ore: ${totalHours.toFixed(2)}</p>
+          ${workReportData.kilometers !== undefined ? `<p style="text-align: right; font-weight: bold;">Km percorsi: ${workReportData.kilometers}</p>` : ''}
+        ` : ''}
+
+        ${workReportData.materials && workReportData.materials.length > 0 ? `
+          <h3 style="color: #0056b3;">Materiali Utilizzati</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+            <thead>
+              <tr style="background-color: #f2f2f2;">
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">U.M.</th>
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Quantità</th>
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Descrizione</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${workReportData.materials.map((material: any) => `
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${material.unit || 'N/D'}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${material.quantity}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${material.description || 'N/D'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : ''}
+
+        <p style="margin-top: 20px;">Può visualizzare e stampare la bolla di consegna completa al seguente link:</p>
+        <p><a href="${clientPrintPageUrl}" style="color: #0056b3; text-decoration: none;">${clientPrintPageUrl}</a></p>
+
+        <p style="margin-top: 30px;">Cordiali saluti,<br/>Antonelli & Zani Refrigerazioni</p>
+      </div>
     `;
-    const fromEmail = 'onboarding@resend.dev'; // IMPORTANTE: Sostituisci con un dominio email verificato su Resend
+
+    const fromEmail = 'onboarding@resend.dev';
     console.log("[send-work-report-email] Attempting to send email from:", fromEmail, "to:", recipientEmail);
 
     const { data, error: resendError } = await resend.emails.send({
       from: fromEmail,
       to: recipientEmail,
       subject: `Bolla di Consegna Intervento ${intervention.client_company_name}`,
-      html: emailContent.replace(/\n/g, '<br/>'),
+      html: emailHtml, // Ora inviamo l'HTML ricco
     });
 
     if (resendError) {
