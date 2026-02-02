@@ -10,7 +10,7 @@ import {
   FormLabel,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { Printer, Mail } from 'lucide-react';
+import { Printer, Mail, AlertCircle } from 'lucide-react';
 import { WorkReportFormValues } from '@/components/work-report-form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
@@ -25,9 +25,10 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { sendWorkReportEmail } from '@/lib/email-utils'; // Importa la utility per l'invio email
+import { sendWorkReportEmail } from '@/lib/email-utils';
 import { toast } from 'sonner';
-import { useInterventionRequests } from '@/context/intervention-context'; // Import useInterventionRequests
+import { useInterventionRequests } from '@/context/intervention-context';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface WorkReportBasicInfoProps {
   clientName?: string;
@@ -37,9 +38,9 @@ interface WorkReportBasicInfoProps {
 
 export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }: WorkReportBasicInfoProps) => {
   const { control, getValues, setValue } = useFormContext<WorkReportFormValues>();
-  const { interventionRequests } = useInterventionRequests(); // Get all interventions
+  const { interventionRequests } = useInterventionRequests();
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-  const [recipientEmailsInput, setRecipientEmailsInput] = useState(clientEmail || ''); // Ora è una stringa per input multipli
+  const [recipientEmailsInput, setRecipientEmailsInput] = useState(clientEmail || '');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const currentIntervention = interventionId 
@@ -61,10 +62,10 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
 
     setIsSendingEmail(true);
     try {
-      await sendWorkReportEmail(currentIntervention, emails); // Passa l'array di email
+      await sendWorkReportEmail(currentIntervention, emails);
       setIsEmailDialogOpen(false);
     } catch (error) {
-      // L'errore è già gestito e mostrato dalla utility sendWorkReportEmail
+      // L'errore è già gestito nella utility
     } finally {
       setIsSendingEmail(false);
     }
@@ -82,6 +83,15 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
           </span>
         )}
       </div>
+
+      {/* Avviso limitazione Resend */}
+      <Alert className="bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription className="text-sm">
+          <strong>Nota:</strong> Con il piano gratuito di Resend, puoi inviare email solo al tuo indirizzo email verificato. 
+          Per inviare ai clienti, verifica un dominio personalizzato su Resend.
+        </AlertDescription>
+      </Alert>
 
       <div className="flex flex-wrap items-center gap-4">
         <FormField
@@ -123,7 +133,7 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
                 type="button"
                 variant="outline"
                 className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-blue-600 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-gray-700"
-                onClick={() => setRecipientEmailsInput(clientEmail || '')} // Pre-compila con l'email del cliente
+                onClick={() => setRecipientEmailsInput(clientEmail || '')}
               >
                 <Mail size={16} />
                 Invia Email
@@ -136,6 +146,15 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
                   Inserisci gli indirizzi email dei destinatari, separati da virgola.
                 </DialogDescription>
               </DialogHeader>
+              
+              {/* Avviso nel dialog */}
+              <Alert className="bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  Con Resend gratuito, inserisci solo il tuo indirizzo email per i test.
+                </AlertDescription>
+              </Alert>
+
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <FormLabel htmlFor="email" className="text-right text-gray-700 dark:text-gray-300">
@@ -143,10 +162,10 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
                   </FormLabel>
                   <Input
                     id="email"
-                    type="text" // Cambiato a text per permettere la virgola
+                    type="text"
                     value={recipientEmailsInput}
                     onChange={(e) => setRecipientEmailsInput(e.target.value)}
-                    placeholder="email1@example.com, email2@example.com"
+                    placeholder="tua@email.com"
                     className="col-span-3 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
@@ -173,7 +192,7 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
           </Dialog>
         )}
 
-        <Select onValueChange={(value) => setValue('status', value as any)} defaultValue={getValues('status')} className="ml-auto">
+        <Select onValueChange={(value) => setValue('status', value as any)} defaultValue={getValues('status')}>
           <FormControl>
             <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
               <SelectValue placeholder="Seleziona stato" />
