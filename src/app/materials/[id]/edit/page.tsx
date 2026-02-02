@@ -9,8 +9,8 @@ import { Material } from '@/types/material';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
-export default function EditMaterialPage({ params }: { params: { id: string } }) {
-  const { id } = params; // Corretto da React.use(params)
+export default async function EditMaterialPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const { materials, updateMaterial } = useMaterials();
   const router = useRouter();
 
