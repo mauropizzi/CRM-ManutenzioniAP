@@ -68,19 +68,28 @@ export const WorkReportBasicInfo = ({ clientName, interventionId }: WorkReportBa
           </Link>
         )}
 
-        <Select onValueChange={(value) => control.setValue('status', value as any)} defaultValue={getValues('status')} className="ml-auto">
-          <FormControl>
-            <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-              <SelectValue placeholder="Seleziona stato" />
-            </SelectTrigger>
-          </FormControl>
-          <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
-            <SelectItem value="Da fare">Da fare</SelectItem>
-            <SelectItem value="In corso">In corso</SelectItem>
-            <SelectItem value="Completato">Completato</SelectItem>
-            <SelectItem value="Annullato">Annullato</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Select per lo stato, ora correttamente avvolto in FormField */}
+        <FormField
+          control={control}
+          name="status"
+          render={({ field }) => (
+            <FormItem className="ml-auto">
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectValue placeholder="Seleziona stato" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
+                  <SelectItem value="Da fare">Da fare</SelectItem>
+                  <SelectItem value="In corso">In corso</SelectItem>
+                  <SelectItem value="Completato">Completato</SelectItem>
+                  <SelectItem value="Annullato">Annullato</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
