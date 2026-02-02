@@ -61,7 +61,7 @@ serve(async (req) => {
 
     const resend = new Resend(resendApiKey);
 
-    const clientPrintPageUrl = `http://localhost:32138/interventions/${intervention.id}/print-work-report`;
+    // Rimosso clientPrintPageUrl
 
     // Deserializza work_report_data se presente
     const workReportData = intervention.work_report_data ? JSON.parse(JSON.stringify(intervention.work_report_data)) : {};
@@ -148,9 +148,6 @@ serve(async (req) => {
             </tbody>
           </table>
         ` : ''}
-
-        <p style="margin-top: 20px;">Può visualizzare e stampare la bolla di consegna completa al seguente link:</p>
-        <p><a href="${clientPrintPageUrl}" style="color: #0056b3; text-decoration: none;">${clientPrintPageUrl}</a></p>
 
         <p style="margin-top: 30px;">Cordiali saluti,<br/>Antonelli & Zani Refrigerazioni</p>
       </div>
