@@ -35,7 +35,7 @@ interface WorkReportBasicInfoProps {
 }
 
 export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }: WorkReportBasicInfoProps) => {
-  const { control, getValues } = useFormContext<WorkReportFormValues>();
+  const { control, getValues, setValue } = useFormContext<WorkReportFormValues>(); // Destrutturato setValue
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState(clientEmail || '');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -163,7 +163,7 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
           </Dialog>
         )}
 
-        <Select onValueChange={(value) => control.setValue('status', value as any)} defaultValue={getValues('status')} className="ml-auto">
+        <Select onValueChange={(value) => setValue('status', value as any)} defaultValue={getValues('status')} className="ml-auto">
           <FormControl>
             <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
               <SelectValue placeholder="Seleziona stato" />
