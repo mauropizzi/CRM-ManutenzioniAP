@@ -9,7 +9,7 @@ import { Technician } from '@/types/technician';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
-export default async function EditTechnicianPage({ params }: { params: { id: string } }) {
+export default function EditTechnicianPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const { technicians, updateTechnician } = useTechnicians();
   const router = useRouter();

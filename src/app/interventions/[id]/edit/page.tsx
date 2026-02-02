@@ -10,7 +10,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 
-export default async function EditInterventionPage({ params }: { params: { id: string } }) {
+export default function EditInterventionPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
