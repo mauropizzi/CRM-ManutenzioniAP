@@ -5,9 +5,6 @@ import { InterventionRequest } from '@/types/intervention';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Button } from '@/components/ui/button';
-import { useCustomers } from '@/context/customer-context';
-import { Printer, Envelope } from 'lucide-react'; // Importa l'icona Envelope
 
 interface PrintableWorkReportProps {
   intervention: InterventionRequest;
@@ -30,16 +27,19 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
   } = intervention;
 
   const totalHours = work_report_data?.time_entries?.reduce((sum, entry) => sum + (entry.total_hours || 0), 0) || 0;
-  const { customers } = useCustomers();
-  const customer = customers.find((c) => c.id === intervention.customer_id);
-  const customerEmail = customer?.email;
 
   return (
     <div className="p-8 bg-white text-gray-900 print:p-0 print:text-black print:font-sans">
       {/* Header */}
       <div className="flex justify-between items-start mb-8 print:mb-6 border-b pb-4 print:border-black">
         <div className="flex flex-col items-start">
-          <Image src="/logo-crm-antonelli-zani.jpg" alt="Antonelli & Zani Logo" width={180} height={100} className="mb-2" />
+          <Image
+            src="/logo-crm-antonelli-zani.jpg"
+            alt="Antonelli & Zani Logo"
+            width={180} // Slightly larger logo for prominence
+            height={100}
+            className="mb-2"
+          />
           <h1 className="text-2xl font-bold text-gray-900 print:text-black">Antonelli & Zani</h1>
           <p className="text-lg text-gray-700 print:text-black">Refrigerazioni</p>
         </div>
@@ -78,7 +78,7 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
           <div>
             <p><span className="font-medium">Matricola:</span> {serial_number}</p>
             <p><span className="font-medium">Ubicazione:</span> {system_location}</p>
-            <p><span className="font-medium">Rif. interno:</span> {internal_ref || 'N/D'}</p>
+            <p><span className="font-medium">Rif. Interno:</span> {internal_ref || 'N/D'}</p>
           </div>
         </div>
       </div>
@@ -162,19 +162,6 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
           <p className="font-medium mb-2 text-gray-900 print:text-black">Firma Tecnico:</p>
           <div className="border-b border-gray-400 w-full h-16 print:border-black"></div>
         </div>
-      </div>
-
-      <div className="flex justify-end gap-4 mt-4">
-        <Button variant="outline" className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 flex items-center gap-2" onClick={() => window.print()}>
-          <Printer size={16} /> Stampa
-        </Button>
-        {customerEmail && (
-          <Button variant="outline" className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2" onClick={() => window.location.href = `mailto:${customerEmail}?subject=Bolla%20di%20Consegna%20${intervention.id.substring(0, 8).toUpperCase()}`}>
-            <span className="flex items-center gap-2">
-              <Envelope size={16} /> Invia Email
-            </span>
-          </Button>
-        )}
       </div>
     </div>
   );
