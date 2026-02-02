@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react'; // Rimosso '{ use }'
+import React, { use } from 'react'; // Reintrodotto 'use'
 import { TechnicianForm, TechnicianFormValues } from '@/components/technician-form';
 import { useTechnicians } from '@/context/technician-context';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,7 @@ interface EditTechnicianPageProps {
 }
 
 export default function EditTechnicianPage({ params }: EditTechnicianPageProps) {
-  const { id } = params;
+  const { id } = use(params); // Srotola i params con React.use()
   const { technicians, updateTechnician } = useTechnicians();
   const router = useRouter();
 

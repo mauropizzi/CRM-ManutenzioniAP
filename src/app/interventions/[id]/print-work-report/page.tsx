@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from 'react'; // Rimosso '{ use }'
+import React, { use, useEffect } from 'react'; // Reintrodotto 'use'
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
@@ -14,7 +14,7 @@ interface PrintWorkReportPageProps {
 }
 
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
-  const { id } = params;
+  const { id } = use(params); // Srotola i params con React.use()
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
   const router = useRouter();
 
