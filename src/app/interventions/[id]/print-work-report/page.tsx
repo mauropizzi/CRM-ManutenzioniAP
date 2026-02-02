@@ -14,7 +14,7 @@ interface PrintWorkReportPageProps {
 }
 
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
-  const { id } = params; // Directly access id from params
+  const { id } = React.use(params); // Reintroduced React.use()
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
   const router = useRouter();
 
@@ -43,7 +43,6 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
   }
 
   return (
-    // Rimosso 'hidden' per rendere il contenuto visibile sulla pagina, mantenendo 'print:block' per la stampa
     <div className="print:block"> 
       <PrintableWorkReport intervention={intervention} />
     </div>
