@@ -61,8 +61,6 @@ serve(async (req) => {
 
     const resend = new Resend(resendApiKey);
 
-    // Rimosso clientPrintPageUrl
-
     // Deserializza work_report_data se presente
     const workReportData = intervention.work_report_data ? JSON.parse(JSON.stringify(intervention.work_report_data)) : {};
 
@@ -149,11 +147,12 @@ serve(async (req) => {
           </table>
         ` : ''}
 
-        <p style="margin-top: 30px;">Cordiali saluti,<br/>Antonelli & Zani Refrigerazioni</p>
+        <p style="margin-top: 30px;">Cordiali saluti,<br/>Antonelli & Pellizzari Refrigerazioni</p>
+        <p style="font-size: 0.8em; color: #777; margin-top: 15px;">Questa è un'email generata automaticamente, non è possibile rispondere.</p>
       </div>
     `;
 
-    const fromEmail = 'onboarding@resend.dev';
+    const fromEmail = 'Antonelli & Pellizzari Refrigerazioni <onboarding@resend.dev>'; // Modificato il nome del mittente
     console.log("[send-work-report-email] Attempting to send email from:", fromEmail, "to:", recipientEmail);
 
     const { data, error: resendError } = await resend.emails.send({
