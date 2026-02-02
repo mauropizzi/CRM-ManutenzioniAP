@@ -19,16 +19,17 @@ const CustomerContext = createContext<CustomerContextType | undefined>(undefined
 export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); // Ottengo l'utente dal contesto di autenticazione
+  const { user, loadingAuth } = useAuth(); // Ottengo l'utente e loadingAuth dal contesto di autenticazione
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && user) { // Recupero i clienti solo se l'utente è autenticato
+    // Fetch customers only if user is authenticated and auth loading is complete
+    if (typeof window !== 'undefined' && !loadingAuth && user) {
       fetchCustomers();
-    } else if (!user) {
+    } else if (!user && !loadingAuth) { // Clear data if not authenticated and auth loading is complete
       setCustomers([]);
       setLoading(false);
     }
-  }, [user]); // Dipendenza dall'oggetto utente
+  }, [user, loadingAuth]); // Dipendenza dall'oggetto utente e dallo stato di caricamento dell'autenticazione
 
   const fetchCustomers = async () => {
     try {
