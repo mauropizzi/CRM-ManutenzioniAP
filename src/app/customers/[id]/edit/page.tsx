@@ -7,9 +7,8 @@ import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Customer } from '@/types/customer';
 import { Toaster } from '@/components/ui/sonner';
-import type { PageProps } from 'next'; // Importa PageProps
 
-export default function EditCustomerPage({ params }: PageProps<{ id: string }>) {
+export default function EditCustomerPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const { customers, updateCustomer } = useCustomers();
   const router = useRouter();
