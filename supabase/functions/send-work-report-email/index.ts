@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
+const RESEND_API_URL = 'https://api.resend.com/emails';
 
 // Funzione semplice per formattare la data senza dipendenze esterne
 const formatDate = (dateStr: string): string => {
@@ -64,11 +64,11 @@ serve(async (req) => {
     // Check environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const brevoApiKey = Deno.env.get('BREVO_API_KEY');
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
 
     console.log("[send-work-report-email] Env check - SUPABASE_URL:", !!supabaseUrl);
     console.log("[send-work-report-email] Env check - SUPABASE_SERVICE_ROLE_KEY:", !!supabaseServiceKey);
-    console.log("[send-work-report-email] Env check - BREVO_API_KEY:", !!brevoApiKey);
+    console.log("[send-work-report-email] Env check - RESEND_API_KEY:", !!resendApiKey);
 
     if (!supabaseUrl || !supabaseServiceKey) {
       return new Response(JSON.stringify({ error: 'Missing Supabase env vars' }), {
@@ -77,8 +77,8 @@ serve(async (req) => {
       });
     }
 
-    if (!brevoApiKey) {
-      return new Response(JSON.stringify({ error: 'Missing BREVO_API_KEY env var' }), {
+    if (!resendApiKey) {
+      return new Response(JSON.stringify({ error: 'Missing RESEND_API_KEY env var' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -214,54 +214,44 @@ serve(async (req) => {
         <p style="margin-top: 30px;">Cordiali saluti,<br/>Antonelli & Zani Refrigerazioni</p>
       </div>`;
 
-    // Prepare recipients
-    const toRecipients = recipientEmails.map((email: string) => ({
-      email: email,
-      name: intervention.client_company_name || 'Cliente'
-    }));
+    console.log("[send-work-report-email] Sending to Resend...");
 
-    console.log("[send-work-report-email] Sending to Brevo...");
-
-    // Send via Brevo
-    const brevoResponse = await fetch(BREVO_API_URL, {
+    // Send via Resend
+    const resendResponse = await fetch(RESEND_API_URL, {
       method: 'POST',
       headers: {
-        'api-key': brevoApiKey,
+        'Authorization': `Bearer ${resendApiKey}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
       },
       body: JSON.stringify({
-        sender: {
-          name: 'Antonelli & Zani Refrigerazioni',
-          email: 'noreply@antonellizani.it'
-        },
-        to: toRecipients,
+        from: 'Antonelli & Zani Refrigerazioni <noreply@antonellizani.it>',
+        to: recipientEmails,
         subject: `Bolla di Consegna - ${intervention.client_company_name || 'Intervento'}`,
-        htmlContent: emailHtml,
+        html: emailHtml,
       }),
     });
 
-    console.log("[send-work-report-email] Brevo response status:", brevoResponse.status);
+    console.log("[send-work-report-email] Resend response status:", resendResponse.status);
 
-    if (!brevoResponse.ok) {
-      let errorMsg = 'Brevo error';
+    if (!resendResponse.ok) {
+      let errorMsg = 'Resend error';
       try {
-        const errData = await brevoResponse.json();
+        const errData = await resendResponse.json();
         errorMsg = errData.message || JSON.stringify(errData);
       } catch {
-        errorMsg = await brevoResponse.text() || `HTTP ${brevoResponse.status}`;
+        errorMsg = await resendResponse.text() || `HTTP ${resendResponse.status}`;
       }
-      console.error("[send-work-report-email] Brevo error:", errorMsg);
-      return new Response(JSON.stringify({ error: `Brevo error: ${errorMsg}` }), {
+      console.error("[send-work-report-email] Resend error:", errorMsg);
+      return new Response(JSON.stringify({ error: `Resend error: ${errorMsg}` }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const result = await brevoResponse.json();
+    const result = await resendResponse.json();
     console.log("[send-work-report-email] Success:", result);
 
-    return new Response(JSON.stringify({ success: true, messageId: result.messageId }), {
+    return new Response(JSON.stringify({ success: true, messageId: result.id }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
