@@ -6,15 +6,14 @@ import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { PrintableWorkReport } from '@/components/printable-work-report';
 import { Loader2 } from 'lucide-react';
+import { use } from 'react';
 
-interface PrintWorkReportPageProps {
-  params: {
-    id: string;
-  };
-}
+type PrintWorkReportPageProps = {
+  params: Promise<{ id: string }>;
+};
 
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
-  const { id } = params; // Corretto da React.use(params)
+  const { id } = use(params);
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
   const router = useRouter();
 
