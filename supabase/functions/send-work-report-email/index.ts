@@ -57,18 +57,15 @@ serve(async (req) => {
 
     const resend = new Resend(resendApiKey);
 
-    // Funzione helper per pulire il testo da caratteri problematici per jsPDF
+    // Funzione helper per pulire il testo
     const sanitizeText = (text: any) => {
       if (!text) return "";
       const str = String(text);
-      // Rimuovi accenti (normalizza NFD e rimuovi segni diacritici)
       const normalized = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      // Sostituisci & (e commercial) con 'e' per evitare conflitti con la sintassi jsPDF
       const safeText = normalized.replace(/&/g, " e ");
       return safeText;
     };
 
-    // Generazione del PDF
     console.log("[send-work-report-email] Generating PDF...");
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -77,7 +74,7 @@ serve(async (req) => {
     // Header
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("Antonelli  e  Pellizzari", 14, yPosition); // Sanitizzato manualmente
+    doc.text("Antonelli  e  Pellizzari", 14, yPosition);
     yPosition += 8;
     doc.setFontSize(14);
     doc.text("Refrigerazioni", 14, yPosition);
@@ -94,7 +91,6 @@ serve(async (req) => {
     yPosition += 10;
     doc.setTextColor(0, 0, 0);
 
-    // Funzione helper per aggiungere testo sanitizzato
     const addText = (label: string, value: string | undefined, yPos: number) => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
@@ -156,6 +152,7 @@ serve(async (req) => {
 
       const totalHours = timeEntries.reduce((sum: number, entry: any) => sum + (entry.total_hours || 0), 0);
 
+      // Genera tabella senza hook didDrawPage (che causava l'errore)
       autoTable(doc, {
         startY: yPosition,
         head: [['Data', 'Tecnico', 'Fascia 1', 'Fascia 2', 'Ore']],
@@ -169,17 +166,19 @@ serve(async (req) => {
         theme: 'grid',
         styles: { fontSize: 8 },
         headStyles: { fillColor: [66, 139, 202] },
-        didDrawPage: (data) => {
-            doc.setFontSize(10);
-            doc.text(`Totale Ore: ${totalHours.toFixed(2)}`, data.table.startX, data.cursor.y + 10);
-            const km = (intervention.work_report_data as any)?.kilometers;
-             if (km !== undefined) {
-                 doc.text(`Km percorsi: ${km}`, data.table.startX + 60, data.cursor.y + 10);
-             }
-        }
       });
       
-      yPosition = (doc as any).lastAutoTable.finalY + 15;
+      // Scrivi i totali DOPO la tabella usando la posizione finale
+      const finalY = (doc as any).lastAutoTable.finalY;
+      doc.setFontSize(10);
+      doc.text(`Totale Ore: ${totalHours.toFixed(2)}`, 14, finalY + 10);
+      
+      const km = (intervention.work_report_data as any)?.kilometers;
+      if (km !== undefined) {
+        doc.text(`Km percorsi: ${km}`, 14, finalY + 18);
+      }
+      
+      yPosition = finalY + 25;
     }
 
     // Materiali (Nuova pagina se necessario)
