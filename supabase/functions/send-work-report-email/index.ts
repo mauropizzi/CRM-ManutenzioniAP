@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { Resend } from 'https://esm.sh/resend@1.1.0';
-// Importazione corretta per l'ambiente Deno/Edge
 import jsPDF from "https://esm.sh/jspdf@2.5.1";
 import autoTable from "https://esm.sh/jspdf-autotable@3.5.31";
 
@@ -58,6 +57,17 @@ serve(async (req) => {
 
     const resend = new Resend(resendApiKey);
 
+    // Funzione helper per pulire il testo da caratteri problematici per jsPDF
+    const sanitizeText = (text: any) => {
+      if (!text) return "";
+      const str = String(text);
+      // Rimuovi accenti (normalizza NFD e rimuovi segni diacritici)
+      const normalized = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      // Sostituisci & (e commercial) con 'e' per evitare conflitti con la sintassi jsPDF
+      const safeText = normalized.replace(/&/g, " e ");
+      return safeText;
+    };
+
     // Generazione del PDF
     console.log("[send-work-report-email] Generating PDF...");
     const doc = new jsPDF();
@@ -67,7 +77,7 @@ serve(async (req) => {
     // Header
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("Antonelli & Pellizzari", 14, yPosition);
+    doc.text("Antonelli  e  Pellizzari", 14, yPosition); // Sanitizzato manualmente
     yPosition += 8;
     doc.setFontSize(14);
     doc.text("Refrigerazioni", 14, yPosition);
@@ -84,13 +94,13 @@ serve(async (req) => {
     yPosition += 10;
     doc.setTextColor(0, 0, 0);
 
-    // Funzione helper
+    // Funzione helper per aggiungere testo sanitizzato
     const addText = (label: string, value: string | undefined, yPos: number) => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text(label + ": ", 14, yPos);
       doc.setFont("helvetica", "normal");
-      doc.text(value || "N/D", 55, yPos);
+      doc.text(sanitizeText(value) || "N/D", 55, yPos);
       return yPos + 7;
     };
 
@@ -127,12 +137,12 @@ serve(async (req) => {
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     const workDesc = (intervention.work_report_data as any)?.work_description || "Nessuna descrizione";
-    const splitDesc = doc.splitTextToSize(workDesc, pageWidth - 28);
+    const splitDesc = doc.splitTextToSize(sanitizeText(workDesc), pageWidth - 28);
     doc.text(splitDesc, 14, yPosition);
     yPosition += (splitDesc.length * 5) + 5;
 
     const workNotes = (intervention.work_report_data as any)?.operative_notes || "Nessuna nota";
-    const splitNotes = doc.splitTextToSize("Note Operative: " + workNotes, pageWidth - 28);
+    const splitNotes = doc.splitTextToSize("Note Operative: " + sanitizeText(workNotes), pageWidth - 28);
     doc.text(splitNotes, 14, yPosition);
     yPosition += (splitNotes.length * 5) + 10;
 
@@ -146,13 +156,12 @@ serve(async (req) => {
 
       const totalHours = timeEntries.reduce((sum: number, entry: any) => sum + (entry.total_hours || 0), 0);
 
-      // Using the imported autoTable function directly
       autoTable(doc, {
         startY: yPosition,
         head: [['Data', 'Tecnico', 'Fascia 1', 'Fascia 2', 'Ore']],
         body: timeEntries.map((entry: any) => [
           entry.date ? new Date(entry.date).toLocaleDateString('it-IT') : 'N/D',
-          entry.technician,
+          sanitizeText(entry.technician),
           `${entry.time_slot_1_start} - ${entry.time_slot_1_end}`,
           entry.time_slot_2_start ? `${entry.time_slot_2_start} - ${entry.time_slot_2_end}` : 'N/D',
           entry.total_hours.toFixed(2)
@@ -192,7 +201,7 @@ serve(async (req) => {
         body: materials.map((mat: any) => [
           mat.unit || 'N/D',
           mat.quantity,
-          mat.description || 'N/D'
+          sanitizeText(mat.description) || 'N/D'
         ]),
         theme: 'grid',
         styles: { fontSize: 8 },
@@ -204,9 +213,6 @@ serve(async (req) => {
     const pdfBase64 = pdfData.split(',')[1];
 
     // Configurazione Email
-    // NOTA: Usiamo onboarding@resend.dev per il testing immediato (dominio già verificato).
-    // Il nome visualizzato ("Antonelli & Pellizzari") apparirà correttamente.
-    // Per usare info@antonellipellizzari.it, devi verificare il dominio nella dashboard Resend.
     const fromEmail = '"Antonelli & Pellizzari Refrigerazioni" <onboarding@resend.dev>';
     
     const emailContent = `
@@ -229,7 +235,7 @@ serve(async (req) => {
       html: emailContent,
       attachments: [
         {
-          filename: `Bolla_${intervention.client_company_name.replace(/\s+/g, '_')}.pdf`,
+          filename: `Bolla_${(intervention.client_company_name || 'sconosciuto').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')}.pdf`,
           content: pdfBase64
         }
       ]
@@ -251,6 +257,7 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error("[send-work-report-email] Generic error:", error.message);
+    console.error("Error stack:", error.stack);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
