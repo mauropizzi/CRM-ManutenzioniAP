@@ -1,12 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { InterventionRequest } from '@/types/intervention'; // Import InterventionRequest
 
-export const sendWorkReportEmail = async (intervention: InterventionRequest, recipientEmails: string[]) => {
+export const sendWorkReportEmail = async (interventionId: string, recipientEmail: string) => {
   try {
-    // Pass the entire intervention object and the array of recipient emails to the Edge Function
     const { data, error } = await supabase.functions.invoke('send-work-report-email', {
-      body: { intervention, recipientEmails },
+      body: { interventionId, recipientEmail },
     });
 
     if (error) {
@@ -15,6 +13,8 @@ export const sendWorkReportEmail = async (intervention: InterventionRequest, rec
       throw error;
     }
 
+    // Le funzioni Edge restituiscono un oggetto Response, quindi il 'data' qui è il body della risposta.
+    // Dobbiamo parsare il JSON se la funzione Edge restituisce JSON.
     const responseBody = data as { error?: string; message?: string };
 
     if (responseBody.error) {

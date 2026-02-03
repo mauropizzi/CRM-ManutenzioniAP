@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react';
+import React, { use } from 'react'; // Reintrodotto 'use'
 import { CustomerForm, CustomerFormValues } from '@/components/customer-form';
 import { useCustomers } from '@/context/customer-context';
 import { useRouter } from 'next/navigation';
@@ -9,11 +9,13 @@ import { Customer } from '@/types/customer';
 import { Toaster } from '@/components/ui/sonner';
 
 interface EditCustomerPageProps {
-  params: Promise<{ id: string }>;
+  params: {
+    id: string;
+  };
 }
 
 export default function EditCustomerPage({ params }: EditCustomerPageProps) {
-  const { id } = use(params);
+  const { id } = use(params); // Srotola i params con React.use()
   const { customers, updateCustomer } = useCustomers();
   const router = useRouter();
 

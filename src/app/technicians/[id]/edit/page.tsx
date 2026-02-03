@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { use } from 'react'; // Reintrodotto 'use'
 import { TechnicianForm, TechnicianFormValues } from '@/components/technician-form';
 import { useTechnicians } from '@/context/technician-context';
 import { useRouter } from 'next/navigation';
@@ -8,14 +8,15 @@ import { notFound } from 'next/navigation';
 import { Technician } from '@/types/technician';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
-import { use } from 'react';
 
-type EditTechnicianPageProps = {
-  params: Promise<{ id: string }>;
-};
+interface EditTechnicianPageProps {
+  params: {
+    id: string;
+  };
+}
 
 export default function EditTechnicianPage({ params }: EditTechnicianPageProps) {
-  const { id } = use(params);
+  const { id } = use(params); // Srotola i params con React.use()
   const { technicians, updateTechnician } = useTechnicians();
   const router = useRouter();
 

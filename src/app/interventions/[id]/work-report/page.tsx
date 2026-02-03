@@ -1,15 +1,20 @@
 "use client";
 
-import React, { use } from 'react';
+import React, { use } from 'react'; // Reintrodotto 'use'
 import { WorkReportForm, WorkReportFormValues } from '@/components/work-report-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Toaster } from '@/components/ui/sonner';
 
-export default function WorkReportPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  
+interface WorkReportPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function WorkReportPage({ params }: WorkReportPageProps) {
+  const { id } = use(params); // Srotola i params con React.use()
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

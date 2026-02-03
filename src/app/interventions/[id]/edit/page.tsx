@@ -1,20 +1,23 @@
 "use client";
 
-import React, { use } from 'react';
+import React, { use } from 'react'; // Reintrodotto 'use'
 import { InterventionForm, InterventionFormValues } from '@/components/intervention-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
+import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 
-type EditInterventionPageProps = {
-  params: Promise<{ id: string }>;
-};
+interface EditInterventionPageProps {
+  params: {
+    id: string;
+  };
+}
 
 export default function EditInterventionPage({ params }: EditInterventionPageProps) {
-  const { id } = use(params);
+  const { id } = use(params); // Srotola i params con React.use()
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
@@ -38,12 +41,14 @@ export default function EditInterventionPage({ params }: EditInterventionPagePro
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4 sm:p-8">
-      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Modifica Richiesta di Intervento</h1>
-        <InterventionForm initialData={interventionToEdit} onSubmit={handleSubmit} />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4 sm:p-8">
+        <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Modifica Richiesta di Intervento</h1>
+          <InterventionForm initialData={interventionToEdit} onSubmit={handleSubmit} />
+        </div>
+        <Toaster />
       </div>
-      <Toaster />
-    </div>
+    </ProtectedRoute>
   );
 }

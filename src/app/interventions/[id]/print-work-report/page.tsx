@@ -1,19 +1,20 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { use, useEffect } from 'react'; // Reintrodotto 'use'
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { PrintableWorkReport } from '@/components/printable-work-report';
 import { Loader2 } from 'lucide-react';
-import { use } from 'react';
 
-type PrintWorkReportPageProps = {
-  params: Promise<{ id: string }>;
-};
+interface PrintWorkReportPageProps {
+  params: {
+    id: string;
+  };
+}
 
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
-  const { id } = use(params);
+  const { id } = use(params); // Srotola i params con React.use()
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
   const router = useRouter();
 
@@ -23,9 +24,8 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
     if (!interventionsLoading && intervention) {
       const timer = setTimeout(() => {
         window.print();
-        // Dopo la stampa, reindirizza alla pagina del report di lavoro
         router.push(`/interventions/${id}/work-report`);
-      }, 500); // Breve ritardo per assicurare il rendering prima della stampa
+      }, 500);
       return () => clearTimeout(timer);
     } else if (!interventionsLoading && !intervention) {
       notFound();
@@ -42,7 +42,7 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
   }
 
   return (
-    <div className="print:block"> 
+    <div className="print:block hidden">
       <PrintableWorkReport intervention={intervention} />
     </div>
   );
