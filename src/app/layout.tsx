@@ -4,13 +4,26 @@ import "./globals.css";
 import { CustomerProvider } from "@/context/customer-context";
 import { InterventionProvider } from "@/context/intervention-context";
 import { MaterialProvider } from "@/context/material-context";
-import { TechnicianProvider } from "@/context/technician-context"; // Importa il nuovo provider
+import { TechnicianProvider } from "@/context/technician-context";
 import { AuthProvider } from "@/context/auth-context";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
+
+// Import dinamico del sidebar (named export)
+const AppSidebar = dynamic(
+  () => import("@/components/app-sidebar").then((m) => m.AppSidebar),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-64 border-r p-4 text-sm text-muted-foreground">
+        Caricamento menu...
+      </div>
+    ),
+  }
+);
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,7 +63,7 @@ export default function RootLayout({
             <CustomerProvider>
               <InterventionProvider>
                 <MaterialProvider>
-                  <TechnicianProvider> {/* Includi il TechnicianProvider qui */}
+                  <TechnicianProvider>
                     <SidebarProvider>
                       <div className="flex min-h-screen">
                         <AppSidebar />
@@ -61,9 +74,7 @@ export default function RootLayout({
                               <span className="ml-2 font-semibold">Menu</span>
                             </div>
                           </div>
-                          <div className="p-4 sm:p-8">
-                            {children}
-                          </div>
+                          <div className="p-4 sm:p-8">{children}</div>
                         </main>
                       </div>
                       <Toaster />
