@@ -39,19 +39,25 @@ export const SupplierProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (err: any) {
       console.error("[supplier-context] Error fetching suppliers:", err);
       if (err?.code === "PGRST205") {
-        // La tabella non esiste
-        toast.info("Tabella 'suppliers' non trovata. Apri Setup e crea la tabella (2 click).");
-        setSuppliers([]);
-        // Facoltativo: ping function di setup per verificare stato
         if (!setupInProgress.current) {
           setupInProgress.current = true;
+          toast.info("Inizializzazione fornitori in corso...");
           try {
-            const res = await ensureSuppliersTable();
-            if (!res?.ok) {
-              console.log("[supplier-context] Setup check:", res);
-            }
-          } catch (_) {}
-          setupInProgress.current = false;
+            await ensureSuppliersTable();
+            toast.success("Tabella fornitori creata!");
+            // Riprova a caricare
+            const { data } = await supabase
+              .from("suppliers")
+              .select("*")
+              .order("ragione_sociale", { ascending: true });
+            setSuppliers(data || []);
+          } catch (e: any) {
+            console.error("[supplier-context] Setup failed:", e);
+            toast.error(e?.message || "Impossibile creare la tabella fornitori.");
+            setSuppliers([]);
+          } finally {
+            setupInProgress.current = false;
+          }
         }
       } else {
         toast.error(err?.message || "Errore nel caricamento fornitori");
@@ -109,4 +115,4 @@ export const useSuppliers = () => {
   const ctx = useContext(SupplierContext);
   if (!ctx) throw new Error("useSuppliers must be used within SupplierProvider");
   return ctx;
-}
+};
