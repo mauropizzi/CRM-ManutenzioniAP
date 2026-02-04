@@ -21,7 +21,7 @@ const AppSidebar = dynamic(
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen" data-dyad-component="AppShell">
         <AppSidebar />
         <main className="flex-1 overflow-auto">
           <div className="flex items-center justify-between border-b p-4 lg:hidden">

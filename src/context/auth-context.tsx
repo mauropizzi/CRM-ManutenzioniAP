@@ -28,22 +28,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const profileFetchInProgress = useRef(false);
 
   useEffect(() => {
-    // Check current session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await fetchUserProfile(session.user);
-      }
-      setLoading(false);
-    };
-
-    checkSession();
-
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        await fetchUserProfile(session.user);
-      } else {
+      if (event === 'INITIAL_SESSION') {
+        if (session?.user) {
+          await fetchUserProfile(session.user);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        if (session?.user) {
+          await fetchUserProfile(session.user);
+        }
+      } else if (event === 'SIGNED_OUT') {
         setUser(null);
       }
     });
