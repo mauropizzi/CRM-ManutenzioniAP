@@ -7,14 +7,20 @@ import { useRouter } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { toast } from "sonner";
 
 const NewSupplierContent: React.FC = () => {
   const { addSupplier } = useSuppliers();
   const router = useRouter();
 
   const handleSubmit = async (data: SupplierFormValues) => {
-    await addSupplier(data);
-    router.push("/suppliers");
+    try {
+      await addSupplier(data);
+      router.push("/suppliers");
+    } catch (error: any) {
+      const msg = error?.message || "Errore durante il salvataggio del fornitore.";
+      toast.error(msg);
+    }
   };
 
   return (

@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { use } from "react";
+import { toast } from "sonner";
 
 interface EditSupplierPageProps {
   params: Promise<{ id: string }>;
@@ -24,8 +25,13 @@ const EditSupplierContent: React.FC<{ supplierId: string }> = ({ supplierId }) =
   }
 
   const handleSubmit = async (data: SupplierFormValues) => {
-    await updateSupplier({ ...supplierToEdit!, ...data });
-    router.push("/suppliers");
+    try {
+      await updateSupplier({ ...supplierToEdit!, ...data });
+      router.push("/suppliers");
+    } catch (error: any) {
+      const msg = error?.message || "Errore durante l'aggiornamento del fornitore.";
+      toast.error(msg);
+    }
   };
 
   return (
