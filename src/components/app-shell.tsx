@@ -4,6 +4,7 @@ import React from "react";
 import dynamic from "next/dynamic";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { useAuth } from "@/context/auth-context";
 
 // Import dinamico del sidebar (named export) solo lato client
 const AppSidebar = dynamic(
@@ -19,6 +20,19 @@ const AppSidebar = dynamic(
 );
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background/80">
+        <div className="text-center">
+          <div className="inline-block h-6 w-6 animate-spin rounded-full border-b-2 border-primary" />
+          <p className="mt-3 text-sm text-muted-foreground">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen" data-dyad-component="AppShell">

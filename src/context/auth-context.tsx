@@ -49,84 +49,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchUserProfile = async (authUser: any) => {
-    // Prevent multiple simultaneous fetches
-    if (profileFetchInProgress.current) {
-      console.log('Profile fetch already in progress, skipping...');
-      return;
-    }
-    
+    // previene fetch multipli contemporanei
+    if (profileFetchInProgress.current) return;
     profileFetchInProgress.current = true;
-    console.log('Fetching profile for user:', authUser.id);
-    
+
     try {
-      // Try to fetch profile
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', authUser.id)
         .single();
 
-      console.log('Profile fetch result:', { data, error });
-
-      if (error) {
-        console.log('Profile fetch error code:', error.code);
-        
-        // If profile doesn't exist (PGRST116 = not found), create it
-        if (error.code === 'PGRST116' || error.message?.includes('not found') || error.message?.includes('No rows found')) {
-          console.log('Profile not found, creating new profile...');
-          
-          const newProfileData = {
+      if (error && error.code === 'PGRST116') {
+        // profilo non trovato → creane uno vuoto
+        await supabase
+          .from('profiles')
+          .insert({
             id: authUser.id,
             first_name: authUser.user_metadata?.first_name || '',
             last_name: authUser.user_metadata?.last_name || '',
-          };
-          
-          console.log('Inserting profile data:', newProfileData);
-          
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert([newProfileData])
-            .select()
-            .single();
-
-          if (createError) {
-            console.error('Error creating profile:', createError);
-            
-            // If user doesn't exist in auth.users table (database reset), force logout
-            if (createError.code === '23503') {
-              console.error('User does not exist in database, forcing logout...');
-              toast.error("Sessione non valida. Effettua nuovamente il login.");
-              await signOut();
-              return;
-            }
-            
-            // Still set user without profile data for other errors
-            setUser({
-              id: authUser.id,
-              email: authUser.email || '',
-            });
-            return;
-          }
-
-          console.log('New profile created:', newProfile);
-
-          if (newProfile) {
-            setUser({
-              id: authUser.id,
-              email: authUser.email || '',
-              first_name: newProfile.first_name,
-              last_name: newProfile.last_name,
-              role: newProfile.role,
-            });
-            return;
-          }
-        } else {
-          console.error('Error fetching profile (not 404):', error);
-        }
-      }
-
-      if (data) {
-        console.log('Profile found:', data);
+          });
+        setUser({
+          id: authUser.id,
+          email: authUser.email,
+          first_name: authUser.user_metadata?.first_name,
+          last_name: authUser.user_metadata?.last_name,
+        });
+      } else if (data) {
         setUser({
           id: authUser.id,
           email: authUser.email || '',
@@ -135,35 +84,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: data.role,
         });
       } else {
-        // Fallback if no profile data
-        console.log('No profile data, using fallback');
-        setUser({
-          id: authUser.id,
-          email: authUser.email || '',
-        });
+        // fallback
+        setUser({ id: authUser.id, email: authUser.email || '' });
       }
-    } catch (error) {
-      console.error('Exception in fetchUserProfile:', error);
-      setUser({
-        id: authUser.id,
-        email: authUser.email || '',
-      });
+    } catch (e: any) {
+      // errore grave non bloccante
+      setUser({ id: authUser.id, email: authUser.email || '' });
     } finally {
       profileFetchInProgress.current = false;
     }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       toast.error(`Errore di accesso: ${error.message}`);
       throw error;
     }
-
     toast.success("Accesso effettuato con successo!");
   };
 
@@ -171,19 +108,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-        },
-      },
+      options: { data: { first_name: firstName, last_name: lastName } }
     });
-
     if (error) {
       toast.error(`Errore di registrazione: ${error.message}`);
       throw error;
     }
-
     toast.success("Registrazione completata! Controlla la tua email per confermare.");
   };
 
