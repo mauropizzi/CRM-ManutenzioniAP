@@ -1,10 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Supplier } from "@/types/supplier";
 import { useAuth } from "@/context/auth-context";
+import { ensureSuppliersTable } from "@/lib/suppliers-setup";
 
 interface SupplierContextValue {
   suppliers: Supplier[];
@@ -21,6 +22,7 @@ export const SupplierProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const { user } = useAuth();
+  const setupInProgress = useRef(false);
 
   const refresh = async () => {
     setLoading(true);
@@ -37,11 +39,30 @@ export const SupplierProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (err: any) {
       console.error("[supplier-context] Error fetching suppliers:", err);
       if (err?.code === "PGRST205") {
-        toast.error("Tabella 'suppliers' non trovata. Crea la tabella in Supabase per usare l'anagrafica fornitori.");
+        if (!setupInProgress.current) {
+          setupInProgress.current = true;
+          toast.info("Inizializzazione fornitori in corso...");
+          try {
+            await ensureSuppliersTable();
+            toast.success("Tabella fornitori creata!");
+            // Riprova a caricare
+            const { data } = await supabase
+              .from("suppliers")
+              .select("*")
+              .order("ragione_sociale", { ascending: true });
+            setSuppliers(data || []);
+          } catch (e: any) {
+            console.error("[supplier-context] Setup failed:", e);
+            toast.error(e?.message || "Impossibile creare la tabella fornitori.");
+            setSuppliers([]);
+          } finally {
+            setupInProgress.current = false;
+          }
+        }
       } else {
         toast.error(err?.message || "Errore nel caricamento fornitori");
+        setSuppliers([]);
       }
-      setSuppliers([]);
     } finally {
       setLoading(false);
     }
