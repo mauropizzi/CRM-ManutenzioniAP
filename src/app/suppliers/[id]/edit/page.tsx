@@ -10,14 +10,24 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { use } from "react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface EditSupplierPageProps {
   params: Promise<{ id: string }>;
 }
 
 const EditSupplierContent: React.FC<{ supplierId: string }> = ({ supplierId }) => {
-  const { suppliers, updateSupplier } = useSuppliers();
+  const { suppliers, loading, updateSupplier } = useSuppliers();
   const router = useRouter();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[200px] items-center justify-center rounded-lg border bg-white p-6 dark:bg-gray-900">
+        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+        <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Caricamento fornitore...</span>
+      </div>
+    );
+  }
 
   const supplierToEdit = suppliers.find((s) => s.id === supplierId);
   if (!supplierToEdit) {
