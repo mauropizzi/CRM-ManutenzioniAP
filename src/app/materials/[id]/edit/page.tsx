@@ -8,15 +8,14 @@ import { notFound } from 'next/navigation';
 import { Material } from '@/types/material';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
+import { use } from 'react';
 
 interface EditMaterialPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 export default function EditMaterialPage({ params }: EditMaterialPageProps) {
-  const { id } = params;
+  const { id } = use(params);
   const { materials, updateMaterial } = useMaterials();
   const router = useRouter();
 

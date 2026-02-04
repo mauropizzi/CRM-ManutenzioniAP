@@ -7,15 +7,14 @@ import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
+import { use } from 'react';
 
 interface ConcludeInterventionPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 export default function ConcludeInterventionPage({ params }: ConcludeInterventionPageProps) {
-  const { id } = params;
+  const { id } = use(params);
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

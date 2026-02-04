@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { use } from 'react';
 import { WorkReportForm, WorkReportFormValues } from '@/components/work-report-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
@@ -8,13 +9,11 @@ import { notFound } from 'next/navigation';
 import { Toaster } from '@/components/ui/sonner';
 
 interface WorkReportPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 export default function WorkReportPage({ params }: WorkReportPageProps) {
-  const { id } = params;
+  const { id } = use(params);
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

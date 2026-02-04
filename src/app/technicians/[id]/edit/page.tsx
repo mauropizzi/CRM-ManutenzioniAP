@@ -8,15 +8,14 @@ import { notFound } from 'next/navigation';
 import { Technician } from '@/types/technician';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
+import { use } from 'react';
 
 interface EditTechnicianPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 export default function EditTechnicianPage({ params }: EditTechnicianPageProps) {
-  const { id } = params;
+  const { id } = use(params);
   const { technicians, updateTechnician } = useTechnicians();
   const router = useRouter();
 

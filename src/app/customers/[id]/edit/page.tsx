@@ -7,15 +7,14 @@ import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Customer } from '@/types/customer';
 import { Toaster } from '@/components/ui/sonner';
+import { use } from 'react';
 
 interface EditCustomerPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 export default function EditCustomerPage({ params }: EditCustomerPageProps) {
-  const { id } = params;
+  const { id } = use(params);
   const { customers, updateCustomer } = useCustomers();
   const router = useRouter();
 
