@@ -33,7 +33,6 @@ serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Recupera i dettagli dell'intervento
     const { data: intervention, error: interventionError } = await supabaseClient
       .from('interventions')
       .select('*')
@@ -59,7 +58,6 @@ serve(async (req: Request) => {
 
     const resend = new Resend(resendApiKey);
 
-    // Funzione helper per pulire il testo
     const sanitizeText = (text: any) => {
       if (!text) return "";
       const str = String(text);
@@ -73,7 +71,6 @@ serve(async (req: Request) => {
     const pageWidth = doc.internal.pageSize.getWidth();
     let yPosition = 20;
 
-    // Header
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.text("Antonelli  e  Pellizzari", 14, yPosition);
@@ -82,7 +79,6 @@ serve(async (req: Request) => {
     doc.text("Refrigerazioni", 14, yPosition);
     yPosition += 10;
 
-    // Titolo Bolla
     doc.setFontSize(16);
     doc.setTextColor(100, 100, 100);
     doc.text("Bolla di Consegna", pageWidth - 60, 20);
@@ -102,7 +98,6 @@ serve(async (req: Request) => {
       return yPos + 7;
     };
 
-    // Dati Cliente
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text("Dati Cliente", 14, yPosition);
@@ -114,7 +109,6 @@ serve(async (req: Request) => {
     yPosition = addText("Referente", intervention.client_referent, yPosition);
     yPosition += 5;
 
-    // Dati Impianto
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text("Dati Impianto", 14, yPosition);
@@ -127,7 +121,6 @@ serve(async (req: Request) => {
     yPosition = addText("Rif. Interno", intervention.internal_ref, yPosition);
     yPosition += 5;
 
-    // Lavori Svolto
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text("Dettagli Lavoro", 14, yPosition);
@@ -144,7 +137,6 @@ serve(async (req: Request) => {
     doc.text(splitNotes, 14, yPosition);
     yPosition += (splitNotes.length * 5) + 10;
 
-    // Ore di Lavoro
     const timeEntries = (intervention.work_report_data as any)?.time_entries || [];
     if (timeEntries.length > 0) {
       doc.setFontSize(12);
@@ -154,7 +146,6 @@ serve(async (req: Request) => {
 
       const totalHours = timeEntries.reduce((sum: number, entry: any) => sum + (entry.total_hours || 0), 0);
 
-      // Genera tabella
       autoTable(doc, {
         startY: yPosition,
         head: [['Data', 'Tecnico', 'Fascia 1', 'Fascia 2', 'Ore']],
@@ -182,7 +173,6 @@ serve(async (req: Request) => {
       yPosition = finalY + 25;
     }
 
-    // Materiali
     if (yPosition > 200) {
       doc.addPage();
       yPosition = 20;
@@ -212,8 +202,10 @@ serve(async (req: Request) => {
     const pdfData = doc.output('datauristring');
     const pdfBase64 = pdfData.split(',')[1];
 
-    const fromEmail = '"Antonelli & Pellizzari Refrigerazioni" <onboarding@resend.dev>';
-    
+    const fromEmailEnv = Deno.env.get('RESEND_FROM_EMAIL');
+    const fromEmail = fromEmailEnv ?? '"Antonelli & Pellizzari Refrigerazioni" <onboarding@resend.dev>';
+
+    const subject = `Bolla di Consegna - ${intervention.client_company_name}`;
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Gentile ${intervention.client_company_name},</h2>
@@ -225,14 +217,44 @@ serve(async (req: Request) => {
         <p style="color: #333; font-weight: bold;">Antonelli & Pellizzari Refrigerazioni</p>
       </div>
     `;
-    
+
     console.log("[send-work-report-email] Sending email...");
     const results: Array<{ to: string; ok: boolean; error?: string }> = [];
+
+    // Prova invio in un'unica email con BCC
+    if (recipientEmails.length > 1) {
+      console.log("[send-work-report-email] Attempting single send with BCC...", { to: recipientEmails[0], bccCount: recipientEmails.length - 1 });
+      const { data, error: resendError } = await resend.emails.send({
+        from: fromEmail,
+        to: recipientEmails[0],
+        bcc: recipientEmails.slice(1),
+        subject,
+        html: emailContent,
+        attachments: [
+          {
+            filename: `Bolla_${(intervention.client_company_name || 'sconosciuto').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')}.pdf`,
+            content: pdfBase64
+          }
+        ]
+      });
+
+      if (resendError) {
+        console.error("[send-work-report-email] BCC send failed, falling back to per-recipient sends:", resendError);
+      } else {
+        recipientEmails.forEach((addr) => results.push({ to: addr, ok: true }));
+        return new Response(JSON.stringify({ message: 'Email inviate (BCC)', results }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // Fallback: invio per destinatario (o singolo destinatario)
     for (const to of recipientEmails) {
       const { data, error: resendError } = await resend.emails.send({
         from: fromEmail,
         to,
-        subject: `Bolla di Consegna - ${intervention.client_company_name}`,
+        subject,
         html: emailContent,
         attachments: [
           {
@@ -258,7 +280,7 @@ serve(async (req: Request) => {
 
   } catch (error: any) {
     console.error("[send-work-report-email] Generic error:", error.message);
-    console.error("Error stack:", error.stack);
+    console.error("[send-work-report-email] Error stack:", error.stack);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
