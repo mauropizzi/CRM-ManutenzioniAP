@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react';
+import React, { use } from 'react'; // Reintrodotto 'use'
 import { InterventionConclusionForm, InterventionConclusionFormValues } from '@/components/intervention-conclusion-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
@@ -8,8 +8,14 @@ import { notFound } from 'next/navigation';
 import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
 
-export default function ConcludeInterventionPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+interface ConcludeInterventionPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function ConcludeInterventionPage({ params }: ConcludeInterventionPageProps) {
+  const { id } = use(params); // Srotola i params con React.use()
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
