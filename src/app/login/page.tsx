@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Toaster } from '@/components/ui/sonner';
 
 export default function LoginPage() {
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,10 +27,21 @@ export default function LoginPage() {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (user) {
+    if (user && !authLoading) {
       router.push('/');
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950 p-4">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-primary mx-auto mb-4" />
+          <p>Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +68,6 @@ export default function LoginPage() {
     }
   };
 
-  // Show loading or null while checking auth state
   if (user) {
     return null;
   }
@@ -79,9 +89,9 @@ export default function LoginPage() {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email-login">Email</Label>
                   <Input
-                    id="email"
+                    id="email-login"
                     type="email"
                     placeholder="tua@email.com"
                     value={loginEmail}
@@ -90,9 +100,9 @@ export default function LoginPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password-login">Password</Label>
                   <Input
-                    id="password"
+                    id="password-login"
                     type="password"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}

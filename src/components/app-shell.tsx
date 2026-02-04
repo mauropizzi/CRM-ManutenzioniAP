@@ -1,23 +1,10 @@
 "use client";
 
 import React from "react";
-import dynamic from "next/dynamic";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/context/auth-context";
-
-// Import dinamico del sidebar (named export) solo lato client
-const AppSidebar = dynamic(
-  () => import("@/components/app-sidebar").then((m) => m.AppSidebar),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-64 border-r p-4 text-sm text-muted-foreground">
-        Caricamento menu...
-      </div>
-    ),
-  }
-);
+import { AppSidebar } from "@/components/app-sidebar";
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
   const { loading } = useAuth();

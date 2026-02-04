@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -25,22 +25,27 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const profileFetchInProgress = useRef(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'INITIAL_SESSION') {
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           await fetchUserProfile(session.user);
-        } else {
-          setUser(null);
         }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
         setLoading(false);
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-        if (session?.user) {
-          await fetchUserProfile(session.user);
-        }
-      } else if (event === 'SIGNED_OUT') {
+      }
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        await fetchUserProfile(session.user);
+      } else {
         setUser(null);
       }
     });
@@ -49,10 +54,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchUserProfile = async (authUser: any) => {
-    // previene fetch multipli contemporanei
-    if (profileFetchInProgress.current) return;
-    profileFetchInProgress.current = true;
-
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -61,7 +62,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error && error.code === 'PGRST116') {
-        // profilo non trovato → creane uno vuoto
         await supabase
           .from('profiles')
           .insert({
@@ -84,14 +84,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: data.role,
         });
       } else {
-        // fallback
         setUser({ id: authUser.id, email: authUser.email || '' });
       }
-    } catch (e: any) {
-      // errore grave non bloccante
+    } catch (error) {
+      console.error('Profile fetch error:', error);
       setUser({ id: authUser.id, email: authUser.email || '' });
-    } finally {
-      profileFetchInProgress.current = false;
     }
   };
 
