@@ -114,7 +114,7 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
                 type="button"
                 variant="outline"
                 className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-blue-600 hover:bg-blue-50 dark:border-gray-700 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-gray-700"
-                onClick={() => setRecipientEmail(clientEmail || '')} // Pre-compila con l'email del cliente
+                onClick={() => setRecipientEmail(clientEmail || '')}
               >
                 <Mail size={16} />
                 Invia Email
@@ -163,19 +163,21 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
           </Dialog>
         )}
 
-        <Select onValueChange={(value) => setValue('status', value as any)} defaultValue={getValues('status')} className="ml-auto">
-          <FormControl>
-            <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-              <SelectValue placeholder="Seleziona stato" />
-            </SelectTrigger>
-          </FormControl>
-          <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
-            <SelectItem value="Da fare">Da fare</SelectItem>
-            <SelectItem value="In corso">In corso</SelectItem>
-            <SelectItem value="Completato">Completato</SelectItem>
-            <SelectItem value="Annullato">Annullato</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="ml-auto">
+          <Select onValueChange={(value) => setValue('status', value as any)} defaultValue={getValues('status')}>
+            <FormControl>
+              <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                <SelectValue placeholder="Seleziona stato" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
+              <SelectItem value="Da fare">Da fare</SelectItem>
+              <SelectItem value="In corso">In corso</SelectItem>
+              <SelectItem value="Completato">Completato</SelectItem>
+              <SelectItem value="Annullato">Annullato</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react'; // Reintrodotto 'use'
+import React from 'react';
 import { MaterialForm, MaterialFormValues } from '@/components/material-form';
 import { useMaterials } from '@/context/material-context';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,7 @@ interface EditMaterialPageProps {
 }
 
 export default function EditMaterialPage({ params }: EditMaterialPageProps) {
-  const { id } = use(params); // Srotola i params con React.use()
+  const { id } = params;
   const { materials, updateMaterial } = useMaterials();
   const router = useRouter();
 

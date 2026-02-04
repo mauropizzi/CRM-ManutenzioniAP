@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react'; // Reintrodotto 'use'
+import React from 'react';
 import { InterventionForm, InterventionFormValues } from '@/components/intervention-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
@@ -17,7 +17,7 @@ interface EditInterventionPageProps {
 }
 
 export default function EditInterventionPage({ params }: EditInterventionPageProps) {
-  const { id } = use(params); // Srotola i params con React.use()
+  const { id } = params;
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react'; // Reintrodotto 'use'
+import React from 'react';
 import { InterventionConclusionForm, InterventionConclusionFormValues } from '@/components/intervention-conclusion-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
@@ -15,7 +15,7 @@ interface ConcludeInterventionPageProps {
 }
 
 export default function ConcludeInterventionPage({ params }: ConcludeInterventionPageProps) {
-  const { id } = use(params); // Srotola i params con React.use()
+  const { id } = params;
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

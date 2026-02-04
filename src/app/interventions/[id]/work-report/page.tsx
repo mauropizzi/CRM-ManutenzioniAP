@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react'; // Reintrodotto 'use'
+import React from 'react';
 import { WorkReportForm, WorkReportFormValues } from '@/components/work-report-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
@@ -14,7 +14,7 @@ interface WorkReportPageProps {
 }
 
 export default function WorkReportPage({ params }: WorkReportPageProps) {
-  const { id } = use(params); // Srotola i params con React.use()
+  const { id } = params;
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

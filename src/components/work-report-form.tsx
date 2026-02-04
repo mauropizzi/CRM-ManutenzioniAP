@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { WorkReportBasicInfo, TimeEntriesSection, MaterialsSection } from './work-report';
 import { calculateHours } from '@/lib/time-utils';
+import type { Resolver, SubmitHandler } from 'react-hook-form';
 
 const timeEntrySchema = z.object({
   date: z.date({ required_error: "Seleziona una data." }),
@@ -24,16 +25,15 @@ const materialSchema = z.object({
 });
 
 export const workReportSchema = z.object({
-  id: z.string().optional(), // Aggiunto il campo ID, reso opzionale
+  id: z.string().optional(),
   client_absent: z.boolean(),
   work_description: z.string().min(10, { message: "Descrivi i lavori svolti (min. 10 caratteri)." }),
   operative_notes: z.string().optional(),
-  time_entries: z.array(timeEntrySchema).optional(),
+  time_entries: z.array(timeEntrySchema).default([]),
   kilometers: z.coerce.number().min(0).optional(),
-  materials: z.array(materialSchema).optional().transform((materials) => {
-    // Filtra i materiali che hanno una descrizione vuota o solo spazi bianchi
-    return materials?.filter(material => material.description && material.description.trim() !== '') || [];
-  }),
+  materials: z.array(materialSchema)
+    .default([])
+    .transform((materials) => materials.filter((material) => material.description && material.description.trim() !== '')),
   status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']),
 });
 
@@ -43,6 +43,7 @@ interface WorkReportFormProps {
   initialData?: Partial<WorkReportFormValues>;
   onSubmit: (data: WorkReportFormValues) => void;
   clientName?: string;
+  clientEmail?: string;
   currentStatus: 'Da fare' | 'In corso' | 'Completato' | 'Annullato';
 }
 
@@ -58,38 +59,35 @@ const DEFAULT_TIME_ENTRY = {
 
 const DEFAULT_MATERIAL = { unit: 'PZ', quantity: 0, description: '' };
 
-export const WorkReportForm = ({ initialData, onSubmit, clientName, currentStatus }: WorkReportFormProps) => {
+export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail, currentStatus }: WorkReportFormProps) => {
   const methods = useForm<WorkReportFormValues>({
-    resolver: zodResolver(workReportSchema),
+    resolver: zodResolver(workReportSchema) as Resolver<WorkReportFormValues>,
     defaultValues: {
-      id: initialData?.id ?? undefined, // Inizializza l'ID
+      id: initialData?.id ?? undefined,
       client_absent: initialData?.client_absent ?? false,
       work_description: initialData?.work_description ?? '',
       operative_notes: initialData?.operative_notes ?? '',
-      time_entries: initialData?.time_entries?.length 
-        ? initialData.time_entries 
+      time_entries: initialData?.time_entries?.length
+        ? initialData.time_entries
         : [DEFAULT_TIME_ENTRY],
       kilometers: initialData?.kilometers ?? 0,
-      materials: initialData?.materials?.length 
-        ? initialData.materials 
+      materials: initialData?.materials?.length
+        ? initialData.materials
         : Array(6).fill(DEFAULT_MATERIAL),
       status: initialData?.status ?? currentStatus,
     } as WorkReportFormValues,
   });
 
-  const { control } = methods;
-
-  const handleSubmit = (values: WorkReportFormValues) => {
+  const handleSubmit: SubmitHandler<WorkReportFormValues> = (values) => {
     onSubmit(values);
   };
 
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8">
-        <WorkReportBasicInfo clientName={clientName} interventionId={initialData?.id} /> {/* Passo l'ID qui */}
+        <WorkReportBasicInfo clientName={clientName} clientEmail={clientEmail} interventionId={initialData?.id} />
         <TimeEntriesSection />
         <MaterialsSection />
-
         <div className="flex justify-end gap-4 pt-4">
           <Link href="/interventions" passHref>
             <Button type="button" variant="outline">Annulla</Button>
