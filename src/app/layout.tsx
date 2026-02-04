@@ -7,23 +7,8 @@ import { MaterialProvider } from "@/context/material-context";
 import { TechnicianProvider } from "@/context/technician-context";
 import { AuthProvider } from "@/context/auth-context";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
-
-// Import dinamico del sidebar (named export)
-const AppSidebar = dynamic(
-  () => import("@/components/app-sidebar").then((m) => m.AppSidebar),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-64 border-r p-4 text-sm text-muted-foreground">
-        Caricamento menu...
-      </div>
-    ),
-  }
-);
+import { AppShell } from "@/components/app-shell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,21 +49,7 @@ export default function RootLayout({
               <InterventionProvider>
                 <MaterialProvider>
                   <TechnicianProvider>
-                    <SidebarProvider>
-                      <div className="flex min-h-screen">
-                        <AppSidebar />
-                        <main className="flex-1 overflow-auto">
-                          <div className="flex items-center justify-between border-b p-4 lg:hidden">
-                            <div className="flex items-center">
-                              <SidebarTrigger />
-                              <span className="ml-2 font-semibold">Menu</span>
-                            </div>
-                          </div>
-                          <div className="p-4 sm:p-8">{children}</div>
-                        </main>
-                      </div>
-                      <Toaster />
-                    </SidebarProvider>
+                    <AppShell>{children}</AppShell>
                   </TechnicianProvider>
                 </MaterialProvider>
               </InterventionProvider>
