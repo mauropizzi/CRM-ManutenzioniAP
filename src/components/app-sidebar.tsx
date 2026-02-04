@@ -47,6 +47,11 @@ const menuItems = [
     url: "/technicians",
     icon: HardHat, // Icona per i tecnici
   },
+  {
+    title: "Fornitori",
+    url: "/suppliers",
+    icon: Users,
+  },
 ]
 
 export function AppSidebar() {
