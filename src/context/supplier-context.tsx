@@ -34,6 +34,14 @@ export const SupplierProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) throw error;
       setSuppliers(data || []);
       console.log("[supplier-context] Suppliers fetched:", data);
+    } catch (err: any) {
+      console.error("[supplier-context] Error fetching suppliers:", err);
+      if (err?.code === "PGRST205") {
+        toast.error("Tabella 'suppliers' non trovata. Crea la tabella in Supabase per usare l'anagrafica fornitori.");
+      } else {
+        toast.error(err?.message || "Errore nel caricamento fornitori");
+      }
+      setSuppliers([]);
     } finally {
       setLoading(false);
     }
