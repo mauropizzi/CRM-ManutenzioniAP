@@ -46,16 +46,29 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
       return;
     }
     if (!recipientEmail) {
-      toast.error("Inserisci un indirizzo email valido.");
+      toast.error("Inserisci almeno un indirizzo email.");
+      return;
+    }
+
+    // Parsa più indirizzi separati da virgole
+    const emails = recipientEmail
+      .split(',')
+      .map((e) => e.trim())
+      .filter((e) => e.length > 0);
+
+    // Validazione semplice email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const invalid = emails.filter((e) => !emailRegex.test(e));
+    if (invalid.length > 0) {
+      toast.error(`Email non valide: ${invalid.join(', ')}`);
       return;
     }
 
     setIsSendingEmail(true);
     try {
-      await sendWorkReportEmail(interventionId, recipientEmail);
+      await sendWorkReportEmail(interventionId, emails);
       setIsEmailDialogOpen(false);
-    } catch (error) {
-      // L'errore è già gestito e mostrato dalla utility sendWorkReportEmail
+      toast.success(`Email inviata a ${emails.length} destinatario/i.`);
     } finally {
       setIsSendingEmail(false);
     }
@@ -134,9 +147,10 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
                   </FormLabel>
                   <Input
                     id="email"
-                    type="email"
+                    type="text"
                     value={recipientEmail}
                     onChange={(e) => setRecipientEmail(e.target.value)}
+                    placeholder="es. email1@dominio.it, email2@dominio.it"
                     className="col-span-3 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>

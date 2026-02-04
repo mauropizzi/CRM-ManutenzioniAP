@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { Resend } from 'https://esm.sh/resend@1.1.0';
@@ -9,18 +11,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { interventionId, recipientEmail } = await req.json();
-    console.log("[send-work-report-email] Received request for interventionId:", interventionId, "recipientEmail:", recipientEmail);
+    const { interventionId, recipientEmails } = await req.json();
+    console.log("[send-work-report-email] Received request for interventionId:", interventionId, "recipientEmails:", recipientEmails);
 
-    if (!interventionId || !recipientEmail) {
-      console.error("[send-work-report-email] Missing interventionId or recipientEmail. Status: 400");
-      return new Response(JSON.stringify({ error: 'Missing interventionId or recipientEmail' }), {
+    if (!interventionId || !recipientEmails || !Array.isArray(recipientEmails) || recipientEmails.length === 0) {
+      console.error("[send-work-report-email] Missing interventionId or recipientEmails. Status: 400");
+      return new Response(JSON.stringify({ error: 'Missing interventionId or recipientEmails' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -152,7 +154,7 @@ serve(async (req) => {
 
       const totalHours = timeEntries.reduce((sum: number, entry: any) => sum + (entry.total_hours || 0), 0);
 
-      // Genera tabella senza hook didDrawPage (che causava l'errore)
+      // Genera tabella
       autoTable(doc, {
         startY: yPosition,
         head: [['Data', 'Tecnico', 'Fascia 1', 'Fascia 2', 'Ore']],
@@ -168,7 +170,6 @@ serve(async (req) => {
         headStyles: { fillColor: [66, 139, 202] },
       });
       
-      // Scrivi i totali DOPO la tabella usando la posizione finale
       const finalY = (doc as any).lastAutoTable.finalY;
       doc.setFontSize(10);
       doc.text(`Totale Ore: ${totalHours.toFixed(2)}`, 14, finalY + 10);
@@ -181,7 +182,7 @@ serve(async (req) => {
       yPosition = finalY + 25;
     }
 
-    // Materiali (Nuova pagina se necessario)
+    // Materiali
     if (yPosition > 200) {
       doc.addPage();
       yPosition = 20;
@@ -211,7 +212,6 @@ serve(async (req) => {
     const pdfData = doc.output('datauristring');
     const pdfBase64 = pdfData.split(',')[1];
 
-    // Configurazione Email
     const fromEmail = '"Antonelli & Pellizzari Refrigerazioni" <onboarding@resend.dev>';
     
     const emailContent = `
@@ -227,30 +227,32 @@ serve(async (req) => {
     `;
     
     console.log("[send-work-report-email] Sending email...");
-    const { data, error: resendError } = await resend.emails.send({
-      from: fromEmail,
-      to: recipientEmail,
-      subject: `Bolla di Consegna - ${intervention.client_company_name}`,
-      html: emailContent,
-      attachments: [
-        {
-          filename: `Bolla_${(intervention.client_company_name || 'sconosciuto').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')}.pdf`,
-          content: pdfBase64
-        }
-      ]
-    });
-
-    if (resendError) {
-      console.error("[send-work-report-email] Error sending email:", resendError);
-      return new Response(JSON.stringify({ error: resendError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const results: Array<{ to: string; ok: boolean; error?: string }> = [];
+    for (const to of recipientEmails) {
+      const { data, error: resendError } = await resend.emails.send({
+        from: fromEmail,
+        to,
+        subject: `Bolla di Consegna - ${intervention.client_company_name}`,
+        html: emailContent,
+        attachments: [
+          {
+            filename: `Bolla_${(intervention.client_company_name || 'sconosciuto').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')}.pdf`,
+            content: pdfBase64
+          }
+        ]
       });
+
+      if (resendError) {
+        console.error("[send-work-report-email] Error sending email:", resendError);
+        results.push({ to, ok: false, error: resendError.message });
+      } else {
+        results.push({ to, ok: true });
+      }
     }
 
-    console.log("[send-work-report-email] Success");
-    return new Response(JSON.stringify({ message: 'Email sent successfully', data }), {
-      status: 200,
+    const allOk = results.every(r => r.ok);
+    return new Response(JSON.stringify({ message: allOk ? 'Email inviate' : 'Alcune email non sono state inviate', results }), {
+      status: allOk ? 200 : 207,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

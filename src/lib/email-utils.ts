@@ -1,33 +1,24 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export const sendWorkReportEmail = async (interventionId: string, recipientEmail: string) => {
-  try {
-    const { data, error } = await supabase.functions.invoke('send-work-report-email', {
-      body: { interventionId, recipientEmail },
-    });
+export async function sendWorkReportEmail(interventionId: string, recipients: string[] | string) {
+  const recipientEmails = Array.isArray(recipients) ? recipients : [recipients];
 
-    if (error) {
-      console.error('Error invoking send-work-report-email function:', error);
-      toast.error(`Errore nell'invio dell'email: ${error.message}`);
-      throw error;
+  const res = await fetch(
+    'https://nrdsgtuzpnamcovuzghb.supabase.co/functions/v1/send-work-report-email',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ interventionId, recipientEmails }),
     }
+  );
 
-    // Le funzioni Edge restituiscono un oggetto Response, quindi il 'data' qui è il body della risposta.
-    // Dobbiamo parsare il JSON se la funzione Edge restituisce JSON.
-    const responseBody = data as { error?: string; message?: string };
-
-    if (responseBody.error) {
-      console.error('Error from Edge Function:', responseBody.error);
-      toast.error(`Errore nell'invio dell'email: ${responseBody.error}`);
-      throw new Error(responseBody.error);
-    }
-
-    toast.success('Email inviata con successo!');
-    return responseBody;
-  } catch (error: any) {
-    console.error('Exception in sendWorkReportEmail:', error);
-    toast.error(`Errore nell'invio dell'email: ${error.message || 'Errore sconosciuto'}`);
-    throw error;
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error?.error || 'Errore durante l’invio email');
   }
-};
+
+  return res.json();
+}
