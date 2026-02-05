@@ -160,16 +160,16 @@ serve(async (req: Request) => {
         styles: { fontSize: 8 },
         headStyles: { fillColor: [66, 139, 202] },
       });
-
+      
       const finalY = (doc as any).lastAutoTable.finalY;
       doc.setFontSize(10);
       doc.text(`Totale Ore: ${totalHours.toFixed(2)}`, 14, finalY + 10);
-
+      
       const km = (intervention.work_report_data as any)?.kilometers;
       if (km !== undefined) {
         doc.text(`Km percorsi: ${km}`, 14, finalY + 18);
       }
-
+      
       yPosition = finalY + 25;
     }
 
@@ -202,10 +202,8 @@ serve(async (req: Request) => {
     const pdfData = doc.output('datauristring');
     const pdfBase64 = pdfData.split(',')[1];
 
-    // IMPORTANT: If you send from Resend's onboarding domain, Resend may only deliver to verified recipients.
-    // Prefer a verified sender on your domain.
     const fromEmailEnv = Deno.env.get('RESEND_FROM_EMAIL');
-    const fromEmail = fromEmailEnv ?? '"Antonelli & Pellizzari Refrigerazioni" <bolla@send.lumafinsrl.com>';
+    const fromEmail = fromEmailEnv ?? '"Antonelli & Pellizzari Refrigerazioni" <onboarding@resend.dev>';
 
     const subject = `Bolla di Consegna - ${intervention.client_company_name}`;
     const emailContent = `
@@ -220,12 +218,13 @@ serve(async (req: Request) => {
       </div>
     `;
 
-    console.log("[send-work-report-email] Sending email...", { fromEmail, recipientsCount: recipientEmails.length });
+    console.log("[send-work-report-email] Sending email...");
     const results: Array<{ to: string; ok: boolean; error?: string }> = [];
 
+    // Prova invio in un'unica email con BCC
     if (recipientEmails.length > 1) {
       console.log("[send-work-report-email] Attempting single send with BCC...", { to: recipientEmails[0], bccCount: recipientEmails.length - 1 });
-      const { error: resendError } = await resend.emails.send({
+      const { data, error: resendError } = await resend.emails.send({
         from: fromEmail,
         to: recipientEmails[0],
         bcc: recipientEmails.slice(1),
@@ -250,8 +249,9 @@ serve(async (req: Request) => {
       }
     }
 
+    // Fallback: invio per destinatario (o singolo destinatario)
     for (const to of recipientEmails) {
-      const { error: resendError } = await resend.emails.send({
+      const { data, error: resendError } = await resend.emails.send({
         from: fromEmail,
         to,
         subject,

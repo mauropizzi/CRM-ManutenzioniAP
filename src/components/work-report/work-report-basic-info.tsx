@@ -25,28 +25,17 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { sendWorkReportEmail } from '@/lib/email-utils';
+import { sendWorkReportEmail } from '@/lib/email-utils'; // Importa la utility per l'invio email
 import { toast } from 'sonner';
 
 interface WorkReportBasicInfoProps {
   clientName?: string;
-  clientEmail?: string;
+  clientEmail?: string; // Aggiunto clientEmail come prop
   interventionId?: string;
 }
 
-type SendEmailResult = {
-  to: string;
-  ok: boolean;
-  error?: string;
-};
-
-type SendEmailResponse = {
-  message?: string;
-  results?: SendEmailResult[];
-};
-
 export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }: WorkReportBasicInfoProps) => {
-  const { control, getValues, setValue } = useFormContext<WorkReportFormValues>();
+  const { control, getValues, setValue } = useFormContext<WorkReportFormValues>(); // Destrutturato setValue
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState(clientEmail || '');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -61,9 +50,9 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
       return;
     }
 
-    // Parsa più indirizzi separati da virgole / punti e virgola / newline
+    // Parsa più indirizzi separati da virgole
     const emails = recipientEmail
-      .split(/[,;\n]+/)
+      .split(',')
       .map((e) => e.trim())
       .filter((e) => e.length > 0);
 
@@ -77,23 +66,9 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
 
     setIsSendingEmail(true);
     try {
-      const resp = (await sendWorkReportEmail(interventionId, emails)) as SendEmailResponse;
-      const results = resp?.results ?? [];
-      const failed = results.filter((r) => !r.ok);
-
-      if (failed.length > 0) {
-        toast.error(
-          `Invio fallito per: ${failed
-            .map((f) => f.to)
-            .join(', ')}`
-        );
-        return;
-      }
-
+      await sendWorkReportEmail(interventionId, emails);
       setIsEmailDialogOpen(false);
       toast.success(`Email inviata a ${emails.length} destinatario/i.`);
-    } catch (e: any) {
-      toast.error(e?.message || "Errore durante l'invio email.");
     } finally {
       setIsSendingEmail(false);
     }
@@ -133,9 +108,10 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
           )}
         />
 
+        {/* Pulsante Stampa Bolla */}
         {interventionId && (
-          <Link
-            href={`/interventions/${interventionId}/print-work-report`}
+          <Link 
+            href={`/interventions/${interventionId}/print-work-report`} 
             className="ml-auto flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <Printer size={16} />
@@ -143,6 +119,7 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
           </Link>
         )}
 
+        {/* Pulsante Invia Email */}
         {interventionId && (
           <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
             <DialogTrigger asChild>
@@ -160,7 +137,7 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
               <DialogHeader>
                 <DialogTitle className="text-gray-900 dark:text-gray-100">Invia Bolla di Consegna via Email</DialogTitle>
                 <DialogDescription className="text-gray-600 dark:text-gray-400">
-                  Inserisci uno o più indirizzi email (separati da virgole, punto e virgola o a capo).
+                  Inserisci l'indirizzo email del destinatario.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -173,23 +150,23 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
                     type="text"
                     value={recipientEmail}
                     onChange={(e) => setRecipientEmail(e.target.value)}
-                    placeholder="es. email1@dominio.it; email2@dominio.it"
+                    placeholder="es. email1@dominio.it, email2@dominio.it"
                     className="col-span-3 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
+                <Button 
+                  type="button" 
+                  variant="outline" 
                   onClick={() => setIsEmailDialogOpen(false)}
                   className="rounded-md px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
                 >
                   Annulla
                 </Button>
-                <Button
-                  type="button"
-                  onClick={handleSendEmail}
+                <Button 
+                  type="button" 
+                  onClick={handleSendEmail} 
                   disabled={isSendingEmail}
                   className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
                 >
