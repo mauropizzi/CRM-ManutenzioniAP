@@ -16,51 +16,13 @@ serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== 'POST') {
-    console.warn("[send-work-report-email] Method not allowed:", req.method);
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-
   try {
-    // Parse JSON body safely (avoid "Unexpected end of JSON input")
-    const rawBody = await req.text();
-    if (!rawBody || rawBody.trim().length === 0) {
-      console.error("[send-work-report-email] Empty request body. Status: 400");
-      return new Response(JSON.stringify({ error: 'Empty request body' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    let parsed: any;
-    try {
-      parsed = JSON.parse(rawBody);
-    } catch (e: any) {
-      console.error("[send-work-report-email] Invalid JSON body. Status: 400", { message: e?.message });
-      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const { interventionId, recipientEmails } = parsed;
+    const { interventionId, recipientEmails } = await req.json();
     console.log("[send-work-report-email] Received request for interventionId:", interventionId, "recipientEmails:", recipientEmails);
 
     if (!interventionId || !recipientEmails || !Array.isArray(recipientEmails) || recipientEmails.length === 0) {
       console.error("[send-work-report-email] Missing interventionId or recipientEmails. Status: 400");
       return new Response(JSON.stringify({ error: 'Missing interventionId or recipientEmails' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(String(interventionId))) {
-      console.error("[send-work-report-email] Invalid interventionId (not a UUID). Status: 400", { interventionId });
-      return new Response(JSON.stringify({ error: 'Invalid interventionId' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -198,16 +160,16 @@ serve(async (req: Request) => {
         styles: { fontSize: 8 },
         headStyles: { fillColor: [66, 139, 202] },
       });
-
+      
       const finalY = (doc as any).lastAutoTable.finalY;
       doc.setFontSize(10);
       doc.text(`Totale Ore: ${totalHours.toFixed(2)}`, 14, finalY + 10);
-
+      
       const km = (intervention.work_report_data as any)?.kilometers;
       if (km !== undefined) {
         doc.text(`Km percorsi: ${km}`, 14, finalY + 18);
       }
-
+      
       yPosition = finalY + 25;
     }
 
@@ -240,16 +202,8 @@ serve(async (req: Request) => {
     const pdfData = doc.output('datauristring');
     const pdfBase64 = pdfData.split(',')[1];
 
-    // IMPORTANT: If you send from Resend's onboarding domain, Resend may only deliver to verified recipients.
-    // Prefer a verified sender on your domain.
     const fromEmailEnv = Deno.env.get('RESEND_FROM_EMAIL');
-    const isValidFrom = typeof fromEmailEnv === 'string' && fromEmailEnv.includes('@');
-    if (fromEmailEnv && !isValidFrom) {
-      console.warn("[send-work-report-email] RESEND_FROM_EMAIL is set but doesn't look like an email. Ignoring.");
-    }
-    const fromEmail = isValidFrom
-      ? fromEmailEnv
-      : '"Antonelli & Pellizzari Refrigerazioni" <bolla@send.lumafinsrl.com>';
+    const fromEmail = fromEmailEnv ?? '"Antonelli & Pellizzari Refrigerazioni" <onboarding@resend.dev>';
 
     const subject = `Bolla di Consegna - ${intervention.client_company_name}`;
     const emailContent = `
@@ -264,12 +218,13 @@ serve(async (req: Request) => {
       </div>
     `;
 
-    console.log("[send-work-report-email] Sending email...", { fromEmail, recipientsCount: recipientEmails.length });
+    console.log("[send-work-report-email] Sending email...");
     const results: Array<{ to: string; ok: boolean; error?: string }> = [];
 
+    // Prova invio in un'unica email con BCC
     if (recipientEmails.length > 1) {
       console.log("[send-work-report-email] Attempting single send with BCC...", { to: recipientEmails[0], bccCount: recipientEmails.length - 1 });
-      const { error: resendError } = await resend.emails.send({
+      const { data, error: resendError } = await resend.emails.send({
         from: fromEmail,
         to: recipientEmails[0],
         bcc: recipientEmails.slice(1),
@@ -294,8 +249,9 @@ serve(async (req: Request) => {
       }
     }
 
+    // Fallback: invio per destinatario (o singolo destinatario)
     for (const to of recipientEmails) {
-      const { error: resendError } = await resend.emails.send({
+      const { data, error: resendError } = await resend.emails.send({
         from: fromEmail,
         to,
         subject,
