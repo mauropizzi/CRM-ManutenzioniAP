@@ -21,7 +21,7 @@ const SupplierContext = createContext<SupplierContextValue | undefined>(undefine
 export const SupplierProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const setupInProgress = useRef(false);
 
   const refresh = async () => {
@@ -37,6 +37,11 @@ export const SupplierProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSuppliers(data || []);
       console.log("[supplier-context] Suppliers fetched:", data);
     } catch (err: any) {
+      if (String(err?.message || '').includes('AbortError')) {
+        // Ignora abort dei lock/HMR senza toast
+        setSuppliers([]);
+        return;
+      }
       console.error("[supplier-context] Error fetching suppliers:", err);
       if (err?.code === "PGRST205") {
         if (!setupInProgress.current) {
@@ -69,8 +74,12 @@ export const SupplierProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   useEffect(() => {
-    refresh();
-  }, [user?.id]);
+    if (!authLoading && user) {
+      refresh();
+    } else if (!authLoading && !user) {
+      setSuppliers([]);
+    }
+  }, [user?.id, authLoading]);
 
   const addSupplier = async (
     supplier: Omit<Supplier, "id" | "user_id" | "created_at" | "updated_at">

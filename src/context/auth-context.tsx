@@ -33,7 +33,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session?.user) {
           await fetchUserProfile(session.user);
         }
-      } catch (error) {
+      } catch (error: any) {
+        if (error?.name === 'AbortError' || String(error?.message || '').includes('AbortError')) {
+          // Ignora gli abort dovuti a HMR/locks
+          return;
+        }
         console.error('Auth initialization error:', error);
       } finally {
         setLoading(false);

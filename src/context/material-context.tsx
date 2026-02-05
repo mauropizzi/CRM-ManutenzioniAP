@@ -40,6 +40,9 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
         .order('created_at', { ascending: false });
 
       if (error) {
+        if (String(error?.message || '').includes('AbortError')) {
+          return;
+        }
         console.error('Supabase error fetching materials:', error);
         toast.error(`Errore nel caricamento dei materiali: ${error.message}`);
         return;
@@ -51,6 +54,9 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
         setMaterials(data as Material[]);
       }
     } catch (error: any) {
+      if (String(error?.message || '').includes('AbortError')) {
+        return;
+      }
       console.error('Exception fetching materials:', error);
       toast.error(`Errore nel caricamento dei materiali: ${error?.message || 'Unknown error'}`);
     } finally {

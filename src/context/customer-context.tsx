@@ -40,6 +40,9 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         .order('created_at', { ascending: false });
 
       if (error) {
+        if (String(error?.message || '').includes('AbortError')) {
+          return; // ignora abort
+        }
         console.error('Supabase error fetching customers:', error);
         toast.error(`Errore nel caricamento dei clienti: ${error.message}`);
         return;
@@ -51,6 +54,9 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         setCustomers(data as Customer[]);
       }
     } catch (error: any) {
+      if (String(error?.message || '').includes('AbortError')) {
+        return; // ignora abort
+      }
       console.error('Exception fetching customers:', error);
       toast.error(`Errore nel caricamento dei clienti: ${error?.message || 'Unknown error'}`);
     } finally {

@@ -67,6 +67,9 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .order('created_at', { ascending: false });
 
       if (error) {
+        if (String(error?.message || '').includes('AbortError')) {
+          return;
+        }
         console.error('Supabase error fetching interventions:', error);
         toast.error(`Errore nel caricamento degli interventi: ${error.message}`);
         return;
@@ -84,6 +87,9 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         setInterventionRequests(parsedData);
       }
     } catch (error: any) {
+      if (String(error?.message || '').includes('AbortError')) {
+        return;
+      }
       console.error('Exception fetching interventions:', error);
       toast.error(`Errore nel caricamento degli interventi: ${error?.message || 'Unknown error'}`);
     } finally {

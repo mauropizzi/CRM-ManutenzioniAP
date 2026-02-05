@@ -40,6 +40,9 @@ export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
         .order('created_at', { ascending: false });
 
       if (error) {
+        if (String(error?.message || '').includes('AbortError')) {
+          return;
+        }
         console.error('Supabase error fetching technicians:', error);
         toast.error(`Errore nel caricamento dei tecnici: ${error.message}`);
         return;
@@ -51,6 +54,9 @@ export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
         setTechnicians(data as Technician[]);
       }
     } catch (error: any) {
+      if (String(error?.message || '').includes('AbortError')) {
+        return;
+      }
       console.error('Exception fetching technicians:', error);
       toast.error(`Errore nel caricamento dei tecnici: ${error?.message || 'Unknown error'}`);
     } finally {
