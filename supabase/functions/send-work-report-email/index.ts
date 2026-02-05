@@ -16,51 +16,13 @@ serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== 'POST') {
-    console.warn("[send-work-report-email] Method not allowed:", req.method);
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-
   try {
-    // Parse JSON body safely (avoid "Unexpected end of JSON input")
-    const rawBody = await req.text();
-    if (!rawBody || rawBody.trim().length === 0) {
-      console.error("[send-work-report-email] Empty request body. Status: 400");
-      return new Response(JSON.stringify({ error: 'Empty request body' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    let parsed: any;
-    try {
-      parsed = JSON.parse(rawBody);
-    } catch (e: any) {
-      console.error("[send-work-report-email] Invalid JSON body. Status: 400", { message: e?.message });
-      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const { interventionId, recipientEmails } = parsed;
+    const { interventionId, recipientEmails } = await req.json();
     console.log("[send-work-report-email] Received request for interventionId:", interventionId, "recipientEmails:", recipientEmails);
 
     if (!interventionId || !recipientEmails || !Array.isArray(recipientEmails) || recipientEmails.length === 0) {
       console.error("[send-work-report-email] Missing interventionId or recipientEmails. Status: 400");
       return new Response(JSON.stringify({ error: 'Missing interventionId or recipientEmails' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(String(interventionId))) {
-      console.error("[send-work-report-email] Invalid interventionId (not a UUID). Status: 400", { interventionId });
-      return new Response(JSON.stringify({ error: 'Invalid interventionId' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -243,13 +205,7 @@ serve(async (req: Request) => {
     // IMPORTANT: If you send from Resend's onboarding domain, Resend may only deliver to verified recipients.
     // Prefer a verified sender on your domain.
     const fromEmailEnv = Deno.env.get('RESEND_FROM_EMAIL');
-    const isValidFrom = typeof fromEmailEnv === 'string' && fromEmailEnv.includes('@');
-    if (fromEmailEnv && !isValidFrom) {
-      console.warn("[send-work-report-email] RESEND_FROM_EMAIL is set but doesn't look like an email. Ignoring.");
-    }
-    const fromEmail = isValidFrom
-      ? fromEmailEnv
-      : '"Antonelli & Pellizzari Refrigerazioni" <bolla@send.lumafinsrl.com>';
+    const fromEmail = fromEmailEnv ?? '"Antonelli & Pellizzari Refrigerazioni" <bolla@send.lumafinsrl.com>';
 
     const subject = `Bolla di Consegna - ${intervention.client_company_name}`;
     const emailContent = `
