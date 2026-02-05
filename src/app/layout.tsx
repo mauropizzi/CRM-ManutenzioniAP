@@ -7,6 +7,7 @@ import { TechnicianProvider } from "@/context/technician-context";
 import { AuthProvider } from "@/context/auth-context";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppShell } from "@/components/app-shell";
+import ChunkErrorHandler from "@/components/chunk-error-handler";
 
 export const metadata: Metadata = {
   title: "Gestione Interventi",
@@ -27,6 +28,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
+          <ChunkErrorHandler />
           <AuthProvider>
             <CustomerProvider>
               <InterventionProvider>
