@@ -18,11 +18,24 @@ serve(async (req: Request) => {
 
   try {
     const { interventionId, recipientEmails } = await req.json();
-    console.log("[send-work-report-email] Received request for interventionId:", interventionId, "recipientEmails:", recipientEmails);
+    console.log("[send-work-report-email] Received request", { interventionId, recipientEmails });
 
     if (!interventionId || !recipientEmails || !Array.isArray(recipientEmails) || recipientEmails.length === 0) {
       console.error("[send-work-report-email] Missing interventionId or recipientEmails. Status: 400");
       return new Response(JSON.stringify({ error: 'Missing interventionId or recipientEmails' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Dedup + pulizia
+    const recipients = Array.from(
+      new Set(recipientEmails.map((e: any) => String(e || '').trim().toLowerCase()).filter(Boolean))
+    );
+
+    if (recipients.length === 0) {
+      console.error("[send-work-report-email] No valid recipients after normalization. Status: 400");
+      return new Response(JSON.stringify({ error: 'No valid recipients' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -160,16 +173,16 @@ serve(async (req: Request) => {
         styles: { fontSize: 8 },
         headStyles: { fillColor: [66, 139, 202] },
       });
-      
+
       const finalY = (doc as any).lastAutoTable.finalY;
       doc.setFontSize(10);
       doc.text(`Totale Ore: ${totalHours.toFixed(2)}`, 14, finalY + 10);
-      
+
       const km = (intervention.work_report_data as any)?.kilometers;
       if (km !== undefined) {
         doc.text(`Km percorsi: ${km}`, 14, finalY + 18);
       }
-      
+
       yPosition = finalY + 25;
     }
 
@@ -203,7 +216,7 @@ serve(async (req: Request) => {
     const pdfBase64 = pdfData.split(',')[1];
 
     const fromEmailEnv = Deno.env.get('RESEND_FROM_EMAIL');
-    const fromEmail = fromEmailEnv ?? '"Antonelli & Pellizzari Refrigerazioni" <onboarding@resend.dev>';
+    const fromEmail = fromEmailEnv ?? '"Antonelli & Pellizzari Refrigerazioni" <bolla@send.lumafinsrl.com>';
 
     const subject = `Bolla di Consegna - ${intervention.client_company_name}`;
     const emailContent = `
@@ -218,39 +231,13 @@ serve(async (req: Request) => {
       </div>
     `;
 
-    console.log("[send-work-report-email] Sending email...");
+    // IMPORTANT: niente BCC. In alcuni casi "sembra" andare ma consegna solo al primo.
+    // Inviando 1 email per destinatario abbiamo risultati chiari per ciascun indirizzo.
+    console.log("[send-work-report-email] Sending per-recipient...", { fromEmail, recipientsCount: recipients.length });
+
     const results: Array<{ to: string; ok: boolean; error?: string }> = [];
 
-    // Prova invio in un'unica email con BCC
-    if (recipientEmails.length > 1) {
-      console.log("[send-work-report-email] Attempting single send with BCC...", { to: recipientEmails[0], bccCount: recipientEmails.length - 1 });
-      const { data, error: resendError } = await resend.emails.send({
-        from: fromEmail,
-        to: recipientEmails[0],
-        bcc: recipientEmails.slice(1),
-        subject,
-        html: emailContent,
-        attachments: [
-          {
-            filename: `Bolla_${(intervention.client_company_name || 'sconosciuto').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')}.pdf`,
-            content: pdfBase64
-          }
-        ]
-      });
-
-      if (resendError) {
-        console.error("[send-work-report-email] BCC send failed, falling back to per-recipient sends:", resendError);
-      } else {
-        recipientEmails.forEach((addr) => results.push({ to: addr, ok: true }));
-        return new Response(JSON.stringify({ message: 'Email inviate (BCC)', results }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
-
-    // Fallback: invio per destinatario (o singolo destinatario)
-    for (const to of recipientEmails) {
+    for (const to of recipients) {
       const { data, error: resendError } = await resend.emails.send({
         from: fromEmail,
         to,
@@ -265,9 +252,10 @@ serve(async (req: Request) => {
       });
 
       if (resendError) {
-        console.error("[send-work-report-email] Error sending email:", resendError);
+        console.error("[send-work-report-email] Error sending email", { to, message: resendError.message });
         results.push({ to, ok: false, error: resendError.message });
       } else {
+        console.log("[send-work-report-email] Email accepted", { to, id: data?.id });
         results.push({ to, ok: true });
       }
     }
