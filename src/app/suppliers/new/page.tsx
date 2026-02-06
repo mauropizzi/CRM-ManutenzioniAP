@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ProtectedRoute } from "@/components/protected-route";
 
 const NewSupplierContent: React.FC = () => {
   const { addSupplier } = useSuppliers();
@@ -40,13 +41,15 @@ const NewSupplierContent: React.FC = () => {
 
 export default function NewSupplierPage() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-8">
-      <div className="mx-auto max-w-4xl">
-        <SupplierProvider>
-          <NewSupplierContent />
-        </SupplierProvider>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-8">
+        <div className="mx-auto max-w-4xl">
+          <SupplierProvider>
+            <NewSupplierContent />
+          </SupplierProvider>
+        </div>
+        <Toaster />
       </div>
-      <Toaster />
-    </div>
+    </ProtectedRoute>
   );
 }

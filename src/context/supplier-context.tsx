@@ -38,7 +38,6 @@ export const SupplierProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log("[supplier-context] Suppliers fetched:", data);
     } catch (err: any) {
       if (String(err?.message || '').includes('AbortError')) {
-        // Ignora abort dei lock/HMR senza toast
         setSuppliers([]);
         return;
       }
@@ -50,7 +49,6 @@ export const SupplierProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           try {
             await ensureSuppliersTable();
             toast.success("Tabella fornitori creata!");
-            // Riprova a caricare
             const { data } = await supabase
               .from("suppliers")
               .select("*")
@@ -84,9 +82,17 @@ export const SupplierProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const addSupplier = async (
     supplier: Omit<Supplier, "id" | "user_id" | "created_at" | "updated_at">
   ) => {
+    const {
+      data: { user: authUser },
+      error: authErr,
+    } = await supabase.auth.getUser();
+
+    if (authErr) throw authErr;
+    if (!authUser) throw new Error("Devi essere autenticato per salvare un fornitore");
+
     const payload = {
       ...supplier,
-      user_id: user?.id ?? null,
+      user_id: authUser.id,
       attivo: supplier.attivo ?? true,
     };
 

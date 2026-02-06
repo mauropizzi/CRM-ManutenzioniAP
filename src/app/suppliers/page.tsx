@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { SupplierTable } from "@/components/supplier-table";
 import { Toaster } from "@/components/ui/sonner";
+import { ProtectedRoute } from "@/components/protected-route";
 
 const SuppliersContent: React.FC = () => {
   const { suppliers, loading } = useSuppliers();
@@ -29,13 +30,15 @@ const SuppliersContent: React.FC = () => {
 
 export default function SuppliersPage() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-8">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <SupplierProvider>
-          <SuppliersContent />
-        </SupplierProvider>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-8">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <SupplierProvider>
+            <SuppliersContent />
+          </SupplierProvider>
+        </div>
+        <Toaster />
       </div>
-      <Toaster />
-    </div>
+    </ProtectedRoute>
   );
 }
