@@ -43,7 +43,14 @@ export interface InterventionRequest {
   scheduled_date?: Date; // Opzionale, per il DatePicker
   scheduled_time?: string; // Opzionale, formato HH:MM
   status: 'Da fare' | 'In corso' | 'Completato' | 'Annullato';
+
+  /**
+   * Assegnazione: può essere valorizzato uno solo tra tecnico e fornitore.
+   * (Entrambi opzionali)
+   */
   assigned_technicians?: string; // Opzionale, testo libero
+  assigned_supplier?: string; // Opzionale, testo libero
+
   office_notes?: string; // Opzionale
 
   // Dati di conclusione intervento (specifici per l'esito, non per la bolla di lavoro)

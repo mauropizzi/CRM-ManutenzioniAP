@@ -4,6 +4,7 @@ import { CustomerProvider } from "@/context/customer-context";
 import { InterventionProvider } from "@/context/intervention-context";
 import { MaterialProvider } from "@/context/material-context";
 import { TechnicianProvider } from "@/context/technician-context";
+import { SupplierProvider } from "@/context/supplier-context";
 import { AuthProvider } from "@/context/auth-context";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppShell } from "@/components/app-shell";
@@ -32,7 +33,9 @@ export default function RootLayout({
               <InterventionProvider>
                 <MaterialProvider>
                   <TechnicianProvider>
-                    <AppShell>{children}</AppShell>
+                    <SupplierProvider>
+                      <AppShell>{children}</AppShell>
+                    </SupplierProvider>
                   </TechnicianProvider>
                 </MaterialProvider>
               </InterventionProvider>

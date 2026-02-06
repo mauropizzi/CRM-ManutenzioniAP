@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Input } from '@/components/ui/input';
 import {
   FormControl,
   FormField,
@@ -20,15 +19,26 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { InterventionFormValues } from '@/components/intervention-form';
 import { Button } from '@/components/ui/button';
-import { useTechnicians } from '@/context/technician-context'; // Importa il contesto dei tecnici
+import { useTechnicians } from '@/context/technician-context';
+import { useSuppliers } from '@/context/supplier-context';
+import type { Supplier } from '@/types/supplier';
 
 interface SchedulingDetailsSectionProps {
   timeOptions: string[];
 }
 
+const NONE_VALUE = "__none__";
+
 export const SchedulingDetailsSection = ({ timeOptions }: SchedulingDetailsSectionProps) => {
-  const { control } = useFormContext<InterventionFormValues>();
-  const { technicians, loading: techniciansLoading } = useTechnicians(); // Ottieni i tecnici dal contesto
+  const { control, watch, setValue } = useFormContext<InterventionFormValues>();
+  const { technicians, loading: techniciansLoading } = useTechnicians();
+  const { suppliers, loading: suppliersLoading } = useSuppliers();
+
+  const assignedTechnician = watch('assigned_technicians');
+  const assignedSupplier = watch('assigned_supplier');
+
+  const isTechLocked = Boolean(assignedSupplier && assignedSupplier.trim().length > 0);
+  const isSupplierLocked = Boolean(assignedTechnician && assignedTechnician.trim().length > 0);
 
   return (
     <div className="grid gap-6 rounded-lg border p-4 shadow-sm">
@@ -121,22 +131,34 @@ export const SchedulingDetailsSection = ({ timeOptions }: SchedulingDetailsSecti
           )}
         />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormField
           control={control}
           name="assigned_technicians"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-gray-700 dark:text-gray-300">Tecnici assegnati (opz.)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel className="text-gray-700 dark:text-gray-300">Assegna a tecnico (opz.)</FormLabel>
+              <Select
+                value={field.value && field.value.trim().length > 0 ? field.value : NONE_VALUE}
+                onValueChange={(val) => {
+                  const next = val === NONE_VALUE ? '' : val;
+                  field.onChange(next);
+                  if (next && next.trim().length > 0) setValue('assigned_supplier', '');
+                }}
+                disabled={isTechLocked}
+              >
                 <FormControl>
-                  <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Seleziona un tecnico" />
+                  <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-60">
+                    <SelectValue placeholder={isTechLocked ? 'Selezione bloccata (fornitore assegnato)' : 'Seleziona un tecnico'} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
+                  <SelectItem value={NONE_VALUE}>Nessuno</SelectItem>
                   {techniciansLoading ? (
-                    <SelectItem value="loading" disabled>Caricamento tecnici...</SelectItem>
+                    <SelectItem value="loading" disabled>
+                      Caricamento tecnici...
+                    </SelectItem>
                   ) : (
                     technicians.map((technician) => (
                       <SelectItem key={technician.id} value={`${technician.first_name} ${technician.last_name}`}>
@@ -150,6 +172,49 @@ export const SchedulingDetailsSection = ({ timeOptions }: SchedulingDetailsSecti
             </FormItem>
           )}
         />
+
+        <FormField
+          control={control}
+          name="assigned_supplier"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-gray-700 dark:text-gray-300">Assegna a fornitore (opz.)</FormLabel>
+              <Select
+                value={field.value && field.value.trim().length > 0 ? field.value : NONE_VALUE}
+                onValueChange={(val) => {
+                  const next = val === NONE_VALUE ? '' : val;
+                  field.onChange(next);
+                  if (next && next.trim().length > 0) setValue('assigned_technicians', '');
+                }}
+                disabled={isSupplierLocked}
+              >
+                <FormControl>
+                  <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-60">
+                    <SelectValue placeholder={isSupplierLocked ? 'Selezione bloccata (tecnico assegnato)' : 'Seleziona un fornitore'} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
+                  <SelectItem value={NONE_VALUE}>Nessuno</SelectItem>
+                  {suppliersLoading ? (
+                    <SelectItem value="loading" disabled>
+                      Caricamento fornitori...
+                    </SelectItem>
+                  ) : (
+                    (suppliers as Supplier[])
+                      .filter((s: Supplier) => s.attivo !== false)
+                      .map((s: Supplier) => (
+                        <SelectItem key={s.id} value={s.ragione_sociale}>
+                          {s.ragione_sociale}
+                        </SelectItem>
+                      ))
+                  )}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={control}
           name="office_notes"
@@ -157,7 +222,11 @@ export const SchedulingDetailsSection = ({ timeOptions }: SchedulingDetailsSecti
             <FormItem>
               <FormLabel className="text-gray-700 dark:text-gray-300">Note ufficio</FormLabel>
               <FormControl>
-                <Textarea placeholder="Es. urgenza, accesso, contatti..." {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[100px]" />
+                <Textarea
+                  placeholder="Es. urgenza, accesso, contatti..."
+                  {...field}
+                  className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[100px]"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
