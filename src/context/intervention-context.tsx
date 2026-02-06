@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { InterventionRequest, WorkReportData, TimeEntry } from '@/types/intervention';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './auth-context'; // Importo useAuth
+import { useAuth } from './auth-context';
 
 interface InterventionContextType {
   interventionRequests: InterventionRequest[];
@@ -16,7 +16,6 @@ interface InterventionContextType {
 
 const InterventionContext = createContext<InterventionContextType | undefined>(undefined);
 
-// Helper per deserializzare work_report_data
 const parseWorkReportData = (data: any): WorkReportData | undefined => {
   if (!data) return undefined;
   const parsed: WorkReportData = {
@@ -29,38 +28,42 @@ const parseWorkReportData = (data: any): WorkReportData | undefined => {
   return parsed;
 };
 
-// Helper per serializzare work_report_data
 const serializeWorkReportData = (data: WorkReportData | undefined): any | undefined => {
   if (!data) return undefined;
   const serialized: any = {
     ...data,
     time_entries: data.time_entries?.map((entry: TimeEntry) => ({
       ...entry,
-      date: entry.date ? entry.date.toISOString().split('T')[0] : undefined, // Formato 'YYYY-MM-DD' per il database
+      date: entry.date ? entry.date.toISOString().split('T')[0] : undefined,
     })),
   };
   return serialized;
 };
 
+const normalizeCustomerId = (value: unknown): string | null => {
+  const v = typeof value === 'string' ? value.trim() : '';
+  if (!v || v === 'new-customer') return null;
+  return v;
+};
 
 export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const [interventionRequests, setInterventionRequests] = useState<InterventionRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); // Ottengo l'utente dal contesto di autenticazione
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && user) { // Recupero gli interventi solo se l'utente è autenticato
+    if (typeof window !== 'undefined' && user) {
       fetchInterventions();
     } else if (!user) {
       setInterventionRequests([]);
       setLoading(false);
     }
-  }, [user]); // Dipendenza dall'oggetto utente
+  }, [user]);
 
   const fetchInterventions = async () => {
     try {
       console.log('Fetching interventions from Supabase...');
-      
+
       const { data, error } = await supabase
         .from('interventions')
         .select('*')
@@ -76,13 +79,12 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       }
 
       console.log('Interventions fetched:', data);
-      
+
       if (data) {
-        // Mappa i dati per convertire le stringhe di scheduled_date in oggetti Date
-        const parsedData = data.map(item => ({
+        const parsedData = data.map((item) => ({
           ...item,
           scheduled_date: item.scheduled_date ? new Date(item.scheduled_date) : undefined,
-          work_report_data: parseWorkReportData(item.work_report_data), // Deserializza work_report_data
+          work_report_data: parseWorkReportData(item.work_report_data),
         })) as InterventionRequest[];
         setInterventionRequests(parsedData);
       }
@@ -98,108 +100,86 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addInterventionRequest = async (newRequest: Omit<InterventionRequest, 'id' | 'user_id'>) => {
-    try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("Devi essere autenticato per aggiungere un intervento");
-        return;
-      }
+    // Get current user
+    const {
+      data: { user: authUser },
+      error: authErr,
+    } = await supabase.auth.getUser();
 
-      const requestWithUserId = {
-        ...newRequest,
-        user_id: user.id,
-        // Serializza work_report_data prima dell'inserimento
-        work_report_data: serializeWorkReportData(newRequest.work_report_data),
-      };
+    if (authErr) throw authErr;
+    if (!authUser) throw new Error('Devi essere autenticato per aggiungere un intervento');
 
-      console.log('Adding intervention:', requestWithUserId);
-      
-      const { data, error } = await supabase
-        .from('interventions')
-        .insert([requestWithUserId])
-        .select()
-        .single();
+    const requestWithUserId = {
+      ...newRequest,
+      user_id: authUser.id,
+      customer_id: normalizeCustomerId((newRequest as any).customer_id),
+      work_report_data: serializeWorkReportData(newRequest.work_report_data),
+    };
 
-      if (error) {
-        console.error('Supabase error adding intervention:', error);
-        toast.error(`Errore nell'aggiunta dell'intervento: ${error.message}`);
-        return;
-      }
+    console.log('Adding intervention:', requestWithUserId);
 
-      console.log('Intervention added:', data);
+    const { data, error } = await supabase
+      .from('interventions')
+      .insert([requestWithUserId])
+      .select()
+      .single();
 
-      if (data) {
-        // Deserializza work_report_data dopo l'inserimento per mantenere la coerenza nel frontend
-        const parsedData = {
-          ...data,
-          scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
-          work_report_data: parseWorkReportData(data.work_report_data),
-        } as InterventionRequest;
-        setInterventionRequests((prev) => [parsedData, ...prev]);
-        toast.success("Richiesta di intervento aggiunta con successo!");
-      }
-    } catch (error: any) {
-      console.error('Exception adding intervention:', error);
-      toast.error(`Errore nell'aggiunta dell'intervento: ${error?.message || 'Unknown error'}`);
+    if (error) {
+      console.error('Supabase error adding intervention:', error);
+      throw error;
+    }
+
+    console.log('Intervention added:', data);
+
+    if (data) {
+      const parsedData = {
+        ...data,
+        scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
+        work_report_data: parseWorkReportData(data.work_report_data),
+      } as InterventionRequest;
+      setInterventionRequests((prev) => [parsedData, ...prev]);
     }
   };
 
   const updateInterventionRequest = async (updatedRequest: InterventionRequest) => {
-    try {
-      console.log('Updating intervention:', updatedRequest);
-      
-      // Prepara l'oggetto per l'aggiornamento, serializzando work_report_data
-      const updatePayload = {
-        ...updatedRequest,
-        scheduled_date: updatedRequest.scheduled_date ? updatedRequest.scheduled_date.toISOString().split('T')[0] : null,
-        work_report_data: serializeWorkReportData(updatedRequest.work_report_data),
-      };
+    console.log('Updating intervention:', updatedRequest);
 
-      const { data, error } = await supabase
-        .from('interventions')
-        .update(updatePayload)
-        .eq('id', updatedRequest.id)
-        .select()
-        .single();
+    const updatePayload = {
+      ...updatedRequest,
+      customer_id: normalizeCustomerId((updatedRequest as any).customer_id),
+      scheduled_date: updatedRequest.scheduled_date ? updatedRequest.scheduled_date.toISOString().split('T')[0] : null,
+      work_report_data: serializeWorkReportData(updatedRequest.work_report_data),
+    };
 
-      if (error) {
-        console.error('Supabase error updating intervention:', error);
-        toast.error(`Errore nell'aggiornamento dell'intervento: ${error.message}`);
-        return;
-      }
+    const { data, error } = await supabase
+      .from('interventions')
+      .update(updatePayload)
+      .eq('id', updatedRequest.id)
+      .select()
+      .single();
 
-      console.log('Intervention updated:', data);
+    if (error) {
+      console.error('Supabase error updating intervention:', error);
+      throw error;
+    }
 
-      if (data) {
-        // Deserializza work_report_data dopo l'aggiornamento per mantenere la coerenza nel frontend
-        const parsedData = {
-          ...data,
-          scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
-          work_report_data: parseWorkReportData(data.work_report_data),
-        } as InterventionRequest;
-        setInterventionRequests((prev) =>
-          prev.map((request) =>
-            request.id === updatedRequest.id ? parsedData : request
-          )
-        );
-        toast.success("Richiesta di intervento aggiornata con successo!");
-      }
-    } catch (error: any) {
-      console.error('Exception updating intervention:', error);
-      toast.error(`Errore nell'aggiornamento dell'intervento: ${error?.message || 'Unknown error'}`);
+    console.log('Intervention updated:', data);
+
+    if (data) {
+      const parsedData = {
+        ...data,
+        scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
+        work_report_data: parseWorkReportData(data.work_report_data),
+      } as InterventionRequest;
+      setInterventionRequests((prev) => prev.map((req) => (req.id === updatedRequest.id ? parsedData : req)));
     }
   };
 
   const deleteInterventionRequest = async (id: string) => {
     try {
       console.log('Deleting intervention:', id);
-      
-      const { error } = await supabase
-        .from('interventions')
-        .delete()
-        .eq('id', id);
+
+      const { error } = await supabase.from('interventions').delete().eq('id', id);
 
       if (error) {
         console.error('Supabase error deleting intervention:', error);
@@ -208,7 +188,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setInterventionRequests((prev) => prev.filter((request) => request.id !== id));
-      toast.success("Richiesta di intervento eliminata con successo!");
+      toast.success('Richiesta di intervento eliminata con successo!');
     } catch (error: any) {
       console.error('Exception deleting intervention:', error);
       toast.error(`Errore nell'eliminazione dell'intervento: ${error?.message || 'Unknown error'}`);
@@ -216,13 +196,15 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <InterventionContext.Provider value={{ 
-      interventionRequests, 
-      addInterventionRequest, 
-      updateInterventionRequest, 
-      deleteInterventionRequest,
-      loading 
-    }}>
+    <InterventionContext.Provider
+      value={{
+        interventionRequests,
+        addInterventionRequest,
+        updateInterventionRequest,
+        deleteInterventionRequest,
+        loading,
+      }}
+    >
       {children}
     </InterventionContext.Provider>
   );
