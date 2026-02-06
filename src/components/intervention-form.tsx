@@ -15,6 +15,12 @@ const isManualCustomer = (customerId?: string) => {
   return !v || v === 'new-customer';
 };
 
+const isValidPiva = (value: string) => /^\d{11}$/.test(value);
+const isValidCf = (value: string) => {
+  // persone fisiche: 16 alfanumerici; aziende: spesso 11 cifre
+  return /^[A-Z0-9]{16}$/.test(value) || /^\d{11}$/.test(value);
+};
+
 export const interventionFormSchema = z
   .object({
     customer_id: z.string().optional(),
@@ -51,7 +57,6 @@ export const interventionFormSchema = z
     assigned_supplier: z.string().optional().or(z.literal('')),
     office_notes: z.string().optional().or(z.literal('')),
   })
-  // mutual exclusion tech/supplier
   .refine(
     (v) => {
       const hasTech = Boolean(v.assigned_technicians && v.assigned_technicians.trim().length > 0);
@@ -63,28 +68,44 @@ export const interventionFormSchema = z
       path: ['assigned_technicians'],
     }
   )
-  // when customer is manual, require fiscal + city/cap/province
+  // when customer is manual: require address details and at least one fiscal id (CF or P.IVA)
   .superRefine((v, ctx) => {
     if (!isManualCustomer(v.customer_id)) return;
 
-    const cf = (v.client_codice_fiscale ?? '').trim();
+    const cf = (v.client_codice_fiscale ?? '').trim().toUpperCase();
     const piva = (v.client_partita_iva ?? '').trim();
     const citta = (v.client_citta ?? '').trim();
     const cap = (v.client_cap ?? '').trim();
-    const prov = (v.client_provincia ?? '').trim();
+    const prov = (v.client_provincia ?? '').trim().toUpperCase();
 
-    if (cf.length !== 16) {
+    const hasCf = cf.length > 0;
+    const hasPiva = piva.length > 0;
+
+    if (!hasCf && !hasPiva) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Il codice fiscale deve contenere 16 caratteri.',
+        message: 'Inserisci almeno Codice Fiscale oppure Partita IVA.',
+        path: ['client_codice_fiscale'],
+      });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Inserisci almeno Codice Fiscale oppure Partita IVA.',
+        path: ['client_partita_iva'],
+      });
+    }
+
+    if (hasCf && !isValidCf(cf)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Codice fiscale non valido (11 cifre oppure 16 caratteri).',
         path: ['client_codice_fiscale'],
       });
     }
 
-    if (piva.length !== 11) {
+    if (hasPiva && !isValidPiva(piva)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'La partita IVA deve contenere 11 caratteri.',
+        message: 'Partita IVA non valida (11 cifre).',
         path: ['client_partita_iva'],
       });
     }
@@ -176,15 +197,8 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
   });
 
   const handleSubmit = (values: InterventionFormValues) => {
-    console.log('InterventionForm handleSubmit called with:', values);
     onSubmit(values);
   };
-
-  React.useEffect(() => {
-    if (Object.keys(methods.formState.errors).length > 0) {
-      console.error('Form validation errors:', methods.formState.errors);
-    }
-  }, [methods.formState.errors]);
 
   return (
     <FormProvider {...methods}>

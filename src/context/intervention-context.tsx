@@ -5,6 +5,7 @@ import { InterventionRequest, WorkReportData, TimeEntry } from '@/types/interven
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './auth-context';
+import { useCustomers } from '@/context/customer-context';
 
 interface InterventionContextType {
   interventionRequests: InterventionRequest[];
@@ -47,11 +48,16 @@ const normalizeCustomerId = (value: unknown): string | null => {
 };
 
 const normFiscal = (value: unknown) => String(value ?? '').trim().toUpperCase();
+const emptyToNull = (value: unknown) => {
+  const v = String(value ?? '').trim();
+  return v.length > 0 ? v : null;
+};
 
 export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const [interventionRequests, setInterventionRequests] = useState<InterventionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { refreshCustomers } = useCustomers();
 
   useEffect(() => {
     if (typeof window !== 'undefined' && user) {
@@ -117,7 +123,6 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
     const piva = normFiscal((newRequest as any).client_partita_iva);
 
     if (!customerId) {
-      // Verifica duplicati (RLS limita ai record dell'utente)
       const orParts: string[] = [];
       if (piva) orParts.push(`partita_iva.eq.${piva}`);
       if (cf) orParts.push(`codice_fiscale.eq.${cf}`);
@@ -139,17 +144,17 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       const customerPayload = {
         user_id: authUser.id,
         ragione_sociale: (newRequest as any).client_company_name,
-        codice_fiscale: cf,
-        partita_iva: piva,
+        codice_fiscale: cf || null,
+        partita_iva: piva || null,
         indirizzo: (newRequest as any).client_address,
-        citta: String((newRequest as any).client_citta ?? '').trim(),
-        cap: String((newRequest as any).client_cap ?? '').trim(),
-        provincia: String((newRequest as any).client_provincia ?? '').trim().toUpperCase(),
+        citta: emptyToNull((newRequest as any).client_citta),
+        cap: emptyToNull((newRequest as any).client_cap),
+        provincia: emptyToNull(String((newRequest as any).client_provincia ?? '').trim().toUpperCase()),
         telefono: (newRequest as any).client_phone,
         email: (newRequest as any).client_email,
-        referente: (newRequest as any).client_referent || null,
-        pec: (newRequest as any).client_pec || null,
-        sdi: (newRequest as any).client_sdi || null,
+        referente: emptyToNull((newRequest as any).client_referent),
+        pec: emptyToNull((newRequest as any).client_pec),
+        sdi: emptyToNull((newRequest as any).client_sdi),
         attivo: true,
       };
 
@@ -160,7 +165,6 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (createCustomerErr) {
-        // Gestione duplicati anche via indice unico (race condition)
         if (String(createCustomerErr?.code || '') === '23505') {
           throw new Error('Cliente già presente in anagrafica. Verifica Partita IVA / Codice Fiscale.');
         }
@@ -169,6 +173,9 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
 
       customerId = (createdCustomer as any)?.id ?? null;
       if (!customerId) throw new Error('Impossibile creare il cliente in anagrafica');
+
+      // Aggiorna lista clienti in memoria (così compare subito in Anagrafica)
+      await refreshCustomers();
     }
 
     // 2) Inserisci intervento (rimuovendo i campi extra usati solo per il cliente)

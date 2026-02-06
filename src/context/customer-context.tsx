@@ -4,13 +4,14 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Customer } from '@/types/customer';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './auth-context'; // Importo useAuth
+import { useAuth } from './auth-context';
 
 interface CustomerContextType {
   customers: Customer[];
   addCustomer: (customer: Omit<Customer, 'id' | 'user_id'>) => Promise<void>;
   updateCustomer: (customer: Customer) => Promise<void>;
   deleteCustomer: (id: string) => Promise<void>;
+  refreshCustomers: () => Promise<void>;
   loading: boolean;
 }
 
@@ -19,21 +20,13 @@ const CustomerContext = createContext<CustomerContextType | undefined>(undefined
 export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); // Ottengo l'utente dal contesto di autenticazione
+  const { user } = useAuth();
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && user) { // Recupero i clienti solo se l'utente è autenticato
-      fetchCustomers();
-    } else if (!user) {
-      setCustomers([]);
-      setLoading(false);
-    }
-  }, [user]); // Dipendenza dall'oggetto utente
-
-  const fetchCustomers = async () => {
+  const refreshCustomers = async () => {
+    setLoading(true);
     try {
       console.log('Fetching customers from Supabase...');
-      
+
       const { data, error } = await supabase
         .from('customers')
         .select('*')
@@ -41,7 +34,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         if (String(error?.message || '').includes('AbortError')) {
-          return; // ignora abort
+          return;
         }
         console.error('Supabase error fetching customers:', error);
         toast.error(`Errore nel caricamento dei clienti: ${error.message}`);
@@ -49,13 +42,11 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
       }
 
       console.log('Customers fetched:', data);
-      
-      if (data) {
-        setCustomers(data as Customer[]);
-      }
+
+      setCustomers((data as Customer[]) || []);
     } catch (error: any) {
       if (String(error?.message || '').includes('AbortError')) {
-        return; // ignora abort
+        return;
       }
       console.error('Exception fetching customers:', error);
       toast.error(`Errore nel caricamento dei clienti: ${error?.message || 'Unknown error'}`);
@@ -64,11 +55,19 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user) {
+      refreshCustomers();
+    } else if (!user) {
+      setCustomers([]);
+      setLoading(false);
+    }
+  }, [user]);
+
   const addCustomer = async (newCustomer: Omit<Customer, 'id' | 'user_id'>) => {
     try {
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         toast.error("Devi essere autenticato per aggiungere un cliente");
         return;
@@ -80,7 +79,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
       };
 
       console.log('Adding customer:', customerWithUserId);
-      
+
       const { data, error } = await supabase
         .from('customers')
         .insert([customerWithUserId])
@@ -108,7 +107,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const updateCustomer = async (updatedCustomer: Customer) => {
     try {
       console.log('Updating customer:', updatedCustomer);
-      
+
       const { data, error } = await supabase
         .from('customers')
         .update(updatedCustomer)
@@ -141,7 +140,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const deleteCustomer = async (id: string) => {
     try {
       console.log('Deleting customer:', id);
-      
+
       const { error } = await supabase
         .from('customers')
         .delete()
@@ -162,12 +161,13 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <CustomerContext.Provider value={{ 
-      customers, 
-      addCustomer, 
-      updateCustomer, 
+    <CustomerContext.Provider value={{
+      customers,
+      addCustomer,
+      updateCustomer,
       deleteCustomer,
-      loading 
+      refreshCustomers,
+      loading,
     }}>
       {children}
     </CustomerContext.Provider>
