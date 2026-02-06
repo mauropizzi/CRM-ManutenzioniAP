@@ -19,9 +19,9 @@ const timeEntrySchema = z.object({
 });
 
 const materialSchema = z.object({
-  unit: z.string().optional().or(z.literal('')), // Reso opzionale e accetta stringa vuota
+  unit: z.string().optional().or(z.literal('')),
   quantity: z.coerce.number().min(0, { message: "Quantità non valida." }).default(0),
-  description: z.string().optional().or(z.literal('')), // Reso opzionale e accetta stringa vuota
+  description: z.string().optional().or(z.literal('')),
 });
 
 export const workReportSchema = z.object({
@@ -31,7 +31,8 @@ export const workReportSchema = z.object({
   operative_notes: z.string().optional(),
   time_entries: z.array(timeEntrySchema).default([]),
   kilometers: z.coerce.number().min(0).optional(),
-  materials: z.array(materialSchema)
+  materials: z
+    .array(materialSchema)
     .default([])
     .transform((materials) => materials.filter((material) => material.description && material.description.trim() !== '')),
   status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']),
@@ -41,7 +42,7 @@ export type WorkReportFormValues = z.infer<typeof workReportSchema>;
 
 interface WorkReportFormProps {
   initialData?: Partial<WorkReportFormValues>;
-  onSubmit: (data: WorkReportFormValues) => void;
+  onSubmit: (data: WorkReportFormValues) => Promise<void> | void;
   clientName?: string;
   clientEmail?: string;
   currentStatus: 'Da fare' | 'In corso' | 'Completato' | 'Annullato';
@@ -67,19 +68,16 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail,
       client_absent: initialData?.client_absent ?? false,
       work_description: initialData?.work_description ?? '',
       operative_notes: initialData?.operative_notes ?? '',
-      time_entries: initialData?.time_entries?.length
-        ? initialData.time_entries
-        : [DEFAULT_TIME_ENTRY],
+      time_entries: initialData?.time_entries?.length ? initialData.time_entries : [DEFAULT_TIME_ENTRY],
       kilometers: initialData?.kilometers ?? 0,
-      materials: initialData?.materials?.length
-        ? initialData.materials
-        : Array(6).fill(DEFAULT_MATERIAL),
+      materials: initialData?.materials?.length ? initialData.materials : Array(6).fill(DEFAULT_MATERIAL),
       status: initialData?.status ?? currentStatus,
     } as WorkReportFormValues,
   });
 
-  const handleSubmit: SubmitHandler<WorkReportFormValues> = (values) => {
-    onSubmit(values);
+  const handleSubmit: SubmitHandler<WorkReportFormValues> = async (values) => {
+    // IMPORTANT: return/await so react-hook-form can manage isSubmitting and prevent double submits
+    await onSubmit(values);
   };
 
   return (
@@ -92,8 +90,8 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail,
           <Link href="/interventions" passHref>
             <Button type="button" variant="outline">Annulla</Button>
           </Link>
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-            Salva Bolla
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={methods.formState.isSubmitting}>
+            {methods.formState.isSubmitting ? 'Salvataggio…' : 'Salva Bolla'}
           </Button>
         </div>
       </form>
