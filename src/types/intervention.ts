@@ -32,6 +32,16 @@ export interface InterventionRequest {
   client_phone: string;
   client_address: string;
   client_referent?: string; // Nuovo campo Referente
+
+  // Campi utili alla creazione del cliente (se inserito manualmente)
+  client_codice_fiscale?: string;
+  client_partita_iva?: string;
+  client_citta?: string;
+  client_cap?: string;
+  client_provincia?: string;
+  client_pec?: string;
+  client_sdi?: string;
+
   // Impianto / Modello macchina
   system_type: string;
   brand: string;

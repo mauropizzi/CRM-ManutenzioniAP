@@ -46,6 +46,8 @@ const normalizeCustomerId = (value: unknown): string | null => {
   return v;
 };
 
+const normFiscal = (value: unknown) => String(value ?? '').trim().toUpperCase();
+
 export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const [interventionRequests, setInterventionRequests] = useState<InterventionRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,7 +102,6 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addInterventionRequest = async (newRequest: Omit<InterventionRequest, 'id' | 'user_id'>) => {
-    // Get current user
     const {
       data: { user: authUser },
       error: authErr,
@@ -109,11 +110,84 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
     if (authErr) throw authErr;
     if (!authUser) throw new Error('Devi essere autenticato per aggiungere un intervento');
 
+    // 1) Se il cliente è inserito manualmente, crealo in anagrafica (con blocco duplicati)
+    let customerId = normalizeCustomerId((newRequest as any).customer_id);
+
+    const cf = normFiscal((newRequest as any).client_codice_fiscale);
+    const piva = normFiscal((newRequest as any).client_partita_iva);
+
+    if (!customerId) {
+      // Verifica duplicati (RLS limita ai record dell'utente)
+      const orParts: string[] = [];
+      if (piva) orParts.push(`partita_iva.eq.${piva}`);
+      if (cf) orParts.push(`codice_fiscale.eq.${cf}`);
+
+      if (orParts.length > 0) {
+        const { data: existing, error: dupErr } = await supabase
+          .from('customers')
+          .select('id, ragione_sociale, partita_iva, codice_fiscale')
+          .or(orParts.join(','))
+          .limit(1);
+
+        if (dupErr) throw dupErr;
+        if (existing && existing.length > 0) {
+          const name = (existing[0] as any).ragione_sociale || 'cliente';
+          throw new Error(`Cliente già presente in anagrafica (${name}). Verifica Partita IVA / Codice Fiscale.`);
+        }
+      }
+
+      const customerPayload = {
+        user_id: authUser.id,
+        ragione_sociale: (newRequest as any).client_company_name,
+        codice_fiscale: cf,
+        partita_iva: piva,
+        indirizzo: (newRequest as any).client_address,
+        citta: String((newRequest as any).client_citta ?? '').trim(),
+        cap: String((newRequest as any).client_cap ?? '').trim(),
+        provincia: String((newRequest as any).client_provincia ?? '').trim().toUpperCase(),
+        telefono: (newRequest as any).client_phone,
+        email: (newRequest as any).client_email,
+        referente: (newRequest as any).client_referent || null,
+        pec: (newRequest as any).client_pec || null,
+        sdi: (newRequest as any).client_sdi || null,
+        attivo: true,
+      };
+
+      const { data: createdCustomer, error: createCustomerErr } = await supabase
+        .from('customers')
+        .insert([customerPayload])
+        .select('id')
+        .single();
+
+      if (createCustomerErr) {
+        // Gestione duplicati anche via indice unico (race condition)
+        if (String(createCustomerErr?.code || '') === '23505') {
+          throw new Error('Cliente già presente in anagrafica. Verifica Partita IVA / Codice Fiscale.');
+        }
+        throw createCustomerErr;
+      }
+
+      customerId = (createdCustomer as any)?.id ?? null;
+      if (!customerId) throw new Error('Impossibile creare il cliente in anagrafica');
+    }
+
+    // 2) Inserisci intervento (rimuovendo i campi extra usati solo per il cliente)
+    const {
+      client_codice_fiscale,
+      client_partita_iva,
+      client_citta,
+      client_cap,
+      client_provincia,
+      client_pec,
+      client_sdi,
+      ...rest
+    } = newRequest as any;
+
     const requestWithUserId = {
-      ...newRequest,
+      ...rest,
       user_id: authUser.id,
-      customer_id: normalizeCustomerId((newRequest as any).customer_id),
-      work_report_data: serializeWorkReportData(newRequest.work_report_data),
+      customer_id: customerId,
+      work_report_data: serializeWorkReportData((newRequest as any).work_report_data),
     };
 
     console.log('Adding intervention:', requestWithUserId);
@@ -144,8 +218,19 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const updateInterventionRequest = async (updatedRequest: InterventionRequest) => {
     console.log('Updating intervention:', updatedRequest);
 
+    const {
+      client_codice_fiscale,
+      client_partita_iva,
+      client_citta,
+      client_cap,
+      client_provincia,
+      client_pec,
+      client_sdi,
+      ...rest
+    } = updatedRequest as any;
+
     const updatePayload = {
-      ...updatedRequest,
+      ...rest,
       customer_id: normalizeCustomerId((updatedRequest as any).customer_id),
       scheduled_date: updatedRequest.scheduled_date ? updatedRequest.scheduled_date.toISOString().split('T')[0] : null,
       work_report_data: serializeWorkReportData(updatedRequest.work_report_data),

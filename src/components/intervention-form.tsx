@@ -10,20 +10,40 @@ import Link from 'next/link';
 import { InterventionRequest } from '@/types/intervention';
 import { ClientDetailsSection, SystemDetailsSection, SchedulingDetailsSection } from './intervention-form/';
 
+const isManualCustomer = (customerId?: string) => {
+  const v = (customerId ?? '').trim();
+  return !v || v === 'new-customer';
+};
+
 export const interventionFormSchema = z
   .object({
     customer_id: z.string().optional(),
+
     client_company_name: z.string().min(2, { message: "La ragione sociale deve contenere almeno 2 caratteri." }),
     client_email: z.string().email({ message: "Inserisci un'email valida." }),
     client_phone: z.string().min(10, { message: "Il numero di telefono deve contenere almeno 10 cifre." }),
+
+    // Indirizzo (usato anche per creare il cliente)
     client_address: z.string().min(5, { message: "L'indirizzo deve contenere almeno 5 caratteri." }),
+    client_citta: z.string().optional().or(z.literal('')),
+    client_cap: z.string().optional().or(z.literal('')),
+    client_provincia: z.string().optional().or(z.literal('')),
+
+    // Dati fiscali (usati per creare il cliente)
+    client_codice_fiscale: z.string().optional().or(z.literal('')),
+    client_partita_iva: z.string().optional().or(z.literal('')),
+
     client_referent: z.string().optional().or(z.literal('')),
+    client_pec: z.string().optional().or(z.literal('')),
+    client_sdi: z.string().optional().or(z.literal('')),
+
     system_type: z.string().min(2, { message: "Il tipo di impianto deve contenere almeno 2 caratteri." }),
     brand: z.string().min(2, { message: "La marca deve contenere almeno 2 caratteri." }),
     model: z.string().min(2, { message: "Il modello deve contenere almeno 2 caratteri." }),
     serial_number: z.string().min(2, { message: "La matricola deve contenere almeno 2 caratteri." }),
     system_location: z.string().min(5, { message: "L'ubicazione dell'impianto deve contenere almeno 5 caratteri." }),
     internal_ref: z.string().optional().or(z.literal('')),
+
     scheduled_date: z.date().optional(),
     scheduled_time: z.string().optional().or(z.literal('')),
     status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']),
@@ -31,6 +51,7 @@ export const interventionFormSchema = z
     assigned_supplier: z.string().optional().or(z.literal('')),
     office_notes: z.string().optional().or(z.literal('')),
   })
+  // mutual exclusion tech/supplier
   .refine(
     (v) => {
       const hasTech = Boolean(v.assigned_technicians && v.assigned_technicians.trim().length > 0);
@@ -41,7 +62,57 @@ export const interventionFormSchema = z
       message: "Puoi assegnare la richiesta o a un tecnico o a un fornitore (non entrambi).",
       path: ['assigned_technicians'],
     }
-  );
+  )
+  // when customer is manual, require fiscal + city/cap/province
+  .superRefine((v, ctx) => {
+    if (!isManualCustomer(v.customer_id)) return;
+
+    const cf = (v.client_codice_fiscale ?? '').trim();
+    const piva = (v.client_partita_iva ?? '').trim();
+    const citta = (v.client_citta ?? '').trim();
+    const cap = (v.client_cap ?? '').trim();
+    const prov = (v.client_provincia ?? '').trim();
+
+    if (cf.length !== 16) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Il codice fiscale deve contenere 16 caratteri.',
+        path: ['client_codice_fiscale'],
+      });
+    }
+
+    if (piva.length !== 11) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La partita IVA deve contenere 11 caratteri.',
+        path: ['client_partita_iva'],
+      });
+    }
+
+    if (citta.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Inserisci la città.',
+        path: ['client_citta'],
+      });
+    }
+
+    if (cap.length !== 5) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Il CAP deve contenere 5 cifre.',
+        path: ['client_cap'],
+      });
+    }
+
+    if (prov.length !== 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La provincia deve contenere 2 caratteri.',
+        path: ['client_provincia'],
+      });
+    }
+  });
 
 export type InterventionFormValues = z.infer<typeof interventionFormSchema>;
 
@@ -69,22 +140,37 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
     resolver: zodResolver(interventionFormSchema),
     defaultValues: {
       customer_id: initialData?.customer_id ?? '',
+
       client_company_name: initialData?.client_company_name ?? '',
       client_email: initialData?.client_email ?? '',
       client_phone: initialData?.client_phone ?? '',
+
       client_address: initialData?.client_address ?? '',
+      client_citta: (initialData as any)?.client_citta ?? '',
+      client_cap: (initialData as any)?.client_cap ?? '',
+      client_provincia: (initialData as any)?.client_provincia ?? '',
+
+      client_codice_fiscale: (initialData as any)?.client_codice_fiscale ?? '',
+      client_partita_iva: (initialData as any)?.client_partita_iva ?? '',
+
       client_referent: initialData?.client_referent ?? '',
+      client_pec: (initialData as any)?.client_pec ?? '',
+      client_sdi: (initialData as any)?.client_sdi ?? '',
+
       system_type: initialData?.system_type ?? '',
       brand: initialData?.brand ?? '',
       model: initialData?.model ?? '',
       serial_number: initialData?.serial_number ?? '',
       system_location: initialData?.system_location ?? '',
       internal_ref: initialData?.internal_ref ?? '',
+
       scheduled_date: initialData?.scheduled_date,
       scheduled_time: initialData?.scheduled_time ?? '',
       status: initialData?.status ?? 'Da fare',
+
       assigned_technicians: initialData?.assigned_technicians ?? '',
       assigned_supplier: (initialData as any)?.assigned_supplier ?? '',
+
       office_notes: initialData?.office_notes ?? '',
     },
   });
