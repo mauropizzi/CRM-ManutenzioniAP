@@ -49,21 +49,6 @@ const buildWhatsappUrl = ({ phone, text }: { phone: string; text: string }) => {
   return `https://wa.me/${phone}?text=${encoded}`;
 };
 
-const getPublicBaseUrl = () => {
-  if (typeof window === 'undefined') return '';
-
-  const { hostname, port, protocol } = window.location;
-  const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
-
-  // In locale spesso il dev server NON espone HTTPS: forziamo http per evitare SSL_ERROR_RX_RECORD_TOO_LONG.
-  if (isLocal) {
-    return `http://${hostname}${port ? `:${port}` : ''}`;
-  }
-
-  // In produzione usiamo l'origin corrente (tipicamente https)
-  return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
-};
-
 const getAssignee = (request: InterventionRequest) => {
   const tech = (request.assigned_technicians ?? '').trim();
   const supplier = (request.assigned_supplier ?? '').trim();
@@ -109,8 +94,8 @@ export const InterventionTable = () => {
       return;
     }
 
-    const baseUrl = getPublicBaseUrl();
-    const link = `${baseUrl}/interventions/${request.id}/edit`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const link = `${origin}/interventions/${request.id}/edit`;
 
     const message = [
       `Richiesta intervento assegnata a te`,
