@@ -23,6 +23,8 @@ const materialSchema = z.object({
   unit: z.string().optional().or(z.literal('')),
   quantity: z.coerce.number().min(0, { message: "Quantità non valida." }).default(0),
   description: z.string().optional().or(z.literal('')),
+  material_id: z.string().optional().or(z.literal('')),
+  is_new: z.boolean().optional(),
 });
 
 export const workReportSchema = z.object({
@@ -35,7 +37,9 @@ export const workReportSchema = z.object({
   materials: z
     .array(materialSchema)
     .default([])
-    .transform((materials) => materials.filter((material) => material.description && material.description.trim() !== '')),
+    .transform((materials) =>
+      materials.filter((material) => material.description && material.description.trim() !== '')
+    ),
   status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']),
 });
 
@@ -60,7 +64,7 @@ const DEFAULT_TIME_ENTRY = {
   total_hours: 0,
 };
 
-const DEFAULT_MATERIAL = { unit: 'PZ', quantity: 0, description: '' };
+const DEFAULT_MATERIAL = { unit: 'PZ', quantity: 0, description: '', material_id: '', is_new: undefined };
 
 export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail, currentStatus }: WorkReportFormProps) => {
   const normalizedTimeEntries = initialData?.time_entries?.length
@@ -69,6 +73,14 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail,
         resource_type: (e as any).resource_type ?? 'technician',
       }))
     : [DEFAULT_TIME_ENTRY];
+
+  const normalizedMaterials = initialData?.materials?.length
+    ? initialData.materials.map((m) => ({
+        material_id: (m as any).material_id ?? '',
+        is_new: (m as any).is_new ?? undefined,
+        ...m,
+      }))
+    : Array(6).fill(DEFAULT_MATERIAL);
 
   const methods = useForm<WorkReportFormValues>({
     resolver: zodResolver(workReportSchema) as Resolver<WorkReportFormValues>,
@@ -79,7 +91,7 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail,
       operative_notes: initialData?.operative_notes ?? '',
       time_entries: normalizedTimeEntries as any,
       kilometers: initialData?.kilometers ?? 0,
-      materials: initialData?.materials?.length ? initialData.materials : Array(6).fill(DEFAULT_MATERIAL),
+      materials: normalizedMaterials as any,
       status: initialData?.status ?? currentStatus,
     } as WorkReportFormValues,
   });

@@ -11,6 +11,7 @@ interface MaterialContextType {
   addMaterial: (material: Omit<Material, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
   updateMaterial: (material: Material) => Promise<void>;
   deleteMaterial: (id: string) => Promise<void>;
+  refreshMaterials: () => Promise<void>;
   loading: boolean;
 }
 
@@ -21,19 +22,11 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && user) {
-      fetchMaterials();
-    } else if (!user) {
-      setMaterials([]);
-      setLoading(false);
-    }
-  }, [user]);
-
-  const fetchMaterials = async () => {
+  const refreshMaterials = async () => {
+    setLoading(true);
     try {
       console.log('Fetching materials from Supabase...');
-      
+
       const { data, error } = await supabase
         .from('materials')
         .select('*')
@@ -49,10 +42,8 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
       }
 
       console.log('Materials fetched:', data);
-      
-      if (data) {
-        setMaterials(data as Material[]);
-      }
+
+      setMaterials((data as Material[]) || []);
     } catch (error: any) {
       if (String(error?.message || '').includes('AbortError')) {
         return;
@@ -64,10 +55,19 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user) {
+      refreshMaterials();
+    } else if (!user) {
+      setMaterials([]);
+      setLoading(false);
+    }
+  }, [user]);
+
   const addMaterial = async (newMaterial: Omit<Material, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         toast.error("Devi essere autenticato per aggiungere un materiale");
         return;
@@ -79,14 +79,11 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
       };
 
       console.log('Adding material:', materialWithUserId);
-      
+
       const { data, error } = await supabase
         .from('materials')
         .insert([materialWithUserId])
-        .select(); // Rimosso .single()
-
-      console.log('Supabase insert response - data:', data); // Log dettagliato
-      console.log('Supabase insert response - error:', error); // Log dettagliato
+        .select();
 
       if (error) {
         console.error('Supabase error adding material:', error);
@@ -94,11 +91,10 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (data && data.length > 0) { // Verifica se data è un array e contiene elementi
-        setMaterials((prev) => [data[0] as Material, ...prev]); // Prendi il primo elemento
+      if (data && data.length > 0) {
+        setMaterials((prev) => [data[0] as Material, ...prev]);
         toast.success("Materiale aggiunto con successo!");
       } else {
-        console.warn('Supabase insert ha restituito nessun dato e nessun errore. Questo potrebbe indicare un problema di RLS o una query che non ha trovato righe corrispondenti.');
         toast.error("Impossibile aggiungere il materiale. Verifica i permessi o riprova.");
       }
     } catch (error: any) {
@@ -110,7 +106,7 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   const updateMaterial = async (updatedMaterial: Material) => {
     try {
       console.log('Updating material:', updatedMaterial);
-      
+
       const { data, error } = await supabase
         .from('materials')
         .update(updatedMaterial)
@@ -143,7 +139,7 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   const deleteMaterial = async (id: string) => {
     try {
       console.log('Deleting material:', id);
-      
+
       const { error } = await supabase
         .from('materials')
         .delete()
@@ -169,6 +165,7 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
       addMaterial,
       updateMaterial,
       deleteMaterial,
+      refreshMaterials,
       loading
     }}>
       {children}
