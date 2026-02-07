@@ -10,7 +10,8 @@ import type { Resolver, SubmitHandler } from 'react-hook-form';
 
 const timeEntrySchema = z.object({
   date: z.date({ required_error: "Seleziona una data." }),
-  technician: z.string().min(1, { message: "Inserisci il nome del tecnico." }),
+  resource_type: z.enum(['technician', 'supplier']).default('technician'),
+  technician: z.string().min(1, { message: "Seleziona un tecnico/fornitore." }),
   time_slot_1_start: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "Formato HH:MM" }),
   time_slot_1_end: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "Formato HH:MM" }),
   time_slot_2_start: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "Formato HH:MM" }).optional().or(z.literal('')),
@@ -50,6 +51,7 @@ interface WorkReportFormProps {
 
 const DEFAULT_TIME_ENTRY = {
   date: new Date(),
+  resource_type: 'technician' as const,
   technician: '',
   time_slot_1_start: '',
   time_slot_1_end: '',
@@ -61,6 +63,13 @@ const DEFAULT_TIME_ENTRY = {
 const DEFAULT_MATERIAL = { unit: 'PZ', quantity: 0, description: '' };
 
 export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail, currentStatus }: WorkReportFormProps) => {
+  const normalizedTimeEntries = initialData?.time_entries?.length
+    ? initialData.time_entries.map((e) => ({
+        ...e,
+        resource_type: (e as any).resource_type ?? 'technician',
+      }))
+    : [DEFAULT_TIME_ENTRY];
+
   const methods = useForm<WorkReportFormValues>({
     resolver: zodResolver(workReportSchema) as Resolver<WorkReportFormValues>,
     defaultValues: {
@@ -68,7 +77,7 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail,
       client_absent: initialData?.client_absent ?? false,
       work_description: initialData?.work_description ?? '',
       operative_notes: initialData?.operative_notes ?? '',
-      time_entries: initialData?.time_entries?.length ? initialData.time_entries : [DEFAULT_TIME_ENTRY],
+      time_entries: normalizedTimeEntries as any,
       kilometers: initialData?.kilometers ?? 0,
       materials: initialData?.materials?.length ? initialData.materials : Array(6).fill(DEFAULT_MATERIAL),
       status: initialData?.status ?? currentStatus,
@@ -76,7 +85,6 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail,
   });
 
   const handleSubmit: SubmitHandler<WorkReportFormValues> = async (values) => {
-    // IMPORTANT: return/await so react-hook-form can manage isSubmitting and prevent double submits
     await onSubmit(values);
   };
 

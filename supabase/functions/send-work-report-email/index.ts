@@ -28,7 +28,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Dedup + pulizia
     const recipients = Array.from(
       new Set(recipientEmails.map((e: any) => String(e || '').trim().toLowerCase()).filter(Boolean))
     );
@@ -77,6 +76,11 @@ serve(async (req: Request) => {
       const normalized = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const safeText = normalized.replace(/&/g, " e ");
       return safeText;
+    };
+
+    const formatResource = (entry: any) => {
+      const type = entry?.resource_type === 'supplier' ? 'Fornitore' : 'Tecnico';
+      return `${type}: ${sanitizeText(entry?.technician) || 'N/D'}`;
     };
 
     console.log("[send-work-report-email] Generating PDF...");
@@ -161,10 +165,10 @@ serve(async (req: Request) => {
 
       autoTable(doc, {
         startY: yPosition,
-        head: [['Data', 'Tecnico', 'Fascia 1', 'Fascia 2', 'Ore']],
+        head: [['Data', 'Risorsa', 'Fascia 1', 'Fascia 2', 'Ore']],
         body: timeEntries.map((entry: any) => [
           entry.date ? new Date(entry.date).toLocaleDateString('it-IT') : 'N/D',
-          sanitizeText(entry.technician),
+          formatResource(entry),
           `${entry.time_slot_1_start} - ${entry.time_slot_1_end}`,
           entry.time_slot_2_start ? `${entry.time_slot_2_start} - ${entry.time_slot_2_end}` : 'N/D',
           entry.total_hours.toFixed(2)
@@ -231,8 +235,6 @@ serve(async (req: Request) => {
       </div>
     `;
 
-    // IMPORTANT: niente BCC. In alcuni casi "sembra" andare ma consegna solo al primo.
-    // Inviando 1 email per destinatario abbiamo risultati chiari per ciascun indirizzo.
     console.log("[send-work-report-email] Sending per-recipient...", { fromEmail, recipientsCount: recipients.length });
 
     const results: Array<{ to: string; ok: boolean; error?: string }> = [];

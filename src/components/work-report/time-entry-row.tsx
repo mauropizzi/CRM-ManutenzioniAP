@@ -17,8 +17,10 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WorkReportFormValues } from '@/components/work-report-form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { timeOptions, calculateHours } from '@/lib/time-utils'; // Importa calculateHours
-import { useTechnicians } from '@/context/technician-context'; // Importa il contesto dei tecnici
+import { timeOptions, calculateHours } from '@/lib/time-utils';
+import { useTechnicians } from '@/context/technician-context';
+import { useSuppliers } from '@/context/supplier-context';
+import type { Supplier } from '@/types/supplier';
 
 interface TimeEntryRowProps {
   index: number;
@@ -28,7 +30,10 @@ interface TimeEntryRowProps {
 
 export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) => {
   const { control, watch, setValue } = useFormContext<WorkReportFormValues>();
-  const { technicians, loading: techniciansLoading } = useTechnicians(); // Ottieni i tecnici dal contesto
+  const { technicians, loading: techniciansLoading } = useTechnicians();
+  const { suppliers, loading: suppliersLoading } = useSuppliers();
+
+  const resourceType = watch(`time_entries.${index}.resource_type`);
 
   // Watch per le fasce orarie di questa riga
   const timeSlot1Start = watch(`time_entries.${index}.time_slot_1_start`);
@@ -36,7 +41,6 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
   const timeSlot2Start = watch(`time_entries.${index}.time_slot_2_start`);
   const timeSlot2End = watch(`time_entries.${index}.time_slot_2_end`);
 
-  // Calcola le ore totali ogni volta che una fascia oraria cambia
   useEffect(() => {
     const calculated = calculateHours(
       timeSlot1Start,
@@ -66,11 +70,7 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
                         !field.value && "text-muted-foreground"
                       )}
                     >
-                      {field.value ? (
-                        format(field.value, "dd/MM/yyyy")
-                      ) : (
-                        <span>gg/mm/aaaa</span>
-                      )}
+                      {field.value ? format(field.value, "dd/MM/yyyy") : <span>gg/mm/aaaa</span>}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
@@ -92,18 +92,60 @@ export const TimeEntryRow = ({ index, onRemove, canRemove }: TimeEntryRowProps) 
       <div className="md:col-span-2">
         <FormField
           control={control}
-          name={`time_entries.${index}.technician`}
+          name={`time_entries.${index}.resource_type`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs">Tecnico</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel className="text-xs">Tipo</FormLabel>
+              <Select
+                value={field.value ?? 'technician'}
+                onValueChange={(val) => {
+                  field.onChange(val);
+                  // quando cambia tipo, resetta la risorsa selezionata
+                  setValue(`time_entries.${index}.technician`, '');
+                }}
+              >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleziona tecnico" />
+                    <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {techniciansLoading ? (
+                  <SelectItem value="technician">Tecnico</SelectItem>
+                  <SelectItem value="supplier">Fornitore</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <FormField
+          control={control}
+          name={`time_entries.${index}.technician`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Risorsa</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={resourceType === 'supplier' ? 'Seleziona fornitore' : 'Seleziona tecnico'} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {resourceType === 'supplier' ? (
+                    suppliersLoading ? (
+                      <SelectItem value="loading" disabled>Caricamento fornitori...</SelectItem>
+                    ) : (
+                      (suppliers as Supplier[])
+                        .filter((s: Supplier) => s.attivo !== false)
+                        .map((s: Supplier) => (
+                          <SelectItem key={s.id} value={s.ragione_sociale}>
+                            {s.ragione_sociale}
+                          </SelectItem>
+                        ))
+                    )
+                  ) : techniciansLoading ? (
                     <SelectItem value="loading" disabled>Caricamento tecnici...</SelectItem>
                   ) : (
                     technicians.map((technician) => (

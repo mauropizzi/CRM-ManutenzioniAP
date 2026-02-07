@@ -28,6 +28,11 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
 
   const totalHours = work_report_data?.time_entries?.reduce((sum, entry) => sum + (entry.total_hours || 0), 0) || 0;
 
+  const formatResource = (entry: any) => {
+    const type = entry?.resource_type === 'supplier' ? 'Fornitore' : 'Tecnico';
+    return `${type}: ${entry?.technician || 'N/D'}`;
+  };
+
   return (
     <div className="p-8 bg-white text-gray-900 print:p-0 print:text-black print:font-sans">
       {/* Header */}
@@ -36,7 +41,7 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
           <Image
             src="/logo-crm-antonelli-zani.jpg"
             alt="Antonelli & Zani Logo"
-            width={180} // Slightly larger logo for prominence
+            width={180}
             height={100}
             className="mb-2"
           />
@@ -98,7 +103,7 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
             <thead>
               <tr className="border-b border-gray-300 print:border-black">
                 <th className="text-left py-2">Data</th>
-                <th className="text-left py-2">Tecnico</th>
+                <th className="text-left py-2">Risorsa</th>
                 <th className="text-left py-2">Fascia 1</th>
                 <th className="text-left py-2">Fascia 2</th>
                 <th className="text-left py-2">Ore</th>
@@ -108,7 +113,7 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
               {work_report_data.time_entries.map((entry, index) => (
                 <tr key={index} className="border-b border-gray-200 last:border-b-0 print:border-black">
                   <td className="py-2">{entry.date ? format(new Date(entry.date), 'dd/MM/yyyy') : 'N/D'}</td>
-                  <td className="py-2">{entry.technician}</td>
+                  <td className="py-2">{formatResource(entry)}</td>
                   <td className="py-2">{entry.time_slot_1_start} - {entry.time_slot_1_end}</td>
                   <td className="py-2">{entry.time_slot_2_start && entry.time_slot_2_end ? `${entry.time_slot_2_start} - ${entry.time_slot_2_end}` : 'N/D'}</td>
                   <td className="py-2">{entry.total_hours.toFixed(2)}</td>

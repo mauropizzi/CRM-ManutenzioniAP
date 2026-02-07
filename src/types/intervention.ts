@@ -1,5 +1,8 @@
 export interface TimeEntry {
   date: Date;
+  /** 'technician' (default) or 'supplier' */
+  resource_type?: 'technician' | 'supplier';
+  /** Name of the selected resource (tecnico/fornitore). Kept as 'technician' for backward compatibility */
   technician: string;
   time_slot_1_start: string; // HH:MM
   time_slot_1_end: string;   // HH:MM
