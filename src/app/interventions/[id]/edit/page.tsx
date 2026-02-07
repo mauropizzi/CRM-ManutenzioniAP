@@ -9,18 +9,29 @@ import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
-import { use } from 'react';
+import { Loader2 } from 'lucide-react';
 
-interface EditInterventionPageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default function EditInterventionPage({ params }: EditInterventionPageProps) {
-  const { id } = use(params);
-  const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
+export default function EditInterventionPage({ params }: { params: any }) {
+  const id = String(params?.id ?? '');
+  const { interventionRequests, updateInterventionRequest, loading } = useInterventionRequests();
   const router = useRouter();
 
   const interventionToEdit = interventionRequests.find((request) => request.id === id);
+
+  // When opening the link directly (e.g., from WhatsApp), the list may still be loading.
+  // Avoid triggering notFound() while data is still being fetched.
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <div className="min-h-[70vh] flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-7 w-7 animate-spin mx-auto" />
+            <p className="mt-3 text-sm text-muted-foreground">Caricamento richiesta...</p>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
 
   if (!interventionToEdit) {
     notFound();
@@ -31,11 +42,11 @@ export default function EditInterventionPage({ params }: EditInterventionPagePro
     try {
       await updateInterventionRequest({ ...interventionToEdit, ...data } as InterventionRequest);
       console.log('Intervention updated successfully');
-      toast.success("Intervento aggiornato con successo!");
+      toast.success('Intervento aggiornato con successo!');
       router.push('/interventions');
     } catch (error: any) {
       console.error('Error updating intervention:', error);
-      toast.error(`Errore: ${error.message || 'Impossibile aggiornare l\'intervento'}`);
+      toast.error(`Errore: ${error.message || "Impossibile aggiornare l'intervento"}`);
     }
   };
 
