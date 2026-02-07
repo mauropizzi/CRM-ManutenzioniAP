@@ -10,15 +10,9 @@ import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { use } from 'react';
 
-interface EditInterventionPageProps {
-  // Next.js 15 App Router passes params as a Promise
-  params: Promise<{ id: string }>;
-}
-
-export default function EditInterventionPage({ params }: EditInterventionPageProps) {
-  const { id } = use(params);
+export default function EditInterventionPage({ params }: { params: any }) {
+  const id = String(params?.id ?? '');
   const { interventionRequests, updateInterventionRequest, loading } = useInterventionRequests();
   const router = useRouter();
 
@@ -48,11 +42,11 @@ export default function EditInterventionPage({ params }: EditInterventionPagePro
     try {
       await updateInterventionRequest({ ...interventionToEdit, ...data } as InterventionRequest);
       console.log('Intervention updated successfully');
-      toast.success("Intervento aggiornato con successo!");
+      toast.success('Intervento aggiornato con successo!');
       router.push('/interventions');
     } catch (error: any) {
       console.error('Error updating intervention:', error);
-      toast.error(`Errore: ${error.message || 'Impossibile aggiornare l\'intervento'}`);
+      toast.error(`Errore: ${error.message || "Impossibile aggiornare l'intervento"}`);
     }
   };
 
