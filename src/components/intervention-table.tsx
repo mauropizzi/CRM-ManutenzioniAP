@@ -21,6 +21,7 @@ import { it } from 'date-fns/locale';
 import { useTechnicians } from '@/context/technician-context';
 import { useSuppliers } from '@/context/supplier-context';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const InterventionTable = () => {
   const { interventionRequests, deleteInterventionRequest } = useInterventionRequests();
@@ -67,20 +68,51 @@ export const InterventionTable = () => {
     if (!digits) return '';
     // If number already starts with 39 (Italy), keep it. Otherwise, prefix 39.
     if (digits.startsWith('39')) return digits;
-    // If typical local number length (<=11), prefix country code 39
     return `39${digits}`;
   };
 
-  const buildWhatsAppUrl = (request: InterventionRequest) => {
+  const createPublicLink = async (interventionId: string) => {
+    const {
+      data: { session },
+      error: sessionErr,
+    } = await supabase.auth.getSession();
+
+    if (sessionErr) throw sessionErr;
+    if (!session?.access_token) throw new Error('Sessione non valida. Effettua di nuovo il login.');
+
+    const res = await fetch(
+      'https://nrdsgtuzpnamcovuzghb.supabase.co/functions/v1/create-intervention-public-link',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ interventionId }),
+      }
+    );
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body?.error || 'Impossibile generare il link pubblico');
+    }
+
+    const json = await res.json();
+    const token = String(json?.token || '').trim();
+    if (!token) throw new Error('Token non valido');
+    return token;
+  };
+
+  const buildWhatsAppUrl = (request: InterventionRequest, publicToken: string) => {
     const assigned = getAssignedInfo(request);
     if (assigned.type === 'none') return null;
 
     const intl = toIntlWhatsAppNumber(assigned.phone);
     if (!intl) return null;
 
-    const origin =
-      typeof window !== 'undefined' ? window.location.origin : 'https://example.com';
-    const link = `${origin}/interventions/${request.id}/edit`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://example.com';
+    const link = `${origin}/public/interventions/${publicToken}`;
+
     const dateStr = request.scheduled_date
       ? format(new Date(request.scheduled_date), 'dd/MM/yyyy', { locale: it })
       : 'N/D';
@@ -102,24 +134,36 @@ export const InterventionTable = () => {
     return `https://wa.me/${intl}?text=${encodeURIComponent(text)}`;
   };
 
-  const handleWhatsAppClick = (request: InterventionRequest) => {
+  const handleWhatsAppClick = async (request: InterventionRequest) => {
     const assigned = getAssignedInfo(request);
+
     if (assigned.type === 'none') {
       toast.error('Nessun tecnico o fornitore assegnato.');
       return;
     }
+
     if (!assigned.phone || !toIntlWhatsAppNumber(assigned.phone)) {
       toast.error(
         `Numero di telefono non disponibile per ${assigned.name}. Aggiorna l'anagrafica per inviare WhatsApp.`
       );
       return;
     }
-    const url = buildWhatsAppUrl(request);
-    if (!url) {
-      toast.error('Impossibile generare il link WhatsApp.');
-      return;
+
+    try {
+      toast.loading('Sto preparando il messaggio WhatsApp…', { id: `wa-${request.id}` });
+
+      const token = await createPublicLink(request.id);
+      const url = buildWhatsAppUrl(request, token);
+
+      if (!url) {
+        throw new Error('Impossibile generare il link WhatsApp.');
+      }
+
+      toast.success('Messaggio pronto', { id: `wa-${request.id}` });
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (e: any) {
+      toast.error(e?.message || 'Errore durante la preparazione del messaggio', { id: `wa-${request.id}` });
     }
-    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const getStatusBadgeClass = (status: InterventionRequest['status']) => {
@@ -203,7 +247,6 @@ export const InterventionTable = () => {
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
-                        {/* Link alla Bolla di Consegna */}
                         <Link href={`/interventions/${request.id}/work-report`} passHref>
                           <Button
                             variant="outline"
@@ -218,14 +261,13 @@ export const InterventionTable = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleWhatsAppClick(request)}
+                          onClick={() => void handleWhatsAppClick(request)}
                           className="rounded-md text-emerald-700 border-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-500 dark:hover:bg-gray-700 flex items-center gap-1"
                           title="Invia WhatsApp"
                         >
                           <MessageCircle size={16} />
                           <span>WhatsApp</span>
                         </Button>
-                        {/* Link per modificare l'intervento */}
                         <Link href={`/interventions/${request.id}/edit`} passHref>
                           <Button
                             variant="ghost"
