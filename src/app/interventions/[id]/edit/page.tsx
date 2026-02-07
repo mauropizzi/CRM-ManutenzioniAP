@@ -10,13 +10,15 @@ import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { use } from 'react';
 
 interface EditInterventionPageProps {
-  params: { id: string };
+  // Next.js 15 App Router passes params as a Promise
+  params: Promise<{ id: string }>;
 }
 
 export default function EditInterventionPage({ params }: EditInterventionPageProps) {
-  const { id } = params;
+  const { id } = use(params);
   const { interventionRequests, updateInterventionRequest, loading } = useInterventionRequests();
   const router = useRouter();
 
