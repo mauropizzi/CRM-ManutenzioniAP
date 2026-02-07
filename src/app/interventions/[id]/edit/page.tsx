@@ -9,15 +9,14 @@ import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
-import { use } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface EditInterventionPageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export default function EditInterventionPage({ params }: EditInterventionPageProps) {
-  const { id } = use(params);
+  const { id } = params;
   const { interventionRequests, updateInterventionRequest, loading } = useInterventionRequests();
   const router = useRouter();
 

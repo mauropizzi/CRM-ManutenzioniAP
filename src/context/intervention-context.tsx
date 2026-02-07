@@ -61,6 +61,9 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && user) {
+      // Important: when opening a deep link (e.g., from WhatsApp) the auth state
+      // may arrive slightly later. Ensure we keep loading=true while fetching.
+      setLoading(true);
       fetchInterventions();
     } else if (!user) {
       setInterventionRequests([]);
@@ -70,6 +73,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchInterventions = async () => {
     try {
+      setLoading(true);
       console.log('Fetching interventions from Supabase...');
 
       const { data, error } = await supabase
@@ -282,7 +286,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       setInterventionRequests((prev) => prev.filter((request) => request.id !== id));
       toast.success('Richiesta di intervento eliminata con successo!');
     } catch (error: any) {
-      console.error('Exception deleting intervention:', error);
+      console.error('Exception deleting interventions:', error);
       toast.error(`Errore nell'eliminazione dell'intervento: ${error?.message || 'Unknown error'}`);
     }
   };
