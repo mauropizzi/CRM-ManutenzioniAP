@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { WorkReportBasicInfo, TimeEntriesSection, MaterialsSection } from './work-report';
+import { WorkReportBasicInfo, TimeEntriesSection, MaterialsSection, SignaturesSection } from './work-report';
 import { calculateHours } from '@/lib/time-utils';
 import type { Resolver, SubmitHandler } from 'react-hook-form';
 
@@ -27,21 +27,33 @@ const materialSchema = z.object({
   is_new: z.boolean().optional(),
 });
 
-export const workReportSchema = z.object({
-  id: z.string().optional(),
-  client_absent: z.boolean(),
-  work_description: z.string().min(10, { message: "Descrivi i lavori svolti (min. 10 caratteri)." }),
-  operative_notes: z.string().optional(),
-  time_entries: z.array(timeEntrySchema).default([]),
-  kilometers: z.coerce.number().min(0).optional(),
-  materials: z
-    .array(materialSchema)
-    .default([])
-    .transform((materials) =>
-      materials.filter((material) => material.description && material.description.trim() !== '')
-    ),
-  status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']),
-});
+export const workReportSchema = z
+  .object({
+    id: z.string().optional(),
+    client_absent: z.boolean(),
+    work_description: z.string().min(10, { message: "Descrivi i lavori svolti (min. 10 caratteri)." }),
+    operative_notes: z.string().optional(),
+    time_entries: z.array(timeEntrySchema).default([]),
+    kilometers: z.coerce.number().min(0).optional(),
+    materials: z
+      .array(materialSchema)
+      .default([])
+      .transform((materials) =>
+        materials.filter((material) => material.description && material.description.trim() !== '')
+      ),
+    client_signature: z.string().optional().or(z.literal('')),
+    technician_signature: z.string().optional().or(z.literal('')),
+    status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']),
+  })
+  .superRefine((v, ctx) => {
+    if (v.status === 'Completato' && (!v.technician_signature || v.technician_signature.trim().length === 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La firma tecnico è obbligatoria per chiudere la bolla (stato: Completato).',
+        path: ['technician_signature'],
+      });
+    }
+  });
 
 export type WorkReportFormValues = z.infer<typeof workReportSchema>;
 
@@ -92,6 +104,8 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail,
       time_entries: normalizedTimeEntries as any,
       kilometers: initialData?.kilometers ?? 0,
       materials: normalizedMaterials as any,
+      client_signature: initialData?.client_signature ?? '',
+      technician_signature: initialData?.technician_signature ?? '',
       status: initialData?.status ?? currentStatus,
     } as WorkReportFormValues,
   });
@@ -106,6 +120,7 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail,
         <WorkReportBasicInfo clientName={clientName} clientEmail={clientEmail} interventionId={initialData?.id} />
         <TimeEntriesSection />
         <MaterialsSection />
+        <SignaturesSection />
         <div className="flex justify-end gap-4 pt-4">
           <Link href="/interventions" passHref>
             <Button type="button" variant="outline">Annulla</Button>

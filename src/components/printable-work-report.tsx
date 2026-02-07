@@ -33,6 +33,32 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
     return `${type}: ${entry?.technician || 'N/D'}`;
   };
 
+  const clientSig = (work_report_data?.client_signature || '').trim();
+  const techSig = (work_report_data?.technician_signature || '').trim();
+  const clientAbsent = Boolean((work_report_data as any)?.client_absent);
+
+  const SignatureBox = ({ src, emptyNote }: { src?: string; emptyNote?: string }) => {
+    const has = Boolean(src && src.trim().length > 0);
+
+    return (
+      <div className="h-24 w-full rounded-md border border-gray-300 print:border-black bg-white flex items-center justify-center overflow-hidden relative">
+        {has ? (
+          // use <img> to avoid Next/Image limitations with data URLs in print
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={src!} alt="Firma" className="max-h-full max-w-full object-contain" />
+        ) : (
+          <div className="w-full px-3">
+            <div className="h-12" />
+            <div className="border-b border-gray-400 print:border-black" />
+            {emptyNote ? (
+              <div className="mt-2 text-[11px] text-gray-600 print:text-black">{emptyNote}</div>
+            ) : null}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="p-8 bg-white text-gray-900 print:p-0 print:text-black print:font-sans">
       {/* Header */}
@@ -161,11 +187,11 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
       <div className="grid grid-cols-2 gap-8 mt-12 text-sm print:mt-8 break-inside-avoid">
         <div>
           <p className="font-medium mb-2 text-gray-900 print:text-black">Firma Cliente:</p>
-          <div className="border-b border-gray-400 w-full h-16 print:border-black"></div>
+          <SignatureBox src={clientSig} emptyNote={clientAbsent ? 'Cliente assente' : undefined} />
         </div>
         <div>
           <p className="font-medium mb-2 text-gray-900 print:text-black">Firma Tecnico:</p>
-          <div className="border-b border-gray-400 w-full h-16 print:border-black"></div>
+          <SignatureBox src={techSig} />
         </div>
       </div>
     </div>

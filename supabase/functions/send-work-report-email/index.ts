@@ -83,9 +83,47 @@ serve(async (req: Request) => {
       return `${type}: ${sanitizeText(entry?.technician) || 'N/D'}`;
     };
 
+    const clampToDataUrl = (maybeDataUrl: any) => {
+      const v = String(maybeDataUrl || '').trim();
+      if (!v) return '';
+      if (v.startsWith('data:image/png;base64,')) return v;
+      if (v.startsWith('data:image/')) return v;
+      // if raw base64
+      if (/^[A-Za-z0-9+/=]+$/.test(v)) return `data:image/png;base64,${v}`;
+      return '';
+    };
+
+    const addSignatureBox = (doc: any, opts: { label: string; dataUrl?: string; x: number; y: number; w: number; h: number; note?: string }) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.text(opts.label, opts.x, opts.y);
+
+      const boxY = opts.y + 4;
+      doc.setDrawColor(120, 120, 120);
+      doc.rect(opts.x, boxY, opts.w, opts.h);
+
+      const sig = clampToDataUrl(opts.dataUrl);
+      if (sig) {
+        try {
+          // Keep a little padding
+          doc.addImage(sig, 'PNG', opts.x + 2, boxY + 2, opts.w - 4, opts.h - 4, undefined, 'FAST');
+        } catch (e) {
+          console.warn('[send-work-report-email] Failed to render signature image', { label: opts.label });
+        }
+      } else if (opts.note) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(110, 110, 110);
+        doc.text(opts.note, opts.x + 2, boxY + opts.h / 2);
+        doc.setTextColor(0, 0, 0);
+      }
+    };
+
     console.log("[send-work-report-email] Generating PDF...");
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
 
     doc.setFontSize(20);
@@ -214,7 +252,50 @@ serve(async (req: Request) => {
         styles: { fontSize: 8 },
         headStyles: { fillColor: [66, 139, 202] },
       });
+
+      yPosition = ((doc as any).lastAutoTable?.finalY ?? yPosition) + 12;
     }
+
+    // Signatures
+    const wr = (intervention.work_report_data as any) || {};
+    const clientAbsent = Boolean(wr?.client_absent);
+    const clientSig = clampToDataUrl(wr?.client_signature);
+    const techSig = clampToDataUrl(wr?.technician_signature);
+
+    const margin = 14;
+    const gap = 10;
+    const boxW = (pageWidth - margin * 2 - gap) / 2;
+    const boxH = 28;
+
+    if (yPosition + 40 > pageHeight - 14) {
+      doc.addPage();
+      yPosition = 20;
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("Firme", 14, yPosition);
+    yPosition += 6;
+
+    addSignatureBox(doc, {
+      label: 'Firma Cliente',
+      dataUrl: clientSig,
+      x: margin,
+      y: yPosition,
+      w: boxW,
+      h: boxH,
+      note: clientAbsent ? 'Cliente assente' : undefined,
+    });
+
+    // IMPORTANT: client must always see this label as "Firma Tecnico" (even if supplier)
+    addSignatureBox(doc, {
+      label: 'Firma Tecnico',
+      dataUrl: techSig,
+      x: margin + boxW + gap,
+      y: yPosition,
+      w: boxW,
+      h: boxH,
+    });
 
     const pdfData = doc.output('datauristring');
     const pdfBase64 = pdfData.split(',')[1];

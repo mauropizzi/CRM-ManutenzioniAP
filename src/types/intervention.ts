@@ -24,6 +24,11 @@ export interface WorkReportData {
   time_entries?: TimeEntry[];
   kilometers?: number;
   materials?: MaterialUsed[]; // Rinominato per coerenza con WorkReportForm
+
+  /** Firma cliente (data URL PNG). Se il cliente è assente può essere vuota. */
+  client_signature?: string;
+  /** Firma tecnico (vale anche per fornitore). Data URL PNG. */
+  technician_signature?: string;
 }
 
 export interface InterventionRequest {
