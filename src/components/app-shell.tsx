@@ -23,7 +23,7 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen" data-dyad-component="AppShell">
-        <AppSidebar>{children}</AppSidebar>
+        <AppSidebar />
         <main className="flex-1 overflow-auto" data-dyad-component="Main">
           <div className="flex items-center justify-between border-b p-4 lg:hidden">
             <div className="flex items-center">

@@ -1,124 +1,157 @@
-"use client";
+"use client"
 
-import React from "react";
-import Link from "next/link";
+import * as React from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Home, Users, Wrench, ClipboardList, LogOut, User, Package, HardHat } from "lucide-react" // Importa l'icona HardHat per i tecnici
+
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Home, Users, Settings, Plus, Wrench, FileText, Package, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/auth-context";
+  SidebarHeader,
+  SidebarFooter,
+} from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/context/auth-context"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { cn } from "@/lib/utils"
 
-const items = [
+const menuItems = [
   {
     title: "Dashboard",
-    url: "/dashboard",
+    url: "/",
     icon: Home,
   },
   {
-    title: "Clienti",
+    title: "Anagrafica Clienti",
     url: "/customers",
     icon: Users,
   },
   {
-    title: "Aggiungi Cliente",
-    url: "/customers/new",
-    icon: Plus,
+    title: "Richieste Intervento",
+    url: "/interventions",
+    icon: ClipboardList,
   },
   {
-    title: "Punti di Servizio",
-    url: "/service-points",
-    icon: MapPin,
+    title: "Anagrafica Materiali",
+    url: "/materials",
+    icon: Package,
   },
   {
-    title: "Servizi",
-    url: "/services",
-    icon: Wrench,
+    title: "Anagrafica Tecnici", // Nuovo elemento del menu
+    url: "/technicians",
+    icon: HardHat, // Icona per i tecnici
   },
   {
     title: "Fornitori",
     url: "/suppliers",
-    icon: Package,
+    icon: Users,
   },
-  {
-    title: "Preventivi",
-    url: "/quotes",
-    icon: FileText,
-  },
-];
+]
 
-export function AppSidebar({ children }: { children: React.ReactNode }) {
-  const { user, signOut } = useAuth();
+export function AppSidebar() {
+  const pathname = usePathname()
+  const { user, signOut } = useAuth()
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2 px-4 py-2">
-            <h2 className="text-lg font-semibold">Gestionale</h2>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Menu</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link href={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter>
-          <div className="p-4">
-            <div className="flex flex-col gap-2">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                {user?.email}
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={signOut}
-                className="w-full"
-              >
-                Esci
-              </Button>
+    <Sidebar>
+      <SidebarHeader className="border-b border-sidebar-border p-4">
+        <h2 className="text-lg font-bold text-sidebar-foreground">Gestione Interventi</h2>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Menu Principale</SidebarGroupLabel>
+          <SidebarMenu>
+            {menuItems.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === item.url || pathname.startsWith(`${item.url}/`)}
+                  tooltip={item.title}
+                >
+                  <Link href={item.url} className="flex items-center gap-3">
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Azioni Rapide</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Nuovo Intervento">
+                <Link href="/interventions/new" className="flex items-center gap-3">
+                  <Wrench className="h-4 w-4" />
+                  <span>Nuovo Intervento</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Nuovo Materiale">
+                <Link href="/materials/new" className="flex items-center gap-3">
+                  <Package className="h-4 w-4" />
+                  <span>Nuovo Materiale</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Nuovo Tecnico">
+                <Link href="/technicians/new" className="flex items-center gap-3">
+                  <HardHat className="h-4 w-4" />
+                  <span>Nuovo Tecnico</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+      
+      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-3">
+        {/* Theme Toggle */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-sidebar-foreground">Tema</span>
+          <ThemeToggle />
+        </div>
+        
+        {user ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-sidebar-foreground">
+              <User className="h-4 w-4" />
+              <span className="truncate">{user.email}</span>
             </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full"
+              onClick={signOut}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
           </div>
-        </SidebarFooter>
-      </Sidebar>
-      <div className="flex-1">
-        <header className="flex h-16 items-center gap-4 border-b px-6">
-          <SidebarTrigger />
-          <h1 className="text-lg font-semibold">Dashboard</h1>
-        </header>
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
-      </div>
-    </SidebarProvider>
-  );
-}
-
-export function AppSidebarProvider({ children }: { children: React.ReactNode }) {
-  return <AppSidebar>{children}</AppSidebar>;
+        ) : (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full"
+            asChild
+          >
+            <Link href="/login">
+              <User className="h-4 w-4 mr-2" />
+              Accedi
+            </Link>
+          </Button>
+        )}
+      </SidebarFooter>
+    </Sidebar>
+  )
 }
