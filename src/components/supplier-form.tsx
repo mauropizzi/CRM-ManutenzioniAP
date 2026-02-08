@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import type { Resolver, SubmitHandler } from "react-hook-form";
 
 const supplierSchema = z.object({
@@ -197,9 +198,19 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({ initialData, onSubmi
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tipo servizio</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Es. Ricambi, Manutenzione, Trasporti..." />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value || undefined}>
+                    <FormControl>
+                      <SelectTrigger className="bg-white dark:bg-gray-950">
+                        <SelectValue placeholder="Seleziona il tipo di servizio" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Manutentore">Manutentore</SelectItem>
+                      <SelectItem value="Elettricista">Elettricista</SelectItem>
+                      <SelectItem value="Idraulico">Idraulico</SelectItem>
+                      <SelectItem value="Muratore">Muratore</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </FormItem>
               )}
             />
