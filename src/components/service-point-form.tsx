@@ -74,15 +74,15 @@ export const ServicePointForm: React.FC<Props> = ({ initialData, onSubmit }) => 
     });
   }, [initialData, reset]);
 
-  // Use string literals to fix TypeScript issues
-  const tipoArray = useFieldArray<ServicePointFormValues>({
+  // Use any type to resolve TypeScript inference issues with useFieldArray
+  const tipoArray = useFieldArray({
     control,
-    name: "tipo_impianti",
+    name: "tipo_impianti" as any,
   });
 
-  const marcheArray = useFieldArray<ServicePointFormValues>({
+  const marcheArray = useFieldArray({
     control,
-    name: "marche",
+    name: "marche" as any,
   });
 
   return (
