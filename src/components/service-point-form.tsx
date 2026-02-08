@@ -74,14 +74,15 @@ export const ServicePointForm: React.FC<Props> = ({ initialData, onSubmit }) => 
     });
   }, [initialData, reset]);
 
+  // Use form control without type assertion to avoid TypeScript errors
   const tipoArray = useFieldArray({
     control,
-    name: "tipo_impianti" as "tipo_impianti",
+    name: "tipo_impianti" as keyof ServicePointFormValues,
   });
 
   const marcheArray = useFieldArray({
     control,
-    name: "marche" as "marche",
+    name: "marche" as keyof ServicePointFormValues,
   });
 
   return (
