@@ -33,13 +33,16 @@ const servicePointSchema = z.object({
 
 export type ServicePointFormValues = z.infer<typeof servicePointSchema>;
 
+// Ensure the form values satisfy react-hook-form FieldValues by widening with Record<string, any>
+type FormValues = ServicePointFormValues & Record<string, any>;
+
 interface Props {
   initialData?: Partial<ServicePointFormValues>;
   onSubmit: (data: ServicePointFormValues) => Promise<void> | void;
 }
 
 export const ServicePointForm: React.FC<Props> = ({ initialData, onSubmit }) => {
-  const form = useForm<ServicePointFormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(servicePointSchema),
     defaultValues: {
       customer_id: initialData?.customer_id ?? "",
@@ -74,19 +77,22 @@ export const ServicePointForm: React.FC<Props> = ({ initialData, onSubmit }) => 
     });
   }, [initialData, reset]);
 
-  const tipoArray = useFieldArray<ServicePointFormValues, "tipo_impianti">({
+  const tipoArray = useFieldArray<FormValues, "tipo_impianti">({
     control,
     name: "tipo_impianti",
   });
 
-  const marcheArray = useFieldArray<ServicePointFormValues, "marche">({
+  const marcheArray = useFieldArray<FormValues, "marche">({
     control,
     name: "marche",
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-4">
+      <form
+        onSubmit={handleSubmit((data) => onSubmit(data as ServicePointFormValues))}
+        className="space-y-6 p-4"
+      >
         <FormField
           control={form.control}
           name="nome_punto_servizio"
