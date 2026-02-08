@@ -16,3 +16,9 @@ declare const Deno: {
     get(name: string): string | undefined;
   };
 };
+
+// FIX: Ambient module for esm.sh supabase-js
+declare module "https://esm.sh/@supabase/supabase-js@2.45.0" {
+  export type SupabaseClient = unknown;
+  export function createClient(url: string, key: string, options?: unknown): SupabaseClient;
+}
