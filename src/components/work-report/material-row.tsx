@@ -39,28 +39,47 @@ interface MaterialRowProps {
 
 const UNITS = ['PZ', 'MT', 'KG', 'LT', 'NR'] as const;
 
-const normalize = (s: string) => s.trim().toLowerCase();
+const fold = (s: string) =>
+  s
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ') // collapse
+    .trim();
 
-const getSimilar = (query: string, materials: Material[]) => {
-  const q = normalize(query);
-  if (q.length < 3) return [];
+const searchMaterials = (query: string, materials: Material[]) => {
+  const q = fold(query || '');
 
-  const tokens = q.split(/\s+/).filter(Boolean);
+  // Default list when query is empty: show a decent chunk (stable UX)
+  if (!q) {
+    return [...materials]
+      .sort((a, b) => a.description.localeCompare(b.description, 'it', { sensitivity: 'base' }))
+      .slice(0, 50);
+  }
+
+  const tokens = q.split(' ').filter(Boolean);
 
   const scored = materials
     .map((m) => {
-      const d = normalize(m.description);
+      const d = fold(m.description || '');
       let score = 0;
-      if (d === q) score += 100;
-      if (d.includes(q)) score += 40;
+
+      if (d === q) score += 1000;
+      if (d.startsWith(q)) score += 250;
+      if (d.includes(q)) score += 150;
+
       for (const t of tokens) {
-        if (t.length >= 3 && d.includes(t)) score += 8;
+        if (!t) continue;
+        if (d.includes(t)) score += t.length >= 3 ? 40 : 15;
       }
+
       return { m, score };
     })
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 6)
+    .slice(0, 30)
     .map((x) => x.m);
 
   return scored;
@@ -71,7 +90,6 @@ export const MaterialRow = ({ index, onRemove, canRemove }: MaterialRowProps) =>
   const { materials } = useMaterials();
 
   const description = watch(`materials.${index}.description`) || '';
-  const unit = watch(`materials.${index}.unit`) || 'PZ';
   const isNew = watch(`materials.${index}.is_new`);
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -79,15 +97,13 @@ export const MaterialRow = ({ index, onRemove, canRemove }: MaterialRowProps) =>
   const [mode, setMode] = useState<'search' | 'similar'>('search');
 
   const results = useMemo(() => {
-    const q = dialogQuery || '';
-    if (!q.trim()) return materials.slice(0, 20);
-    return getSimilar(q, materials);
+    return searchMaterials(dialogQuery, materials);
   }, [dialogQuery, materials]);
 
   const exactMatch = useMemo(() => {
-    const q = normalize(description);
+    const q = fold(description);
     if (!q) return null;
-    return materials.find((m) => normalize(m.description) === q) ?? null;
+    return materials.find((m) => fold(m.description) === q) ?? null;
   }, [description, materials]);
 
   // Se l'utente modifica manualmente la descrizione, resetta i flag
@@ -145,7 +161,7 @@ export const MaterialRow = ({ index, onRemove, canRemove }: MaterialRowProps) =>
 
     if (exactMatch) return;
 
-    const sim = getSimilar(d, materials);
+    const sim = searchMaterials(d, materials);
     if (sim.length > 0) {
       openSimilarPrompt();
       return;
