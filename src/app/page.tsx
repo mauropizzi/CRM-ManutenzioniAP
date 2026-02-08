@@ -12,7 +12,7 @@ export default function Home() {
             <div className="relative flex flex-col items-center justify-center gap-5 px-6 py-10 sm:px-10 sm:py-12">
               <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 dark:bg-slate-950 dark:ring-slate-800">
                 <Image
-                  src="/logo-crm-antonelli-zani.jpg"
+                  src="/nuevo-logo-az.jpeg"
                   alt="Antonelli & Zani Refrigerazione"
                   width={760}
                   height={240}
