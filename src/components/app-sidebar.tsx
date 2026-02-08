@@ -19,6 +19,7 @@ import {
   LogIn,
   LogOut,
   Tag,
+  Factory,
 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 
@@ -27,6 +28,7 @@ const navigation = [
   { name: 'Clienti', href: '/customers', icon: Users },
   { name: 'Punti Servizio', href: '/service-points', icon: MapPin },
   { name: 'Tipo Impianto', href: '/system-types', icon: Tag },
+  { name: 'Marche', href: '/brands', icon: Factory },
   { name: 'Interventi', href: '/interventions', icon: Wrench },
   { name: 'Materiali', href: '/materials', icon: Package },
   { name: 'Tecnici', href: '/technicians', icon: Truck },
