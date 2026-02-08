@@ -11,9 +11,14 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { InterventionFormValues } from '@/components/intervention-form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useSystemTypes } from '@/context/system-type-context';
+import { useBrands } from '@/context/brand-context';
 
 export const SystemDetailsSection = () => {
   const { control } = useFormContext<InterventionFormValues>();
+  const { systemTypes } = useSystemTypes();
+  const { brands } = useBrands();
 
   return (
     <div className="grid gap-6 rounded-lg border p-4 shadow-sm">
@@ -26,7 +31,18 @@ export const SystemDetailsSection = () => {
             <FormItem>
               <FormLabel className="text-gray-700 dark:text-gray-300">Tipo impianto *</FormLabel>
               <FormControl>
-                <Input placeholder="Tipo impianto" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+                <Select value={field.value} onValueChange={(val) => field.onChange(val)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona tipo impianto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {systemTypes.map((s) => (
+                      <SelectItem key={s.id} value={s.name}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -39,7 +55,18 @@ export const SystemDetailsSection = () => {
             <FormItem>
               <FormLabel className="text-gray-700 dark:text-gray-300">Marca *</FormLabel>
               <FormControl>
-                <Input placeholder="Marca" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+                <Select value={field.value} onValueChange={(val) => field.onChange(val)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona marca" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((b) => (
+                      <SelectItem key={b.id} value={b.name}>
+                        {b.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
