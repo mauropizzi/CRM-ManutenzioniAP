@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,11 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useCustomers } from '@/context/customer-context';
 import { useServicePoint } from '@/context/service-point-context';
 import { ServicePointWithSystems, ServicePointSystem } from '@/types/service-point';
-import { Plus, Trash2, Edit } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ServicePointFormProps {
@@ -27,15 +26,15 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
   const { createServicePoint, updateServicePoint, addSystem, updateSystem, deleteSystem } = useServicePoint();
 
   const [formData, setFormData] = useState({
-    customer_id: customerId || servicePoint?.customer_id || '',
-    name: servicePoint?.name || '',
-    address: servicePoint?.address || '',
-    city: servicePoint?.city || '',
-    cap: servicePoint?.cap || '',
-    province: servicePoint?.province || '',
-    phone: servicePoint?.phone || '',
-    email: servicePoint?.email || '',
-    notes: servicePoint?.notes || ''
+    customer_id: customerId || (servicePoint as any)?.customer_id || '',
+    name: (servicePoint as any)?.name || '',
+    address: (servicePoint as any)?.address || '',
+    city: (servicePoint as any)?.city || '',
+    cap: (servicePoint as any)?.cap || '',
+    provincia: (servicePoint as any)?.provincia || (servicePoint as any)?.province || '',
+    telefono: (servicePoint as any)?.telefono || (servicePoint as any)?.phone || '',
+    email: (servicePoint as any)?.email || '',
+    note: (servicePoint as any)?.note || (servicePoint as any)?.notes || '',
   });
 
   const [systems, setSystems] = useState<ServicePointSystem[]>(servicePoint?.systems || []);
@@ -43,24 +42,27 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleAddSystem = () => {
     if (newSystem.system_type && newSystem.brand) {
-      setSystems(prev => [...prev, {
-        id: Date.now().toString(),
-        service_point_id: servicePoint?.id || '',
-        system_type: newSystem.system_type,
-        brand: newSystem.brand,
-        created_at: new Date().toISOString()
-      }]);
+      setSystems((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          service_point_id: (servicePoint as any)?.id || '',
+          system_type: newSystem.system_type,
+          brand: newSystem.brand,
+          created_at: new Date().toISOString(),
+        },
+      ]);
       setNewSystem({ system_type: '', brand: '' });
     }
   };
 
   const handleRemoveSystem = (systemId: string) => {
-    setSystems(prev => prev.filter(s => s.id !== systemId));
+    setSystems((prev) => prev.filter((s) => s.id !== systemId));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,56 +75,68 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
     setIsSubmitting(true);
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const servicePointData = {
-        ...formData,
-        user_id: user.id
+
+      // Payload allineato allo schema DB (colonne: provincia, telefono, note)
+      const basePayload = {
+        customer_id: formData.customer_id,
+        name: formData.name,
+        address: formData.address,
+        city: formData.city,
+        cap: formData.cap,
+        provincia: formData.provincia,
+        telefono: formData.telefono,
+        email: formData.email,
+        note: formData.note,
       };
 
       if (servicePoint) {
-        await updateServicePoint(servicePoint.id, servicePointData);
-        
+        await updateServicePoint((servicePoint as any).id, basePayload);
+
         // Handle systems updates
-        const currentSystemIds = servicePoint.systems.map(s => s.id);
-        const newSystemIds = systems.map(s => s.id);
-        
+        const currentSystemIds = servicePoint.systems.map((s) => s.id);
+        const newSystemIds = systems.map((s) => s.id);
+
         // Delete removed systems
         for (const systemId of currentSystemIds) {
           if (!newSystemIds.includes(systemId)) {
             await deleteSystem(systemId);
           }
         }
-        
+
         // Update or add systems
         for (const system of systems) {
           const isExisting = currentSystemIds.includes(system.id);
           if (isExisting) {
             await updateSystem(system.id, {
               system_type: system.system_type,
-              brand: system.brand
+              brand: system.brand,
             });
           } else {
-            await addSystem(servicePoint.id, {
+            await addSystem((servicePoint as any).id, {
               system_type: system.system_type,
-              brand: system.brand
+              brand: system.brand,
             });
           }
         }
-        
+
         toast.success('Punto servizio aggiornato con successo');
       } else {
-        const createdPoint = await createServicePoint(servicePointData);
-        
+        const createdPoint = await createServicePoint({
+          ...basePayload,
+          created_by: user.id,
+        });
+
         // Add systems
         for (const system of systems) {
           await addSystem((createdPoint as any).id, {
             system_type: system.system_type,
-            brand: system.brand
+            brand: system.brand,
           });
         }
-        
+
         toast.success('Punto servizio creato con successo');
       }
-      
+
       router.push('/service-points');
     } catch (error) {
       console.error('Error saving service point:', error);
@@ -136,9 +150,7 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>
-            {servicePoint ? 'Modifica Punto Servizio' : 'Nuovo Punto Servizio'}
-          </CardTitle>
+          <CardTitle>{servicePoint ? 'Modifica Punto Servizio' : 'Nuovo Punto Servizio'}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -205,11 +217,11 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
                 />
               </div>
               <div>
-                <Label htmlFor="province">Provincia</Label>
+                <Label htmlFor="provincia">Provincia</Label>
                 <Input
-                  id="province"
-                  value={formData.province}
-                  onChange={(e) => handleInputChange('province', e.target.value)}
+                  id="provincia"
+                  value={formData.provincia}
+                  onChange={(e) => handleInputChange('provincia', e.target.value)}
                   placeholder="Provincia"
                 />
               </div>
@@ -218,11 +230,11 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
             {/* Contact Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="phone">Telefono</Label>
+                <Label htmlFor="telefono">Telefono</Label>
                 <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  id="telefono"
+                  value={formData.telefono}
+                  onChange={(e) => handleInputChange('telefono', e.target.value)}
                   placeholder="Telefono"
                 />
               </div>
@@ -238,13 +250,13 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
               </div>
             </div>
 
-            {/* Notes */}
+            {/* Note */}
             <div>
-              <Label htmlFor="notes">Note</Label>
+              <Label htmlFor="note">Note</Label>
               <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => handleInputChange('notes', e.target.value)}
+                id="note"
+                value={formData.note}
+                onChange={(e) => handleInputChange('note', e.target.value)}
                 placeholder="Note aggiuntive"
                 rows={3}
               />
@@ -256,7 +268,10 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
               <div className="space-y-4 mt-2">
                 {/* Existing Systems */}
                 {systems.map((system) => (
-                  <div key={system.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div
+                    key={system.id}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">{system.system_type}</Badge>
                       <span className="text-sm text-muted-foreground">{system.brand}</span>
@@ -277,12 +292,12 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
                   <Input
                     placeholder="Tipo impianto"
                     value={newSystem.system_type}
-                    onChange={(e) => setNewSystem(prev => ({ ...prev, system_type: e.target.value }))}
+                    onChange={(e) => setNewSystem((prev) => ({ ...prev, system_type: e.target.value }))}
                   />
                   <Input
                     placeholder="Marca"
                     value={newSystem.brand}
-                    onChange={(e) => setNewSystem(prev => ({ ...prev, brand: e.target.value }))}
+                    onChange={(e) => setNewSystem((prev) => ({ ...prev, brand: e.target.value }))}
                   />
                   <Button
                     type="button"
@@ -297,15 +312,11 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
 
             {/* Actions */}
             <div className="flex gap-4 justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push('/service-points')}
-              >
+              <Button type="button" variant="outline" onClick={() => router.push('/service-points')}>
                 Annulla
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Salvataggio...' : (servicePoint ? 'Aggiorna' : 'Crea')}
+                {isSubmitting ? 'Salvataggio...' : servicePoint ? 'Aggiorna' : 'Crea'}
               </Button>
             </div>
           </form>
