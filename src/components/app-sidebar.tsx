@@ -2,24 +2,22 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import {
-  Menu,
-  Home,
-  Users,
-  Wrench,
-  Package,
-  Truck,
+import { 
+  Menu, 
+  Home, 
+  Users, 
+  Wrench, 
+  Package, 
+  Truck, 
   Settings,
-  MapPin,
-  LogIn,
-  LogOut,
+  Calendar,
+  MapPin
 } from 'lucide-react';
-import { useAuth } from '@/context/auth-context';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
@@ -35,47 +33,6 @@ interface AppSidebarProps {
   className?: string;
 }
 
-function SidebarFooter() {
-  const router = useRouter();
-  const { user, signOut } = useAuth();
-
-  if (!user) {
-    return (
-      <div className="px-3 pt-4">
-        <Link href="/login" className="block">
-          <Button
-            variant="secondary"
-            className="w-full justify-start rounded-xl bg-primary/10 text-primary hover:bg-primary/15"
-          >
-            <LogIn className="mr-2 h-4 w-4" />
-            Accedi
-          </Button>
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="px-3 pt-4">
-      <div className="mb-3 rounded-xl border bg-card/60 px-3 py-2">
-        <p className="text-xs text-muted-foreground">Connesso come</p>
-        <p className="truncate text-sm font-medium">{user.email}</p>
-      </div>
-      <Button
-        variant="ghost"
-        className="w-full justify-start rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40"
-        onClick={async () => {
-          await signOut();
-          router.push('/login');
-        }}
-      >
-        <LogOut className="mr-2 h-4 w-4" />
-        Logout
-      </Button>
-    </div>
-  );
-}
-
 export function AppSidebar({ className }: AppSidebarProps) {
   const pathname = usePathname();
 
@@ -86,10 +43,10 @@ export function AppSidebar({ className }: AppSidebarProps) {
         return (
           <Link key={item.name} href={item.href}>
             <Button
-              variant={isActive ? 'secondary' : 'ghost'}
+              variant={isActive ? "secondary" : "ghost"}
               className={cn(
-                'w-full justify-start rounded-xl',
-                isActive && 'bg-primary/10 text-primary hover:bg-primary/15'
+                "w-full justify-start",
+                isActive && "bg-secondary"
               )}
             >
               <item.icon className="mr-2 h-4 w-4" />
@@ -104,20 +61,16 @@ export function AppSidebar({ className }: AppSidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className={cn('flex w-72 flex-col border-r bg-background/80', className)}>
-        <div className="space-y-4 py-5">
-          <div className="px-4">
-            <h2 className="text-lg font-semibold tracking-tight">Gestione</h2>
-            <p className="text-xs text-muted-foreground">Clienti • Interventi • Impianti</p>
-          </div>
-          <div className="px-3">
+      <div className={cn("pb-12 w-64", className)}>
+        <div className="space-y-4 py-4">
+          <div className="px-3 py-2">
+            <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+              Menu
+            </h2>
             <div className="space-y-1">
               <NavItems />
             </div>
           </div>
-        </div>
-        <div className="mt-auto pb-5">
-          <SidebarFooter />
         </div>
       </div>
 
@@ -132,21 +85,19 @@ export function AppSidebar({ className }: AppSidebarProps) {
             <span className="sr-only">Toggle Menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0">
-          <div className="flex h-full w-full flex-col">
-            <ScrollArea className="flex-1 px-4 py-5">
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold tracking-tight">Gestione</h2>
-                <p className="text-xs text-muted-foreground">Clienti • Interventi • Impianti</p>
+        <SheetContent side="left" className="pr-0">
+          <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
+            <div className="space-y-4 py-4">
+              <div className="px-3 py-2">
+                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+                  Menu
+                </h2>
+                <div className="space-y-1">
+                  <NavItems />
+                </div>
               </div>
-              <div className="space-y-1">
-                <NavItems />
-              </div>
-            </ScrollArea>
-            <div className="border-t bg-background/80 px-1 pb-5">
-              <SidebarFooter />
             </div>
-          </div>
+          </ScrollArea>
         </SheetContent>
       </Sheet>
     </>
