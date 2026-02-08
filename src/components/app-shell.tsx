@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/context/auth-context";
@@ -8,6 +9,17 @@ import { AppSidebar } from "@/components/app-sidebar";
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
   const { loading } = useAuth();
+  const pathname = usePathname();
+
+  // On the login page we render a clean layout (no sidebar)
+  if (pathname === "/login") {
+    return (
+      <>
+        {children}
+        <Toaster />
+      </>
+    );
+  }
 
   if (loading) {
     return (
@@ -31,7 +43,9 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
               <span className="ml-2 font-semibold">Menu</span>
             </div>
           </div>
-          <div className="p-4 sm:p-8" data-dyad-component="Content">{children}</div>
+          <div className="p-4 sm:p-8" data-dyad-component="Content">
+            {children}
+          </div>
         </main>
       </div>
       <Toaster />
