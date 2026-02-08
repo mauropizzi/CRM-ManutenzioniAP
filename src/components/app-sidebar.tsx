@@ -18,6 +18,7 @@ import {
   MapPin,
   LogIn,
   LogOut,
+  Tag,
 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 
@@ -25,6 +26,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Clienti', href: '/customers', icon: Users },
   { name: 'Punti Servizio', href: '/service-points', icon: MapPin },
+  { name: 'Tipo Impianto', href: '/system-types', icon: Tag },
   { name: 'Interventi', href: '/interventions', icon: Wrench },
   { name: 'Materiali', href: '/materials', icon: Package },
   { name: 'Tecnici', href: '/technicians', icon: Truck },
