@@ -13,6 +13,36 @@ function getCanvasPoint(canvas: HTMLCanvasElement, clientX: number, clientY: num
   };
 }
 
+function exportSignature(canvas: HTMLCanvasElement) {
+  // Export with a capped resolution to keep payload small and saves reliable.
+  const cssW = Math.max(1, canvas.clientWidth);
+  const cssH = Math.max(1, canvas.clientHeight);
+
+  // Reasonable upper bounds (works well on mobile, keeps base64 compact)
+  const maxW = 700;
+  const maxH = 220;
+
+  const scale = Math.min(maxW / cssW, maxH / cssH, 1);
+  const outW = Math.max(1, Math.round(cssW * scale));
+  const outH = Math.max(1, Math.round(cssH * scale));
+
+  const out = document.createElement("canvas");
+  out.width = outW;
+  out.height = outH;
+
+  const ctx = out.getContext("2d");
+  if (!ctx) return canvas.toDataURL("image/png");
+
+  // White background improves compression + legibility in PDFs
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, outW, outH);
+
+  ctx.drawImage(canvas, 0, 0, cssW, cssH, 0, 0, outW, outH);
+
+  // JPEG is significantly smaller and very stable across browsers
+  return out.toDataURL("image/jpeg", 0.78);
+}
+
 export function SignaturePad({
   value,
   onChange,
@@ -105,7 +135,7 @@ export function SignaturePad({
   const commit = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const dataUrl = canvas.toDataURL("image/png");
+    const dataUrl = exportSignature(canvas);
     onChange(dataUrl);
   };
 

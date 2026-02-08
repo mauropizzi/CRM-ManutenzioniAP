@@ -106,8 +106,9 @@ serve(async (req: Request) => {
       const sig = clampToDataUrl(opts.dataUrl);
       if (sig) {
         try {
+          const fmt = sig.startsWith('data:image/jpeg') ? 'JPEG' : sig.startsWith('data:image/png') ? 'PNG' : 'JPEG';
           // Keep a little padding
-          doc.addImage(sig, 'PNG', opts.x + 2, boxY + 2, opts.w - 4, opts.h - 4, undefined, 'FAST');
+          doc.addImage(sig, fmt, opts.x + 2, boxY + 2, opts.w - 4, opts.h - 4, undefined, 'FAST');
         } catch (e) {
           console.warn('[send-work-report-email] Failed to render signature image', { label: opts.label });
         }
