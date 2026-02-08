@@ -2,16 +2,29 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ServicePointWithSystems, ServicePointSystem } from '@/types/service-point';
-import { getServicePoints, createServicePoint, updateServicePoint, deleteServicePoint, addServicePointSystem, updateServicePointSystem, deleteServicePointSystem } from '@/lib/service-point-utils';
+import {
+  getServicePoints,
+  createServicePoint,
+  updateServicePoint,
+  deleteServicePoint,
+  addServicePointSystem,
+  updateServicePointSystem,
+  deleteServicePointSystem,
+} from '@/lib/service-point-utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface ServicePointContextType {
   servicePoints: ServicePointWithSystems[];
   loading: boolean;
   refreshServicePoints: () => Promise<void>;
-  createServicePoint: (servicePoint: any) => Promise<void>;
+  createServicePoint: (servicePoint: any) => Promise<any>;
   updateServicePoint: (id: string, updates: any) => Promise<void>;
   deleteServicePoint: (id: string) => Promise<void>;
-  addSystem: (servicePointId: string, system: Omit<ServicePointSystem, 'id' | 'created_at' | 'service_point_id'>) => Promise<void>;
+  addSystem: (
+    servicePointId: string,
+    system: Omit<ServicePointSystem, 'id' | 'created_at' | 'service_point_id'>
+  ) => Promise<void>;
   updateSystem: (systemId: string, updates: Partial<ServicePointSystem>) => Promise<void>;
   deleteSystem: (systemId: string) => Promise<void>;
 }
@@ -48,8 +61,24 @@ export const ServicePointProvider: React.FC<ServicePointProviderProps> = ({ chil
 
   const handleCreateServicePoint = async (servicePointData: any) => {
     try {
-      await createServicePoint(servicePointData);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast.error('Devi essere autenticato per creare un punto servizio');
+        throw new Error('Not authenticated');
+      }
+
+      // RLS: created_by deve essere uguale a auth.uid()
+      const payload = {
+        ...servicePointData,
+        created_by: user.id,
+      };
+
+      const created = await createServicePoint(payload);
       await refreshServicePoints();
+      return created;
     } catch (error) {
       console.error('Error creating service point:', error);
       throw error;
@@ -58,7 +87,9 @@ export const ServicePointProvider: React.FC<ServicePointProviderProps> = ({ chil
 
   const handleUpdateServicePoint = async (id: string, updates: any) => {
     try {
-      await updateServicePoint(id, updates);
+      // Evita di sovrascrivere created_by da client
+      const { created_by, user_id, ...safeUpdates } = updates || {};
+      await updateServicePoint(id, safeUpdates);
       await refreshServicePoints();
     } catch (error) {
       console.error('Error updating service point:', error);
@@ -76,11 +107,14 @@ export const ServicePointProvider: React.FC<ServicePointProviderProps> = ({ chil
     }
   };
 
-  const handleAddSystem = async (servicePointId: string, systemData: Omit<ServicePointSystem, 'id' | 'created_at' | 'service_point_id'>) => {
+  const handleAddSystem = async (
+    servicePointId: string,
+    systemData: Omit<ServicePointSystem, 'id' | 'created_at' | 'service_point_id'>
+  ) => {
     try {
       await addServicePointSystem({
         service_point_id: servicePointId,
-        ...systemData
+        ...systemData,
       });
       await refreshServicePoints();
     } catch (error) {
@@ -114,17 +148,19 @@ export const ServicePointProvider: React.FC<ServicePointProviderProps> = ({ chil
   }, []);
 
   return (
-    <ServicePointContext.Provider value={{
-      servicePoints,
-      loading,
-      refreshServicePoints,
-      createServicePoint: handleCreateServicePoint,
-      updateServicePoint: handleUpdateServicePoint,
-      deleteServicePoint: handleDeleteServicePoint,
-      addSystem: handleAddSystem,
-      updateSystem: handleUpdateSystem,
-      deleteSystem: handleDeleteSystem
-    }}>
+    <ServicePointContext.Provider
+      value={{
+        servicePoints,
+        loading,
+        refreshServicePoints,
+        createServicePoint: handleCreateServicePoint,
+        updateServicePoint: handleUpdateServicePoint,
+        deleteServicePoint: handleDeleteServicePoint,
+        addSystem: handleAddSystem,
+        updateSystem: handleUpdateSystem,
+        deleteSystem: handleDeleteSystem,
+      }}
+    >
       {children}
     </ServicePointContext.Provider>
   );

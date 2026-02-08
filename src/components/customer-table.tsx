@@ -12,7 +12,7 @@ import {
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Customer } from '@/types/customer';
 import { useCustomers } from '@/context/customer-context';
-import { Edit, Trash2, PlusCircle, Eye, MapPin } from 'lucide-react'; // Importa l'icona MapPin
+import { Edit, Trash2, PlusCircle, Eye, MapPin, Building2 } from 'lucide-react'; // Importa l'icona MapPin
 import { Toaster } from '@/components/ui/sonner';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -72,6 +72,17 @@ export const CustomerTable = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
+                    <Link
+                      href={`/customers/${customer.id}/service-points`}
+                      className={cn(
+                        buttonVariants({ variant: "ghost", size: "sm" }),
+                        "rounded-md text-violet-600 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-gray-700"
+                      )}
+                      title="Punti Servizio"
+                    >
+                      <Building2 size={18} className="mr-1" />
+                      Punti Servizio
+                    </Link>
                     <Link
                       href={getGoogleMapsLink(customer)} // Usa la funzione per generare il link
                       target="_blank" // Apre in una nuova scheda

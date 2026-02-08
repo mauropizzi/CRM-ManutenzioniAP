@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import {
@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { useCustomers } from '@/context/customer-context';
 import { InterventionFormValues } from '@/components/intervention-form';
+import { getServicePointsByCustomer } from '@/lib/service-point-utils';
 
 export const ClientDetailsSection = () => {
   const { control, watch, setValue } = useFormContext<InterventionFormValues>();
@@ -28,10 +29,16 @@ export const ClientDetailsSection = () => {
   const selectedCustomerId = watch('customer_id');
   const isCustomerSelected = !!selectedCustomerId;
 
+  const [servicePoints, setServicePoints] = useState<any[]>([]);
+  const [selectedServicePointId, setSelectedServicePointId] = useState<string | ''>('');
+
   useEffect(() => {
     if (customersLoading) return;
 
-    // Manual mode by default: do NOT clear fields when no selection.
+    // Reset service point selection on customer change
+    setSelectedServicePointId('');
+    setServicePoints([]);
+
     if (selectedCustomerId === 'new-customer') {
       setValue('client_company_name', '');
       setValue('client_codice_fiscale', '');
@@ -53,6 +60,7 @@ export const ClientDetailsSection = () => {
     const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
     if (!selectedCustomer) return;
 
+    // Prefill from customer by default
     setValue('client_company_name', selectedCustomer.ragione_sociale);
     setValue('client_codice_fiscale', selectedCustomer.codice_fiscale ?? '');
     setValue('client_partita_iva', selectedCustomer.partita_iva ?? '');
@@ -65,7 +73,38 @@ export const ClientDetailsSection = () => {
     setValue('client_referent', selectedCustomer.referente ?? '');
     setValue('client_pec', selectedCustomer.pec ?? '');
     setValue('client_sdi', selectedCustomer.sdi ?? '');
+
+    // Fetch service points for customer
+    (async () => {
+      const points = await getServicePointsByCustomer(selectedCustomerId);
+      setServicePoints(points || []);
+
+      if (points && points.length === 1) {
+        // Auto-use the single service point
+        const sp = points[0] as any;
+        setSelectedServicePointId(sp.id);
+        setValue('client_address', sp.address ?? '');
+        setValue('client_citta', sp.city ?? '');
+        setValue('client_cap', sp.cap ?? '');
+        setValue('client_provincia', sp.provincia ?? '');
+        // Optional: if you want to override phone/email with service point data:
+        // setValue('client_phone', sp.telefono ?? selectedCustomer.telefono ?? '');
+        // setValue('client_email', sp.email ?? selectedCustomer.email ?? '');
+      }
+    })();
   }, [selectedCustomerId, customers, customersLoading, setValue]);
+
+  useEffect(() => {
+    if (!selectedServicePointId) return;
+    const sp = servicePoints.find((p: any) => p.id === selectedServicePointId);
+    if (!sp) return;
+
+    // When a specific service point is selected, fill address from it
+    setValue('client_address', sp.address ?? '');
+    setValue('client_citta', sp.city ?? '');
+    setValue('client_cap', sp.cap ?? '');
+    setValue('client_provincia', sp.provincia ?? '');
+  }, [selectedServicePointId, servicePoints, setValue]);
 
   const fieldsDisabled = isCustomerSelected && selectedCustomerId !== 'new-customer';
 
@@ -107,6 +146,33 @@ export const ClientDetailsSection = () => {
           </FormItem>
         )}
       />
+
+      {/* Selettore punto servizio: visibile solo se > 1 punti */}
+      {isCustomerSelected && servicePoints.length > 1 && (
+        <FormItem>
+          <FormLabel className="text-gray-700 dark:text-gray-300">Seleziona Punto Servizio</FormLabel>
+          <Select
+            onValueChange={(val) => setSelectedServicePointId(val)}
+            value={selectedServicePointId}
+          >
+            <FormControl>
+              <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                <SelectValue placeholder="Seleziona il punto servizio per l'intervento" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
+              {servicePoints.map((sp: any) => (
+                <SelectItem key={sp.id} value={sp.id}>
+                  {sp.name} {sp.address ? `– ${sp.address}` : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormDescription className="text-gray-600 dark:text-gray-400">
+            Seleziona il punto presso cui effettuare l'intervento. Se non selezioni, verrà usato l'indirizzo del cliente.
+          </FormDescription>
+        </FormItem>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
