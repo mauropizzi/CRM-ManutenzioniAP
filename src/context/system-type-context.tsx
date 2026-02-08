@@ -29,6 +29,7 @@ export function SystemTypeProvider({ children }: { children: React.ReactNode }) 
       const { data, error } = await supabase
         .from('system_types')
         .select('*')
+        .order('sort_order', { ascending: true, nullsFirst: false })
         .order('name', { ascending: true });
 
       if (error) throw error;
