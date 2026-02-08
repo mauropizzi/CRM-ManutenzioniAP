@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCustomers } from '@/context/customer-context';
 import { useServicePoint } from '@/context/service-point-context';
+import { useSystemTypes } from '@/context/system-type-context';
+import { useBrands } from '@/context/brand-context';
 import { ServicePointWithSystems, ServicePointSystem } from '@/types/service-point';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -24,6 +26,8 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
   const router = useRouter();
   const { customers } = useCustomers();
   const { createServicePoint, updateServicePoint, addSystem, updateSystem, deleteSystem } = useServicePoint();
+  const { systemTypes } = useSystemTypes();
+  const { brands } = useBrands();
 
   const [formData, setFormData] = useState({
     customer_id: customerId || (servicePoint as any)?.customer_id || '',
@@ -31,14 +35,14 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
     address: (servicePoint as any)?.address || '',
     city: (servicePoint as any)?.city || '',
     cap: (servicePoint as any)?.cap || '',
-    provincia: (servicePoint as any)?.provincia || (servicePoint as any)?.province || '',
-    telefono: (servicePoint as any)?.telefono || (servicePoint as any)?.phone || '',
+    provincia: (servicePoint as any)?.provincia || '',
+    telefono: (servicePoint as any)?.telefono || '',
     email: (servicePoint as any)?.email || '',
-    note: (servicePoint as any)?.note || (servicePoint as any)?.notes || '',
+    note: (servicePoint as any)?.note || '',
   });
 
   const [systems, setSystems] = useState<ServicePointSystem[]>(servicePoint?.systems || []);
-  const [newSystem, setNewSystem] = useState({ system_type: '', brand: '' });
+  const [newSystem, setNewSystem] = useState({ system_type_id: '', brand_id: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
@@ -46,19 +50,30 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
   };
 
   const handleAddSystem = () => {
-    if (newSystem.system_type && newSystem.brand) {
-      setSystems((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          service_point_id: (servicePoint as any)?.id || '',
-          system_type: newSystem.system_type,
-          brand: newSystem.brand,
-          created_at: new Date().toISOString(),
-        },
-      ]);
-      setNewSystem({ system_type: '', brand: '' });
+    if (!newSystem.system_type_id || !newSystem.brand_id) return;
+
+    const typeName = systemTypes.find((t) => t.id === newSystem.system_type_id)?.name || '';
+    const brandName = brands.find((b) => b.id === newSystem.brand_id)?.name || '';
+
+    if (!typeName || !brandName) {
+      toast.error('Seleziona un tipo impianto e una marca validi');
+      return;
     }
+
+    setSystems((prev) => [
+      ...prev,
+      {
+        id: `tmp_${Date.now()}`,
+        service_point_id: (servicePoint as any)?.id || '',
+        system_type_id: newSystem.system_type_id,
+        brand_id: newSystem.brand_id,
+        system_type: typeName,
+        brand: brandName,
+        created_at: new Date().toISOString(),
+      },
+    ]);
+
+    setNewSystem({ system_type_id: '', brand_id: '' });
   };
 
   const handleRemoveSystem = (systemId: string) => {
@@ -74,46 +89,47 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
 
     setIsSubmitting(true);
     try {
-      // Payload allineato allo schema DB (colonne: provincia, telefono, note)
       const basePayload = {
         customer_id: formData.customer_id,
         name: formData.name,
-        address: formData.address,
-        city: formData.city,
-        cap: formData.cap,
-        provincia: formData.provincia,
-        telefono: formData.telefono,
-        email: formData.email,
-        note: formData.note,
+        address: formData.address || null,
+        city: formData.city || null,
+        cap: formData.cap || null,
+        provincia: formData.provincia || null,
+        telefono: formData.telefono || null,
+        email: formData.email || null,
+        note: formData.note || null,
       };
 
       if (servicePoint) {
         await updateServicePoint((servicePoint as any).id, basePayload);
 
-        // Handle systems updates
         const currentSystemIds = servicePoint.systems.map((s) => s.id);
         const newSystemIds = systems.map((s) => s.id);
 
-        // Delete removed systems
         for (const systemId of currentSystemIds) {
           if (!newSystemIds.includes(systemId)) {
             await deleteSystem(systemId);
           }
         }
 
-        // Update or add systems
         for (const system of systems) {
           const isExisting = currentSystemIds.includes(system.id);
+
+          const system_type_id = system.system_type_id || systemTypes.find((t) => t.name === system.system_type)?.id || null;
+          const brand_id = system.brand_id || brands.find((b) => b.name === system.brand)?.id || null;
+
+          const payload = {
+            system_type: system.system_type,
+            brand: system.brand,
+            system_type_id,
+            brand_id,
+          };
+
           if (isExisting) {
-            await updateSystem(system.id, {
-              system_type: system.system_type,
-              brand: system.brand,
-            });
+            await updateSystem(system.id, payload);
           } else {
-            await addSystem((servicePoint as any).id, {
-              system_type: system.system_type,
-              brand: system.brand,
-            });
+            await addSystem((servicePoint as any).id, payload);
           }
         }
 
@@ -121,11 +137,15 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
       } else {
         const createdPoint = await createServicePoint(basePayload);
 
-        // Add systems
         for (const system of systems) {
+          const system_type_id = system.system_type_id || systemTypes.find((t) => t.name === system.system_type)?.id || null;
+          const brand_id = system.brand_id || brands.find((b) => b.name === system.brand)?.id || null;
+
           await addSystem((createdPoint as any).id, {
             system_type: system.system_type,
             brand: system.brand,
+            system_type_id,
+            brand_id,
           });
         }
 
@@ -284,21 +304,39 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
 
                 {/* Add New System */}
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="Tipo impianto"
-                    value={newSystem.system_type}
-                    onChange={(e) => setNewSystem((prev) => ({ ...prev, system_type: e.target.value }))}
-                  />
-                  <Input
-                    placeholder="Marca"
-                    value={newSystem.brand}
-                    onChange={(e) => setNewSystem((prev) => ({ ...prev, brand: e.target.value }))}
-                  />
-                  <Button
-                    type="button"
-                    onClick={handleAddSystem}
-                    disabled={!newSystem.system_type || !newSystem.brand}
+                  <Select
+                    value={newSystem.system_type_id}
+                    onValueChange={(value) => setNewSystem((prev) => ({ ...prev, system_type_id: value }))}
                   >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Tipo impianto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {systemTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={newSystem.brand_id}
+                    onValueChange={(value) => setNewSystem((prev) => ({ ...prev, brand_id: value }))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Marca" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {brands.map((brand) => (
+                        <SelectItem key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button type="button" onClick={handleAddSystem} disabled={!newSystem.system_type_id || !newSystem.brand_id}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
