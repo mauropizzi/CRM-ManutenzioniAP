@@ -74,17 +74,15 @@ export const ServicePointForm: React.FC<Props> = ({ initialData, onSubmit }) => 
     });
   }, [initialData, reset]);
 
-  // useFieldArray generic inference can be strict depending on TS config.
-  // Use a concise, safe approach by letting react-hook-form infer types
-  // and assert the field name as a constant string.
+  // TypeScript inference issue with useFieldArray - casting to any to resolve
   const tipoArray = useFieldArray({
     control,
-    name: "tipo_impianti" as const,
+    name: "tipo_impianti" as any,
   });
 
   const marcheArray = useFieldArray({
     control,
-    name: "marche" as const,
+    name: "marche" as any,
   });
 
   return (
