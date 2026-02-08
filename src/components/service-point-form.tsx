@@ -74,14 +74,14 @@ export const ServicePointForm: React.FC<Props> = ({ initialData, onSubmit }) => 
     });
   }, [initialData, reset]);
 
-  const tipoArray = useFieldArray({
+  const tipoArray = useFieldArray<ServicePointFormValues, "tipo_impianti">({
     control,
-    name: "tipo_impianti" as keyof typeof servicePointSchema._type,
+    name: "tipo_impianti",
   });
 
-  const marcheArray = useFieldArray({
+  const marcheArray = useFieldArray<ServicePointFormValues, "marche">({
     control,
-    name: "marche" as keyof typeof servicePointSchema._type,
+    name: "marche",
   });
 
   return (
