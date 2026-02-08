@@ -74,6 +74,8 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
 
     setIsSubmitting(true);
     try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+
       // Payload allineato allo schema DB (colonne: provincia, telefono, note)
       const basePayload = {
         customer_id: formData.customer_id,
@@ -119,7 +121,10 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
 
         toast.success('Punto servizio aggiornato con successo');
       } else {
-        const createdPoint = await createServicePoint(basePayload);
+        const createdPoint = await createServicePoint({
+          ...basePayload,
+          created_by: user.id,
+        });
 
         // Add systems
         for (const system of systems) {
