@@ -1,157 +1,105 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Home, Users, Wrench, ClipboardList, LogOut, User, Package, HardHat } from "lucide-react" // Importa l'icona HardHat per i tecnici
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { 
+  Menu, 
+  Home, 
+  Users, 
+  Wrench, 
+  Package, 
+  Truck, 
+  Settings,
+  Calendar,
+  MapPin
+} from 'lucide-react';
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-} from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
-import { useAuth } from "@/context/auth-context"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { cn } from "@/lib/utils"
+const navigation = [
+  { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Clienti', href: '/customers', icon: Users },
+  { name: 'Punti Servizio', href: '/service-points', icon: MapPin },
+  { name: 'Interventi', href: '/interventions', icon: Wrench },
+  { name: 'Materiali', href: '/materials', icon: Package },
+  { name: 'Tecnici', href: '/technicians', icon: Truck },
+  { name: 'Fornitori', href: '/suppliers', icon: Settings },
+];
 
-const menuItems = [
-  {
-    title: "Dashboard",
-    url: "/",
-    icon: Home,
-  },
-  {
-    title: "Anagrafica Clienti",
-    url: "/customers",
-    icon: Users,
-  },
-  {
-    title: "Richieste Intervento",
-    url: "/interventions",
-    icon: ClipboardList,
-  },
-  {
-    title: "Anagrafica Materiali",
-    url: "/materials",
-    icon: Package,
-  },
-  {
-    title: "Anagrafica Tecnici", // Nuovo elemento del menu
-    url: "/technicians",
-    icon: HardHat, // Icona per i tecnici
-  },
-  {
-    title: "Fornitori",
-    url: "/suppliers",
-    icon: Users,
-  },
-]
+interface AppSidebarProps {
+  className?: string;
+}
 
-export function AppSidebar() {
-  const pathname = usePathname()
-  const { user, signOut } = useAuth()
+export function AppSidebar({ className }: AppSidebarProps) {
+  const pathname = usePathname();
+
+  const NavItems = () => (
+    <>
+      {navigation.map((item) => {
+        const isActive = pathname === item.href;
+        return (
+          <Link key={item.name} href={item.href}>
+            <Button
+              variant={isActive ? "secondary" : "ghost"}
+              className={cn(
+                "w-full justify-start",
+                isActive && "bg-secondary"
+              )}
+            >
+              <item.icon className="mr-2 h-4 w-4" />
+              {item.name}
+            </Button>
+          </Link>
+        );
+      })}
+    </>
+  );
 
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <h2 className="text-lg font-bold text-sidebar-foreground">Gestione Interventi</h2>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu Principale</SidebarGroupLabel>
-          <SidebarMenu>
-            {menuItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === item.url || pathname.startsWith(`${item.url}/`)}
-                  tooltip={item.title}
-                >
-                  <Link href={item.url} className="flex items-center gap-3">
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-        
-        <SidebarGroup>
-          <SidebarGroupLabel>Azioni Rapide</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Nuovo Intervento">
-                <Link href="/interventions/new" className="flex items-center gap-3">
-                  <Wrench className="h-4 w-4" />
-                  <span>Nuovo Intervento</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Nuovo Materiale">
-                <Link href="/materials/new" className="flex items-center gap-3">
-                  <Package className="h-4 w-4" />
-                  <span>Nuovo Materiale</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Nuovo Tecnico">
-                <Link href="/technicians/new" className="flex items-center gap-3">
-                  <HardHat className="h-4 w-4" />
-                  <span>Nuovo Tecnico</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-      </SidebarContent>
-      
-      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-3">
-        {/* Theme Toggle */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-sidebar-foreground">Tema</span>
-          <ThemeToggle />
-        </div>
-        
-        {user ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-sidebar-foreground">
-              <User className="h-4 w-4" />
-              <span className="truncate">{user.email}</span>
+    <>
+      {/* Desktop Sidebar */}
+      <div className={cn("pb-12 w-64", className)}>
+        <div className="space-y-4 py-4">
+          <div className="px-3 py-2">
+            <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+              Menu
+            </h2>
+            <div className="space-y-1">
+              <NavItems />
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full"
-              onClick={signOut}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
           </div>
-        ) : (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full"
-            asChild
+        </div>
+      </div>
+
+      {/* Mobile Sidebar */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
           >
-            <Link href="/login">
-              <User className="h-4 w-4 mr-2" />
-              Accedi
-            </Link>
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle Menu</span>
           </Button>
-        )}
-      </SidebarFooter>
-    </Sidebar>
-  )
+        </SheetTrigger>
+        <SheetContent side="left" className="pr-0">
+          <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
+            <div className="space-y-4 py-4">
+              <div className="px-3 py-2">
+                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+                  Menu
+                </h2>
+                <div className="space-y-1">
+                  <NavItems />
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+    </>
+  );
 }
