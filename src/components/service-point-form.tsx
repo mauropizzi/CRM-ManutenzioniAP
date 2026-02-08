@@ -74,15 +74,14 @@ export const ServicePointForm: React.FC<Props> = ({ initialData, onSubmit }) => 
     });
   }, [initialData, reset]);
 
-  // Use any type to resolve TypeScript inference issues with useFieldArray
   const tipoArray = useFieldArray({
     control,
-    name: "tipo_impianti" as any,
+    name: "tipo_impianti" as "tipo_impianti",
   });
 
   const marcheArray = useFieldArray({
     control,
-    name: "marche" as any,
+    name: "marche" as "marche",
   });
 
   return (
