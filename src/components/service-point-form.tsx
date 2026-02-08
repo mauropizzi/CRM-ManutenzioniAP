@@ -33,16 +33,13 @@ const servicePointSchema = z.object({
 
 export type ServicePointFormValues = z.infer<typeof servicePointSchema>;
 
-// Ensure the form values satisfy react-hook-form FieldValues by widening with Record<string, any>
-type FormValues = ServicePointFormValues & Record<string, any>;
-
 interface Props {
   initialData?: Partial<ServicePointFormValues>;
   onSubmit: (data: ServicePointFormValues) => Promise<void> | void;
 }
 
 export const ServicePointForm: React.FC<Props> = ({ initialData, onSubmit }) => {
-  const form = useForm<FormValues>({
+  const form = useForm<ServicePointFormValues>({
     resolver: zodResolver(servicePointSchema),
     defaultValues: {
       customer_id: initialData?.customer_id ?? "",
@@ -77,22 +74,20 @@ export const ServicePointForm: React.FC<Props> = ({ initialData, onSubmit }) => 
     });
   }, [initialData, reset]);
 
-  const tipoArray = useFieldArray<FormValues, "tipo_impianti">({
+  // Use string literals to fix TypeScript issues
+  const tipoArray = useFieldArray<ServicePointFormValues>({
     control,
     name: "tipo_impianti",
   });
 
-  const marcheArray = useFieldArray<FormValues, "marche">({
+  const marcheArray = useFieldArray<ServicePointFormValues>({
     control,
     name: "marche",
   });
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={handleSubmit((data) => onSubmit(data as ServicePointFormValues))}
-        className="space-y-6 p-4"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-4">
         <FormField
           control={form.control}
           name="nome_punto_servizio"
@@ -192,7 +187,7 @@ export const ServicePointForm: React.FC<Props> = ({ initialData, onSubmit }) => 
             {tipoArray.fields.map((f, idx) => (
               <div key={f.id} className="flex gap-2">
                 <input
-                  {...form.register(`tipo_impianti.${idx}` as const)}
+                  {...form.register(`tipo_impianti.${idx}` as any)}
                   placeholder={`Tipo impianto ${idx + 1}`}
                   className="flex-1 rounded-md border px-2 py-1"
                 />
@@ -224,7 +219,7 @@ export const ServicePointForm: React.FC<Props> = ({ initialData, onSubmit }) => 
             {marcheArray.fields.map((f, idx) => (
               <div key={f.id} className="flex gap-2">
                 <input
-                  {...form.register(`marche.${idx}` as const)}
+                  {...form.register(`marche.${idx}` as any)}
                   placeholder={`Marca ${idx + 1}`}
                   className="flex-1 rounded-md border px-2 py-1"
                 />
