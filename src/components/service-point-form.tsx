@@ -14,6 +14,7 @@ import { useServicePoint } from '@/context/service-point-context';
 import { ServicePointWithSystems, ServicePointSystem } from '@/types/service-point';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ServicePointSystemCombobox } from '@/components/service-point-system-combobox';
 
 interface ServicePointFormProps {
   servicePoint?: ServicePointWithSystems;
@@ -47,16 +48,13 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
 
   const handleAddSystem = () => {
     if (newSystem.system_type && newSystem.brand) {
-      setSystems((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          service_point_id: (servicePoint as any)?.id || '',
-          system_type: newSystem.system_type,
-          brand: newSystem.brand,
-          created_at: new Date().toISOString(),
-        },
-      ]);
+      setSystems(prev => [...prev, {
+        id: Date.now().toString(),
+        service_point_id: servicePoint?.id || '',
+        system_type: newSystem.system_type,
+        brand: newSystem.brand,
+        created_at: new Date().toISOString()
+      }]);
       setNewSystem({ system_type: '', brand: '' });
     }
   };
@@ -283,25 +281,12 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
                 ))}
 
                 {/* Add New System */}
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Tipo impianto"
-                    value={newSystem.system_type}
-                    onChange={(e) => setNewSystem((prev) => ({ ...prev, system_type: e.target.value }))}
-                  />
-                  <Input
-                    placeholder="Marca"
-                    value={newSystem.brand}
-                    onChange={(e) => setNewSystem((prev) => ({ ...prev, brand: e.target.value }))}
-                  />
-                  <Button
-                    type="button"
-                    onClick={handleAddSystem}
-                    disabled={!newSystem.system_type || !newSystem.brand}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
+                <ServicePointSystemCombobox
+                  onAdd={(sys) => {
+                    setNewSystem(sys as any);
+                    handleAddSystem();
+                  }}
+                />
               </div>
             </div>
 
