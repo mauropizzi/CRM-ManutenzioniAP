@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Technician } from '@/types/technician';
 import { useTechnicians } from '@/context/technician-context';
 import { Edit, Trash2, PlusCircle } from 'lucide-react';
-import { Toaster } from '@/components/ui/sonner';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 
@@ -91,7 +90,6 @@ export const TechnicianTable = () => {
           </Table>
         </div>
       )}
-      <Toaster />
     </div>
   );
 };

@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Toaster } from '@/components/ui/sonner';
 
 export default function LoginPage() {
   const { signIn, signUp, user, loading: authLoading } = useAuth();
@@ -166,7 +165,6 @@ export default function LoginPage() {
           </Tabs>
         </CardContent>
       </Card>
-      <Toaster />
     </div>
   );
 }

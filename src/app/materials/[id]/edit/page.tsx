@@ -6,7 +6,6 @@ import { useMaterials } from '@/context/material-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Material } from '@/types/material';
-import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 import { use } from 'react';
 
@@ -37,7 +36,6 @@ export default function EditMaterialPage({ params }: EditMaterialPageProps) {
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Modifica Materiale</h1>
           <MaterialForm initialData={materialToEdit} onSubmit={handleSubmit} />
         </div>
-        <Toaster />
       </div>
     </ProtectedRoute>
   );

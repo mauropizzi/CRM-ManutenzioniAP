@@ -1,7 +1,6 @@
 "use client";
 
 import { ProtectedRoute } from '@/components/protected-route';
-import { Toaster } from '@/components/ui/sonner';
 import { SystemTypeManager } from '@/components/system-type-manager';
 import { SystemTypeProvider } from '@/context/system-type-context';
 
@@ -12,7 +11,6 @@ export default function SystemTypesPage() {
         <SystemTypeProvider>
           <SystemTypeManager />
         </SystemTypeProvider>
-        <Toaster />
       </div>
     </ProtectedRoute>
   );

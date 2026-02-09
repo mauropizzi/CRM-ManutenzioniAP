@@ -4,7 +4,6 @@ import React from 'react';
 import { TechnicianForm, TechnicianFormValues } from '@/components/technician-form';
 import { useTechnicians } from '@/context/technician-context';
 import { useRouter } from 'next/navigation';
-import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 
@@ -32,7 +31,6 @@ export default function NewTechnicianPage() {
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Aggiungi Nuovo Tecnico</h1>
           <TechnicianForm onSubmit={handleSubmit} />
         </div>
-        <Toaster />
       </div>
     </ProtectedRoute>
   );

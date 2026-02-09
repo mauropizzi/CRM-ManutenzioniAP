@@ -5,7 +5,6 @@ import { InterventionForm, InterventionFormValues } from '@/components/intervent
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter, notFound } from 'next/navigation';
 import { InterventionRequest } from '@/types/intervention';
-import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 import { use } from 'react';
@@ -51,7 +50,6 @@ export default function EditInterventionPage({ params }: EditInterventionPagePro
               </h1>
               <InterventionForm initialData={interventionToEdit} onSubmit={handleSubmit} />
             </div>
-            <Toaster />
           </div>
         </BrandProvider>
       </SystemTypeProvider>
