@@ -161,10 +161,10 @@ serve(async (req: Request) => {
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(100, 100, 100);
-    doc.text("Bolla di Consegna", pageWidth - 70, yPosition - 30);
+    doc.text("Bolla di Consegna", pageWidth - 70, 25);
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, pageWidth - 70, yPosition - 22);
+    doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, pageWidth - 70, 33);
     yPosition += 5;
     
     doc.setDrawColor(200, 200, 200);
