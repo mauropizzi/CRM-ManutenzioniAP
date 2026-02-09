@@ -19,7 +19,6 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
     client_referent,
     system_type,
     brand,
-    model,
     serial_number,
     system_location,
     internal_ref,
@@ -112,7 +111,6 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
           <div>
             <p><span className="font-medium">Tipo Impianto:</span> {system_type}</p>
             <p><span className="font-medium">Marca:</span> {brand}</p>
-            <p><span className="font-medium">Modello:</span> {model}</p>
           </div>
           <div>
             <p><span className="font-medium">Matricola:</span> {serial_number}</p>

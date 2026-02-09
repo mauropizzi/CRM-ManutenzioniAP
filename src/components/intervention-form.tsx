@@ -9,6 +9,7 @@ import { Form } from '@/components/ui/form';
 import Link from 'next/link';
 import { InterventionRequest } from '@/types/intervention';
 import { ClientDetailsSection, SystemDetailsSection, SchedulingDetailsSection } from './intervention-form/';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const isManualCustomer = (customerId?: string) => {
   const v = (customerId ?? '').trim();
@@ -45,7 +46,6 @@ export const interventionFormSchema = z
 
     system_type: z.string().min(2, { message: "Il tipo di impianto deve contenere almeno 2 caratteri." }),
     brand: z.string().min(2, { message: "La marca deve contenere almeno 2 caratteri." }),
-    model: z.string().min(2, { message: "Il modello deve contenere almeno 2 caratteri." }),
     serial_number: z.string().min(2, { message: "La matricola deve contenere almeno 2 caratteri." }),
     system_location: z.string().min(5, { message: "L'ubicazione dell'impianto deve contenere almeno 5 caratteri." }),
     internal_ref: z.string().optional().or(z.literal('')),
@@ -180,7 +180,6 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
 
       system_type: initialData?.system_type ?? '',
       brand: initialData?.brand ?? '',
-      model: initialData?.model ?? '',
       serial_number: initialData?.serial_number ?? '',
       system_location: initialData?.system_location ?? '',
       internal_ref: initialData?.internal_ref ?? '',
@@ -201,44 +200,54 @@ export const InterventionForm = ({ initialData, onSubmit }: InterventionFormProp
   };
 
   return (
-    <FormProvider {...methods}>
-      <Form {...methods}>
-        <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8 p-4">
-          <ClientDetailsSection />
-          <SystemDetailsSection />
-          <SchedulingDetailsSection timeOptions={timeOptions} />
+    <div className="container-base py-6">
+      <div className="card-base p-6 max-w-4xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground">
+            {initialData ? 'Modifica Richiesta di Intervento' : 'Nuova Richiesta di Intervento'}
+          </h1>
+          <p className="text-text-secondary mt-1">
+            {initialData ? 'Modifica i dettagli della richiesta esistente' : 'Compila i campi per creare una nuova richiesta di intervento'}
+          </p>
+        </div>
 
-          {Object.keys(methods.formState.errors).length > 0 && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-              <p className="font-semibold">Correggi i seguenti errori:</p>
-              <ul className="mt-2 list-disc list-inside text-sm">
-                {Object.entries(methods.formState.errors).map(([field, error]) => (
-                  <li key={field}>{error?.message as any}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+        <FormProvider {...methods}>
+          <Form {...methods}>
+            <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-6">
+              <ClientDetailsSection />
+              <SystemDetailsSection />
+              <SchedulingDetailsSection timeOptions={timeOptions} />
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Link href="/interventions" passHref>
-              <Button
-                type="button"
-                variant="outline"
-                className="rounded-md px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-              >
-                Annulla
-              </Button>
-            </Link>
-            <Button
-              type="submit"
-              className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
-              disabled={methods.formState.isSubmitting}
-            >
-              {methods.formState.isSubmitting ? 'Registrazione...' : initialData ? 'Salva Modifiche' : 'Registra Richiesta'}
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </FormProvider>
+              {Object.keys(methods.formState.errors).length > 0 && (
+                <Card className="border-danger/20 bg-danger/5">
+                  <CardContent className="pt-6">
+                    <p className="font-semibold text-danger mb-2">Correggi i seguenti errori:</p>
+                    <ul className="mt-2 list-disc list-inside text-sm text-danger">
+                      {Object.entries(methods.formState.errors).map(([field, error]) => (
+                        <li key={field}>{error?.message as any}</li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                <Link href="/interventions">
+                  <Button type="button" variant="outline">
+                    Annulla
+                  </Button>
+                </Link>
+                <Button
+                  type="submit"
+                  disabled={methods.formState.isSubmitting}
+                >
+                  {methods.formState.isSubmitting ? 'Registrazione...' : initialData ? 'Salva Modifiche' : 'Registra Richiesta'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </FormProvider>
+      </div>
+    </div>
   );
 };
