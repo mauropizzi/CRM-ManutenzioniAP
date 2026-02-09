@@ -37,7 +37,7 @@ export default function Home() {
           </p>
         </main>
 
-        <by MP/>
+        <MadeWithDyad/>
       </div>
     </ProtectedRoute>
   );
