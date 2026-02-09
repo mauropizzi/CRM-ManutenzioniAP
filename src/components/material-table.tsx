@@ -12,72 +12,305 @@ import {
 import { Button } from '@/components/ui/button';
 import { Material } from '@/types/material';
 import { useMaterials } from '@/context/material-context';
-import { Edit, Trash2, PlusCircle } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Search, Package, Filter, Eye } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner';
+import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const MaterialTable = () => {
   const { materials, deleteMaterial } = useMaterials();
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [unitFilter, setUnitFilter] = React.useState<string>('all');
+
+  // Filtra i materiali in base al termine di ricerca e all'unità di misura
+  const filteredMaterials = React.useMemo(() => {
+    return materials.filter((material) => {
+      const matchesSearch = 
+        material.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        material.unit.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesUnit = unitFilter === 'all' || material.unit === unitFilter;
+      
+      return matchesSearch && matchesUnit;
+    });
+  }, [materials, searchTerm, unitFilter]);
+
+  // Ottieni tutte le unità di misura uniche per il filtro
+  const uniqueUnits = React.useMemo(() => {
+    const units = [...new Set(materials.map((m) => m.unit))];
+    return units.sort();
+  }, [materials]);
 
   const handleDeleteClick = (id: string) => {
     deleteMaterial(id);
   };
 
+  const getUnitBadgeVariant = (unit: string) => {
+    switch (unit) {
+      case 'PZ':
+        return 'bg-primary/10 text-primary border-primary/20';
+      case 'MT':
+        return 'bg-success/10 text-success border-success/20';
+      case 'KG':
+        return 'bg-warning/10 text-warning border-warning/20';
+      case 'LT':
+        return 'bg-info/10 text-info border-info/20';
+      default:
+        return 'bg-secondary text-secondary-foreground border-border';
+    }
+  };
+
+  const getUnitIcon = (unit: string) => {
+    switch (unit) {
+      case 'PZ':
+        return '📦';
+      case 'MT':
+        return '📏';
+      case 'KG':
+        return '⚖️';
+      case 'LT':
+        return '🥤';
+      default:
+        return '📋';
+    }
+  };
+
   return (
-    <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Anagrafica Materiali</h2>
-        <Link href="/materials/new" passHref>
-          <Button className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 flex items-center gap-2">
-            <PlusCircle size={18} /> Aggiungi Materiale
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Materiali e Ricambi</h2>
+          <p className="text-text-secondary text-sm mt-1">
+            Gestisci il catalogo dei materiali utilizzati negli interventi
+          </p>
+        </div>
+        <Link href="/materials/new">
+          <Button variant="primary" className="gap-2">
+            <PlusCircle size={18} />
+            Aggiungi Materiale
           </Button>
         </Link>
       </div>
 
-      {materials.length === 0 ? (
-        <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessun materiale trovato. Aggiungi un nuovo materiale per iniziare!</p>
-      ) : (
-        <div className="overflow-x-auto rounded-md border border-gray-200 dark:border-gray-700">
-          <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <TableHeader className="bg-gray-50 dark:bg-gray-800">
-              <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tl-md">U.M.</TableHead>
-                {/* <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Quantità</TableHead> */}
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Descrizione</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tr-md">Azioni</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-              {materials.map((material: Material) => (
-                <TableRow key={material.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{material.unit}</TableCell>
-                  {/* <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{material.quantity}</TableCell> */}
-                  <TableCell className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate">{material.description}</TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
-                    <Link href={`/materials/${material.id}/edit`} passHref>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-md text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700"
-                      >
-                        <Edit size={18} />
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(material.id)}
-                      className="rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700"
-                    >
-                      <Trash2 size={18} />
-                    </Button>
-                  </TableCell>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-text-secondary">Totale Materiali</p>
+              <p className="text-2xl font-bold text-foreground">{materials.length}</p>
+            </div>
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Package className="h-5 w-5 text-primary" />
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-text-secondary">Pezzi</p>
+              <p className="text-2xl font-bold text-foreground">
+                {materials.filter(m => m.unit === 'PZ').length}
+              </p>
+            </div>
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg">
+              📦
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-text-secondary">Metri</p>
+              <p className="text-2xl font-bold text-foreground">
+                {materials.filter(m => m.unit === 'MT').length}
+              </p>
+            </div>
+            <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center text-lg">
+              📏
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-text-secondary">Altri</p>
+              <p className="text-2xl font-bold text-foreground">
+                {materials.filter(m => !['PZ', 'MT'].includes(m.unit)).length}
+              </p>
+            </div>
+            <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center text-lg">
+              📋
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary h-4 w-4" />
+              <Input
+                placeholder="Cerca materiale..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="sm:w-40">
+              <Select value={unitFilter} onValueChange={setUnitFilter}>
+                <SelectTrigger>
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-text-secondary" />
+                    <SelectValue placeholder="Unità" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutte le unità</SelectItem>
+                  {uniqueUnits.map((unit) => (
+                    <SelectItem key={unit} value={unit}>
+                      <div className="flex items-center gap-2">
+                        <span>{getUnitIcon(unit)}</span>
+                        <span>{unit}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main Content */}
+      <Card>
+        {filteredMaterials.length === 0 ? (
+          <CardContent className="py-12">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                <Package className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                {materials.length === 0 ? 'Nessun materiale trovato' : 'Nessun risultato'}
+              </h3>
+              <p className="text-text-secondary mb-6">
+                {materials.length === 0 
+                  ? 'Aggiungi il primo materiale al catalogo' 
+                  : 'Prova a modificare i filtri di ricerca'
+                }
+              </p>
+              {materials.length === 0 && (
+                <Link href="/materials/new">
+                  <Button variant="primary">Primo Materiale</Button>
+                </Link>
+              )}
+            </div>
+          </CardContent>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    Descrizione
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    Unità di Misura
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    Utilizzato
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    Azioni
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+              </TableHeader>
+              <TableBody className="divide-y divide-border">
+                {filteredMaterials.map((material: Material) => (
+                  <TableRow key={material.id} className="hover:bg-muted/30 transition-colors">
+                    <TableCell className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-sm">
+                          {getUnitIcon(material.unit)}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-foreground">
+                            {material.description}
+                          </div>
+                          {material.quantity_used > 0 && (
+                            <div className="text-xs text-text-secondary mt-1">
+                              {material.quantity_used.toFixed(2)} {material.unit} utilizzati
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <Badge 
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium border ${getUnitBadgeVariant(material.unit)}`}
+                      >
+                        <div className="flex items-center gap-1">
+                          <span>{getUnitIcon(material.unit)}</span>
+                          <span>{material.unit}</span>
+                        </div>
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <div className="text-sm text-text-secondary">
+                        {material.quantity_used || 0} {material.unit}
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-primary hover:bg-primary/10"
+                          title="Visualizza Dettagli"
+                        >
+                          <Eye size={14} className="mr-1" />
+                          Dettagli
+                        </Button>
+                        <Link href={`/materials/${material.id}/edit`}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary hover:bg-primary/10"
+                            title="Modifica Materiale"
+                          >
+                            <Edit size={14} />
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteClick(material.id)}
+                          className="h-8 w-8 text-danger hover:bg-danger/10"
+                          title="Elimina Materiale"
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </Card>
       <Toaster />
     </div>
   );
