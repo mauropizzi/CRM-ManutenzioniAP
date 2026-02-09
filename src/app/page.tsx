@@ -13,7 +13,7 @@ export default function Home() {
               <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 dark:bg-slate-950 dark:ring-slate-800">
                 <Image
                   src="/nuovo-logo.jpeg"
-                  alt="Antonelli & Zani Refrigerazione"
+                  alt="Antonelli & Zanni Refrigerazione"
                   width={760}
                   height={240}
                   priority
