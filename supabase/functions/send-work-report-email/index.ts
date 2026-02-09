@@ -148,7 +148,7 @@ serve(async (req: Request) => {
     doc.text("Antonelli & Zanni Refrigerazione Srl", 14, yPosition);
     yPosition += 8;
     doc.setFontSize(14);
-    doc.text("Via Fabio Filzi, 10, 25062 Concesio BS", 14, yPosition);
+    doc.text("Via Fabio Filzi, 10, 25062 Concesio BS Partita IVA: 03509590984 ", 14, yPosition);
     yPosition += 10;
 
     doc.setFontSize(16);
