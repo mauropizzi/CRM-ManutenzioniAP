@@ -129,10 +129,10 @@ serve(async (req: Request) => {
 
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("Antonelli  e  Pellizzari", 14, yPosition);
+    doc.text("Antonelli & Zanni Refrigerazione Srl", 14, yPosition);
     yPosition += 8;
     doc.setFontSize(14);
-    doc.text("Refrigerazioni", 14, yPosition);
+    doc.text("Refrigerazione", 14, yPosition);
     yPosition += 10;
 
     doc.setFontSize(16);
