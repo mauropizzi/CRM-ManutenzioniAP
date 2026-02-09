@@ -145,10 +145,11 @@ serve(async (req: Request) => {
     // Company info on the right side
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("Antonelli & Zanni Refrigerazione Srl", 60, yPosition + 8);
+    doc.text("Antonelli & Zanni", 60, yPosition + 8);
     yPosition += 8;
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
+    doc.text("Refrigerazione", 60, yPosition + 8);
     yPosition += 6;
     doc.setFontSize(9);
     doc.text("Via Fabio Filzi, 10, 25062 Concesio BS", 60, yPosition + 8);

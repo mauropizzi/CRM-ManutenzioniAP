@@ -192,28 +192,6 @@
 @layer utilities {
   /* Print-specific styles */
   @media print {
-    /* Hide navigation elements */
-    .sidebar,
-    .navbar,
-    nav,
-    header,
-    footer,
-    button,
-    .btn,
-    .no-print {
-      display: none !important;
-    }
-    
-    /* Ensure print content is visible */
-    .print-container {
-      display: block !important;
-      visibility: visible !important;
-      width: 100% !important;
-      background: white !important;
-      color: black !important;
-    }
-    
-    /* Reset body for printing */
     body {
       margin: 0;
       padding: 0;
@@ -223,21 +201,56 @@
       line-height: 1.2;
     }
     
-    /* Hide all elements except print container */
-    body > *:not(.print-container) {
-      display: none !important;
-    }
-    
-    /* Ensure printable content and all its children are visible */
-    .print-container,
-    .print-container * {
-      visibility: visible !important;
+    /* Ensure printable content is visible */
+    .print-container {
       display: block !important;
+      visibility: visible !important;
+      width: 100% !important;
       background: white !important;
       color: black !important;
     }
     
-    /* Table-specific fixes */
+    /* Hide all UI elements during print */
+    header,
+    nav,
+    aside,
+    .sidebar,
+    .navbar,
+    .menu,
+    button,
+    .btn,
+    .no-print,
+    [role="button"],
+    [data-no-print] {
+      display: none !important;
+    }
+    
+    /* Page breaks */
+    .break-inside-avoid {
+      break-inside: avoid;
+    }
+    
+    /* Remove all backgrounds and shadows for printing */
+    * {
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+    
+    /* Ensure borders are visible */
+    .print-container .border {
+      border: 1px solid black !important;
+    }
+    
+    /* Grid fixes */
+    .print-container .grid {
+      display: grid !important;
+    }
+    
+    .print-container .grid-cols-2 {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    /* Table fixes */
     .print-container table {
       display: table !important;
       border-collapse: collapse !important;
@@ -262,35 +275,10 @@
       border: 1px solid black !important;
     }
     
-    /* Grid fixes */
-    .print-container .grid {
-      display: grid !important;
-    }
-    
-    .print-container .grid-cols-2 {
-      grid-template-columns: repeat(2, 1fr) !important;
-    }
-    
-    /* Page breaks */
-    .break-inside-avoid {
-      break-inside: avoid;
-    }
-    
-    /* Remove all backgrounds and shadows for printing */
-    * {
-      box-shadow: none !important;
-      text-shadow: none !important;
-    }
-    
-    /* Ensure borders are visible */
-    .print-container .border {
-      border: 1px solid black !important;
-    }
-    
     /* Image fixes for printing */
     .print-container img {
       display: block !important;
-      max-width: 100% !important;
+      max-width: 180px !important;
       height: auto !important;
     }
   }

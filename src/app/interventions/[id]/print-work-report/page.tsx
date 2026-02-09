@@ -20,16 +20,20 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
 
   useEffect(() => {
     if (!interventionsLoading && intervention) {
-      // Add a delay to ensure content is fully rendered
-      const timer = setTimeout(() => {
+      // Hide all body content except our print container
+      const originalBodyContent = document.body.innerHTML;
+      const printContainer = document.getElementById('print-container');
+      
+      if (printContainer) {
+        document.body.innerHTML = printContainer.innerHTML;
         window.print();
-        // Navigate back after print dialog closes (with a small delay)
+        document.body.innerHTML = originalBodyContent;
+        
+        // Re-attach event listeners by reloading the page
         setTimeout(() => {
           router.push(`/interventions/${id}/work-report`);
         }, 100);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
+      }
     } else if (!interventionsLoading && !intervention) {
       notFound();
     }
@@ -45,8 +49,10 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
   }
 
   return (
-    <div className="print-container">
-      <PrintableWorkReport intervention={intervention} />
+    <div className="p-8 bg-white">
+      <div id="print-container" className="print-container">
+        <PrintableWorkReport intervention={intervention} />
+      </div>
     </div>
   );
 }
