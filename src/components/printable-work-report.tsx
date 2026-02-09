@@ -74,7 +74,7 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
         <div className="flex flex-col items-start">
           {/* Use regular img tag for printing */}
           <img
-            src="/logo-crm-antonelli-zani.jpg"
+            src="/nuovo-logo.jpeg"
             alt="Antonelli & Zani Logo"
             width={180}
             height={100}
