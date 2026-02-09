@@ -41,6 +41,7 @@ export const workReportSchema = z
       .transform((materials) =>
         materials.filter((material) => material.description && material.description.trim() !== '')
       ),
+    client_signer_name: z.string().optional().or(z.literal('')),
     client_signature: z.string().optional().or(z.literal('')),
     technician_signature: z.string().optional().or(z.literal('')),
     status: z.enum(['Da fare', 'In corso', 'Completato', 'Annullato']),
@@ -51,6 +52,14 @@ export const workReportSchema = z
         code: z.ZodIssueCode.custom,
         message: 'La firma tecnico è obbligatoria per chiudere la bolla (stato: Completato).',
         path: ['technician_signature'],
+      });
+    }
+
+    if (v.status === 'Completato' && !v.client_absent && (!v.client_signer_name || v.client_signer_name.trim().length === 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Il nome di chi firma è obbligatorio.',
+        path: ['client_signer_name'],
       });
     }
   });
@@ -104,6 +113,7 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail,
       time_entries: normalizedTimeEntries as any,
       kilometers: initialData?.kilometers ?? 0,
       materials: normalizedMaterials as any,
+      client_signer_name: initialData?.client_signer_name ?? '',
       client_signature: initialData?.client_signature ?? '',
       technician_signature: initialData?.technician_signature ?? '',
       status: initialData?.status ?? currentStatus,

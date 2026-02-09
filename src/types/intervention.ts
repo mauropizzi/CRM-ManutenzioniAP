@@ -25,6 +25,8 @@ export interface WorkReportData {
   kilometers?: number;
   materials?: MaterialUsed[]; // Rinominato per coerenza con WorkReportForm
 
+  /** Nome e cognome di chi firma per il cliente */
+  client_signer_name?: string;
   /** Firma cliente (data URL PNG). Se il cliente è assente può essere vuota. */
   client_signature?: string;
   /** Firma tecnico (vale anche per fornitore). Data URL PNG. */

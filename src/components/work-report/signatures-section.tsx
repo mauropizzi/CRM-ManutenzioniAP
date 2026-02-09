@@ -4,10 +4,13 @@ import React, { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { WorkReportFormValues } from "@/components/work-report-form";
 import { SignaturePad } from "@/components/signature-pad";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function SignaturesSection() {
   const {
     watch,
+    register,
     setValue,
     formState: { errors },
   } = useFormContext<WorkReportFormValues>();
@@ -17,8 +20,11 @@ export function SignaturesSection() {
   const technicianSignature = watch("technician_signature");
 
   useEffect(() => {
-    if (clientAbsent && clientSignature) {
-      setValue("client_signature", "", { shouldDirty: true, shouldValidate: true });
+    if (clientAbsent) {
+      if (clientSignature) {
+        setValue("client_signature", "", { shouldDirty: true, shouldValidate: true });
+      }
+      setValue("client_signer_name", "", { shouldDirty: true, shouldValidate: true });
     }
   }, [clientAbsent, clientSignature, setValue]);
 
@@ -31,16 +37,38 @@ export function SignaturesSection() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <SignaturePad
-          label="Firma cliente"
-          hint={clientAbsent ? "Cliente assente: firma non richiesta" : "Firma richiesta"}
-          value={clientSignature}
-          onChange={(v) => setValue("client_signature", v, { shouldDirty: true, shouldValidate: true })}
-          disabled={clientAbsent}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Sezione Cliente */}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="client_signer_name" className={clientAbsent ? "opacity-50" : ""}>
+              Nome e Cognome di chi firma (Cliente)
+            </Label>
+            <Input
+              id="client_signer_name"
+              placeholder="Inserisci nome e cognome"
+              disabled={clientAbsent}
+              {...register("client_signer_name")}
+              className={errors.client_signer_name ? "border-rose-500" : ""}
+            />
+            {errors.client_signer_name?.message && (
+              <p className="text-xs font-semibold text-rose-600">
+                {String(errors.client_signer_name.message)}
+              </p>
+            )}
+          </div>
+          
+          <SignaturePad
+            label="Firma cliente"
+            hint={clientAbsent ? "Cliente assente: firma non richiesta" : "Firma richiesta"}
+            value={clientSignature}
+            onChange={(v) => setValue("client_signature", v, { shouldDirty: true, shouldValidate: true })}
+            disabled={clientAbsent}
+          />
+        </div>
 
-        <div>
+        {/* Sezione Tecnico */}
+        <div className="flex flex-col justify-end">
           <SignaturePad
             label="Firma tecnico"
             hint="Obbligatoria per chiusura"
