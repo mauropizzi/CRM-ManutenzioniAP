@@ -38,6 +38,11 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
   const clientAbsent = Boolean((work_report_data as any)?.client_absent);
   const signerName = work_report_data?.client_signer_name || '';
 
+  // Aggiungo calcolo materiali non vuoti
+  const materials = (work_report_data?.materials || []).filter(
+    (m) => (m?.description || '').trim().length > 0
+  );
+
   const SignatureBox = ({ src, emptyNote, footerText }: { src?: string; emptyNote?: string; footerText?: string }) => {
     const has = Boolean(src && src.trim().length > 0);
 
@@ -79,7 +84,7 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
             className="mb-2"
           />
           <h1 className="text-xl font-extrabold leading-tight text-gray-900 print:text-black">
-            Antonelli &amp; Zanni Refrigerazione Srl
+            Antonelli & Zanni Refrigerazione Srl
           </h1>
           <div className="mt-1 space-y-0.5 text-[12px] leading-snug text-gray-700 print:text-black">
             <p>Via Fabio Filzi, 10, 25062 Concesio BS</p>
@@ -133,7 +138,7 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
         {/* Ore */}
         {work_report_data?.time_entries && work_report_data.time_entries.length > 0 && (
           <div className="break-inside-avoid">
-            <h3 className="text-lg font-bold mb-2 text-gray-800 print:text-black">Ore di Lavoro</h3>
+            <h3 className="text-lg font-bold mb-2 text-gray-800 print:text-black">Ore di lavoro (uomo/ora)</h3>
             <table className="w-full text-[12px] border-collapse">
               <thead>
                 <tr className="border-b-2 border-black">
@@ -162,6 +167,33 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
                 <div className="text-sm font-bold">Km percorsi: {work_report_data.kilometers}</div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Materiali */}
+        {materials.length > 0 && (
+          <div className="border border-gray-200 rounded-lg p-4 print:border-gray-300 break-inside-avoid">
+            <h3 className="text-lg font-bold mb-3 text-gray-800 print:text-black border-b pb-1">
+              Ricambi / Materiali utilizzati
+            </h3>
+            <table className="w-full text-[12px] border-collapse">
+              <thead>
+                <tr className="border-b-2 border-black">
+                  <th className="text-left py-2 font-bold w-20">Q.tà</th>
+                  <th className="text-left py-2 font-bold w-24">Unità</th>
+                  <th className="text-left py-2 font-bold">Descrizione</th>
+                </tr>
+              </thead>
+              <tbody>
+                {materials.map((m, idx) => (
+                  <tr key={idx} className="border-b border-gray-200 last:border-b-0 print:border-gray-200">
+                    <td className="py-2">{typeof m.quantity === 'number' ? m.quantity : '-'}</td>
+                    <td className="py-2">{m.unit || 'PZ'}</td>
+                    <td className="py-2">{m.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
