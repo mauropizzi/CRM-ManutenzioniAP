@@ -46,17 +46,17 @@ function SidebarFooter() {
 
   if (!user) {
     return (
-      <div className="px-3 pt-4">
+      <div className="px-4 pt-6">
         <Link href="/login" className="block">
           <Button
-            variant="secondary"
-            className="w-full justify-start rounded-xl bg-primary/10 text-primary hover:bg-primary/15"
+            variant="outline"
+            className="w-full justify-start h-10"
           >
             <LogIn className="mr-2 h-4 w-4" />
             Accedi
           </Button>
         </Link>
-        <div className="mt-3">
+        <div className="mt-4 flex justify-center">
           <ThemeToggle />
         </div>
       </div>
@@ -64,17 +64,17 @@ function SidebarFooter() {
   }
 
   return (
-    <div className="px-3 pt-4">
-      <div className="mb-3 rounded-xl border bg-card/60 px-3 py-2">
-        <p className="text-xs text-muted-foreground">Connesso come</p>
-        <p className="truncate text-sm font-medium">{user.email}</p>
+    <div className="px-4 pt-6 space-y-4">
+      <div className="rounded-xl border border-border bg-surface p-3">
+        <p className="text-xs text-text-secondary mb-1">Connesso come</p>
+        <p className="text-sm font-medium text-foreground truncate">{user.email}</p>
       </div>
-      <div className="mb-3 flex justify-center">
+      <div className="flex justify-center">
         <ThemeToggle />
       </div>
       <Button
         variant="ghost"
-        className="w-full justify-start rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40"
+        className="w-full justify-start h-10 text-danger hover:bg-danger/10 hover:text-danger"
         onClick={async () => {
           await signOut();
           router.push('/login');
@@ -97,14 +97,15 @@ export function AppSidebar({ className }: AppSidebarProps) {
         return (
           <Link key={item.name} href={item.href}>
             <Button
-              variant={isActive ? 'secondary' : 'ghost'}
+              variant={isActive ? 'primary' : 'ghost'}
               className={cn(
-                'w-full justify-start rounded-xl',
-                isActive && 'bg-primary/10 text-primary hover:bg-primary/15'
+                'w-full justify-start h-10 px-4',
+                !isActive && 'hover:bg-accent hover:text-accent-foreground',
+                isActive && 'shadow-sm'
               )}
             >
-              <item.icon className="mr-2 h-4 w-4" />
-              {item.name}
+              <item.icon className="mr-3 h-4 w-4" />
+              <span className="font-medium">{item.name}</span>
             </Button>
           </Link>
         );
@@ -115,20 +116,27 @@ export function AppSidebar({ className }: AppSidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className={cn('flex w-72 flex-col border-r bg-background/80', className)}>
-        <div className="space-y-4 py-5">
-          <div className="px-4">
-            <h2 className="text-lg font-semibold tracking-tight">Gestione</h2>
-            <p className="text-xs text-muted-foreground">Clienti • Interventi • Impianti</p>
+      <div className={cn('hidden lg:flex lg:flex-col lg:w-72 border-r border-border bg-surface', className)}>
+        <div className="flex-1 flex flex-col">
+          <div className="p-6 border-b border-border">
+            <div className="flex items-center space-x-3">
+              <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
+                <span className="text-white font-bold text-lg">A</span>
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Gestione</h2>
+                <p className="text-xs text-text-secondary">Clienti • Interventi • Impianti</p>
+              </div>
+            </div>
           </div>
-          <div className="px-3">
+          <ScrollArea className="flex-1 p-4">
             <div className="space-y-1">
               <NavItems />
             </div>
+          </ScrollArea>
+          <div className="border-t border-border">
+            <SidebarFooter />
           </div>
-        </div>
-        <div className="mt-auto pb-5">
-          <SidebarFooter />
         </div>
       </div>
 
@@ -137,24 +145,31 @@ export function AppSidebar({ className }: AppSidebarProps) {
         <SheetTrigger asChild>
           <Button
             variant="ghost"
-            className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+            className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 lg:hidden"
           >
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle Menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0">
-          <div className="flex h-full w-full flex-col">
-            <ScrollArea className="flex-1 px-4 py-5">
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold tracking-tight">Gestione</h2>
-                <p className="text-xs text-muted-foreground">Clienti • Interventi • Impianti</p>
+        <SheetContent side="left" className="p-0 w-72">
+          <div className="flex h-full flex-col">
+            <div className="p-6 border-b border-border bg-surface">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">A</span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">Gestione</h2>
+                  <p className="text-xs text-text-secondary">Clienti • Interventi • Impianti</p>
+                </div>
               </div>
+            </div>
+            <ScrollArea className="flex-1 p-4">
               <div className="space-y-1">
                 <NavItems />
               </div>
             </ScrollArea>
-            <div className="border-t bg-background/80 px-1 pb-5">
+            <div className="border-t border-border bg-surface">
               <SidebarFooter />
             </div>
           </div>
