@@ -313,7 +313,7 @@ serve(async (req: Request) => {
           <b>${intervention.system_type} ${intervention.brand} ${intervention.model}</b>.
         </p>
         <p style="color: #333;">Cordiali saluti,</p>
-        <p style="color: #333; font-weight: bold;">Antonelli & Pellizzari Refrigerazioni</p>
+        <p style="color: #333; font-weight: bold;">Antonelli & Zanni Refrigerazione Srl</p>
       </div>
     `;
 
