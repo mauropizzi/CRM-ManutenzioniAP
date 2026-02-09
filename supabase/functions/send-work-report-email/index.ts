@@ -21,7 +21,6 @@ serve(async (req: Request) => {
     console.log("[send-work-report-email] Received request", { interventionId, recipientEmails });
 
     if (!interventionId || !recipientEmails || !Array.isArray(recipientEmails) || recipientEmails.length === 0) {
-      console.error("[send-work-report-email] Missing interventionId or recipientEmails. Status: 400");
       return new Response(JSON.stringify({ error: 'Missing interventionId or recipientEmails' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -31,14 +30,6 @@ serve(async (req: Request) => {
     const recipients = Array.from(
       new Set(recipientEmails.map((e: any) => String(e || '').trim().toLowerCase()).filter(Boolean))
     );
-
-    if (recipients.length === 0) {
-      console.error("[send-work-report-email] No valid recipients after normalization. Status: 400");
-      return new Response(JSON.stringify({ error: 'No valid recipients' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -52,7 +43,6 @@ serve(async (req: Request) => {
       .single();
 
     if (interventionError || !intervention) {
-      console.error("[send-work-report-email] Error fetching intervention:", interventionError?.message);
       return new Response(JSON.stringify({ error: 'Intervention not found' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -60,299 +50,231 @@ serve(async (req: Request) => {
     }
 
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    if (!resendApiKey) {
-      console.error("[send-work-report-email] RESEND_API_KEY is not set.");
-      return new Response(JSON.stringify({ error: 'Email service configuration error' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     const resend = new Resend(resendApiKey);
 
     const sanitizeText = (text: any) => {
       if (!text) return "";
       const str = String(text);
-      const normalized = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const safeText = normalized.replace(/&/g, " e ");
-      return safeText;
-    };
-
-    const formatResource = (entry: any) => {
-      const type = entry?.resource_type === 'supplier' ? 'Fornitore' : 'Tecnico';
-      return `${type}: ${sanitizeText(entry?.technician) || 'N/D'}`;
+      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/&/g, " e ");
     };
 
     const clampToDataUrl = (maybeDataUrl: any) => {
       const v = String(maybeDataUrl || '').trim();
       if (!v) return '';
-      if (v.startsWith('data:image/png;base64,')) return v;
       if (v.startsWith('data:image/')) return v;
-      // if raw base64
       if (/^[A-Za-z0-9+/=]+$/.test(v)) return `data:image/png;base64,${v}`;
       return '';
     };
 
-    const addSignatureBox = (doc: any, opts: { label: string; dataUrl?: string; x: number; y: number; w: number; h: number; note?: string }) => {
+    const addSignatureBox = (doc: any, opts: { label: string; dataUrl?: string; x: number; y: number; w: number; h: number; note?: string; footer?: string }) => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.setTextColor(0, 0, 0);
-      doc.text(opts.label, opts.x, opts.y);
+      doc.text(opts.label, opts.x, opts.y - 2);
 
-      const boxY = opts.y + 4;
-      doc.setDrawColor(120, 120, 120);
-      doc.rect(opts.x, boxY, opts.w, opts.h);
+      const boxY = opts.y;
+      doc.setDrawColor(200, 200, 200);
+      doc.roundedRect(opts.x, boxY, opts.w, opts.h, 2, 2);
 
       const sig = clampToDataUrl(opts.dataUrl);
       if (sig) {
         try {
-          const fmt = sig.startsWith('data:image/jpeg') ? 'JPEG' : sig.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-          // Keep a little padding
+          const fmt = sig.startsWith('data:image/png') ? 'PNG' : 'JPEG';
           doc.addImage(sig, fmt, opts.x + 2, boxY + 2, opts.w - 4, opts.h - 4, undefined, 'FAST');
         } catch (e) {
-          console.warn('[send-work-report-email] Failed to render signature image', { label: opts.label });
+          console.warn('[send-work-report-email] Signature error', e);
         }
       } else if (opts.note) {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        doc.setTextColor(110, 110, 110);
-        doc.text(opts.note, opts.x + 2, boxY + opts.h / 2);
-        doc.setTextColor(0, 0, 0);
+        doc.setTextColor(100, 100, 100);
+        doc.text(opts.note, opts.x + opts.w/2, boxY + opts.h/2 + 2, { align: 'center' });
+      }
+
+      if (opts.footer) {
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(8);
+        doc.setTextColor(80, 80, 80);
+        doc.text(opts.footer, opts.x, boxY + opts.h + 5);
       }
     };
 
-    console.log("[send-work-report-email] Generating PDF...");
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    let yPosition = 20;
+    const margin = 14;
+    let y = 20;
 
-    doc.setFontSize(20);
+    // Header
     doc.setFont("helvetica", "bold");
-    doc.text("Antonelli & Zanni Refrigerazione Srl", 14, yPosition);
-    yPosition += 8;
-    doc.setFontSize(14);
-    doc.text("Via Fabio Filzi, 10, 25062 Concesio BS", 14, yPosition);
-    yPosition += 10;
-
-    doc.setFontSize(16);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Bolla di Consegna", pageWidth - 60, 20);
-    doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, pageWidth - 70, 28);
-    yPosition += 10;
-    doc.setDrawColor(200, 200, 200);
-    doc.line(14, yPosition, pageWidth - 14, yPosition);
-    yPosition += 10;
+    doc.setFontSize(22);
     doc.setTextColor(0, 0, 0);
+    doc.text("Antonelli & Zanni", margin, y + 10);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "normal");
+    doc.text("Refrigerazione", margin, y + 18);
 
-    const addText = (label: string, value: string | undefined, yPos: number) => {
+    doc.setFontSize(28);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(26, 54, 140); // Matches #1a368c
+    doc.text("Bolla di Consegna", pageWidth - margin, y + 10, { align: 'right' });
+    
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, pageWidth - margin, y + 18, { align: 'right' });
+    doc.text(`Intervento ID: ${intervention.id.substring(0, 8).toUpperCase()}`, pageWidth - margin, y + 23, { align: 'right' });
+
+    y += 35;
+    doc.setDrawColor(0, 0, 0);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    const addSection = (title: string, data: [string, string | undefined][], columns = 2) => {
+      if (y + 40 > pageHeight) { doc.addPage(); y = 20; }
+      
+      const startY = y;
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text(label + ": ", 14, yPos);
-      doc.setFont("helvetica", "normal");
-      doc.text(sanitizeText(value) || "N/D", 55, yPos);
-      return yPos + 7;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(title, margin + 4, y + 8);
+      
+      doc.setFontSize(9);
+      let dataY = y + 16;
+      const colWidth = (pageWidth - margin * 2) / columns;
+
+      data.forEach((item, i) => {
+        const col = i % columns;
+        const row = Math.floor(i / columns);
+        const curY = dataY + (row * 6);
+        
+        doc.setFont("helvetica", "bold");
+        doc.text(item[0] + ":", margin + 4 + (col * colWidth), curY);
+        doc.setFont("helvetica", "normal");
+        doc.text(sanitizeText(item[1]) || "N/D", margin + 35 + (col * colWidth), curY);
+      });
+
+      const sectionHeight = 16 + Math.ceil(data.length / columns) * 6 + 4;
+      doc.setDrawColor(200, 200, 200);
+      doc.roundedRect(margin, startY, pageWidth - margin * 2, sectionHeight, 2, 2);
+      y += sectionHeight + 8;
     };
 
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Dati Cliente", 14, yPosition);
-    yPosition += 7;
-    yPosition = addText("Ragione Sociale", intervention.client_company_name, yPosition);
-    yPosition = addText("Indirizzo", intervention.client_address, yPosition);
-    yPosition = addText("Email", intervention.client_email, yPosition);
-    yPosition = addText("Telefono", intervention.client_phone, yPosition);
-    yPosition = addText("Referente", intervention.client_referent, yPosition);
-    yPosition += 5;
+    addSection("Dati Cliente", [
+      ["Ragione Sociale", intervention.client_company_name],
+      ["Telefono", intervention.client_phone],
+      ["Indirizzo", intervention.client_address],
+      ["Referente", intervention.client_referent],
+      ["Email", intervention.client_email]
+    ]);
 
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Dati Impianto", 14, yPosition);
-    yPosition += 7;
-    yPosition = addText("Tipo Impianto", intervention.system_type, yPosition);
-    yPosition = addText("Marca", intervention.brand, yPosition);
-    yPosition = addText("Modello", intervention.model, yPosition);
-    yPosition = addText("Matricola", intervention.serial_number, yPosition);
-    yPosition = addText("Ubicazione", intervention.system_location, yPosition);
-    yPosition = addText("Rif. Interno", intervention.internal_ref, yPosition);
-    yPosition += 5;
+    addSection("Dati Impianto", [
+      ["Tipo Impianto", intervention.system_type],
+      ["Matricola", intervention.serial_number],
+      ["Marca", intervention.brand],
+      ["Ubicazione", intervention.system_location],
+      ["Modello", intervention.model],
+      ["Rif. Interno", intervention.internal_ref]
+    ]);
 
-    doc.setFontSize(12);
+    // Dettagli Lavoro
+    const wr = intervention.work_report_data || {};
+    const workDesc = wr.work_description || "Nessuna descrizione";
+    const operativeNotes = wr.operative_notes || "Nessuna nota";
+    
+    const splitDesc = doc.splitTextToSize("Descrizione: " + sanitizeText(workDesc), pageWidth - margin * 2 - 10);
+    const splitNotes = doc.splitTextToSize("Note Operative: " + sanitizeText(operativeNotes), pageWidth - margin * 2 - 10);
+    const workHeight = 15 + (splitDesc.length + splitNotes.length) * 5 + 5;
+
+    if (y + workHeight > pageHeight) { doc.addPage(); y = 20; }
+    const workStartY = y;
     doc.setFont("helvetica", "bold");
-    doc.text("Dettagli Lavoro", 14, yPosition);
-    yPosition += 7;
-    doc.setFontSize(10);
+    doc.setFontSize(12);
+    doc.text("Dettagli Lavoro Svolto", margin + 4, y + 8);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    const workDesc = (intervention.work_report_data as any)?.work_description || "Nessuna descrizione";
-    const splitDesc = doc.splitTextToSize(sanitizeText(workDesc), pageWidth - 28);
-    doc.text(splitDesc, 14, yPosition);
-    yPosition += (splitDesc.length * 5) + 5;
+    doc.text(splitDesc, margin + 4, y + 16);
+    doc.text(splitNotes, margin + 4, y + 16 + splitDesc.length * 5 + 2);
+    doc.setDrawColor(200, 200, 200);
+    doc.roundedRect(margin, workStartY, pageWidth - margin * 2, workHeight, 2, 2);
+    y += workHeight + 10;
 
-    const workNotes = (intervention.work_report_data as any)?.operative_notes || "Nessuna nota";
-    const splitNotes = doc.splitTextToSize("Note Operative: " + sanitizeText(workNotes), pageWidth - 28);
-    doc.text(splitNotes, 14, yPosition);
-    yPosition += (splitNotes.length * 5) + 10;
-
-    const timeEntries = (intervention.work_report_data as any)?.time_entries || [];
+    // Ore
+    const timeEntries = wr.time_entries || [];
     if (timeEntries.length > 0) {
-      doc.setFontSize(12);
+      if (y + 30 > pageHeight) { doc.addPage(); y = 20; }
       doc.setFont("helvetica", "bold");
-      doc.text("Ore di Lavoro", 14, yPosition);
-      yPosition += 7;
-
-      const totalHours = timeEntries.reduce((sum: number, entry: any) => sum + (entry.total_hours || 0), 0);
+      doc.setFontSize(12);
+      doc.text("Ore di Lavoro", margin, y);
+      y += 5;
 
       autoTable(doc, {
-        startY: yPosition,
+        startY: y,
         head: [['Data', 'Risorsa', 'Fascia 1', 'Fascia 2', 'Ore']],
-        body: timeEntries.map((entry: any) => [
-          entry.date ? new Date(entry.date).toLocaleDateString('it-IT') : 'N/D',
-          formatResource(entry),
-          `${entry.time_slot_1_start} - ${entry.time_slot_1_end}`,
-          entry.time_slot_2_start ? `${entry.time_slot_2_start} - ${entry.time_slot_2_end}` : 'N/D',
-          entry.total_hours.toFixed(2)
+        body: timeEntries.map((e: any) => [
+          e.date ? new Date(e.date).toLocaleDateString('it-IT') : 'N/D',
+          `${e.resource_type === 'supplier' ? 'Fornitore' : 'Tecnico'}: ${sanitizeText(e.technician) || 'N/D'}`,
+          `${e.time_slot_1_start} - ${e.time_slot_1_end}`,
+          e.time_slot_2_start ? `${e.time_slot_2_start} - ${e.time_slot_2_end}` : 'N/D',
+          (e.total_hours || 0).toFixed(2)
         ]),
-        theme: 'grid',
+        theme: 'plain',
         styles: { fontSize: 8 },
-        headStyles: { fillColor: [66, 139, 202] },
+        headStyles: { fontStyle: 'bold', borderBottom: { color: [0, 0, 0], width: 0.1 } },
+        margin: { left: margin, right: margin }
       });
 
-      const finalY = (doc as any).lastAutoTable.finalY;
+      y = (doc as any).lastAutoTable.finalY + 8;
+      const totalHours = timeEntries.reduce((s: number, e: any) => s + (e.total_hours || 0), 0);
       doc.setFontSize(10);
-      doc.text(`Totale Ore: ${totalHours.toFixed(2)}`, 14, finalY + 10);
-
-      const km = (intervention.work_report_data as any)?.kilometers;
-      if (km !== undefined) {
-        doc.text(`Km percorsi: ${km}`, 14, finalY + 18);
+      doc.text(`Totale Ore: ${totalHours.toFixed(2)}`, pageWidth - margin, y, { align: 'right' });
+      if (wr.kilometers) {
+        y += 6;
+        doc.text(`Km percorsi: ${wr.kilometers}`, pageWidth - margin, y, { align: 'right' });
       }
-
-      yPosition = finalY + 25;
+      y += 12;
     }
 
-    if (yPosition > 200) {
-      doc.addPage();
-      yPosition = 20;
-    }
-
-    const materials = (intervention.work_report_data as any)?.materials || [];
-    if (materials.length > 0) {
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text("Materiali Utilizzati", 14, yPosition);
-      yPosition += 7;
-
-      autoTable(doc, {
-        startY: yPosition,
-        head: [['U.M.', 'Quantità', 'Descrizione']],
-        body: materials.map((mat: any) => [
-          mat.unit || 'N/D',
-          mat.quantity,
-          sanitizeText(mat.description) || 'N/D'
-        ]),
-        theme: 'grid',
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [66, 139, 202] },
-      });
-
-      yPosition = ((doc as any).lastAutoTable?.finalY ?? yPosition) + 12;
-    }
-
-    // Signatures
-    const wr = (intervention.work_report_data as any) || {};
-    const clientAbsent = Boolean(wr?.client_absent);
-    const clientSig = clampToDataUrl(wr?.client_signature);
-    const techSig = clampToDataUrl(wr?.technician_signature);
-
-    const margin = 14;
-    const gap = 10;
-    const boxW = (pageWidth - margin * 2 - gap) / 2;
-    const boxH = 28;
-
-    if (yPosition + 40 > pageHeight - 14) {
-      doc.addPage();
-      yPosition = 20;
-    }
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text("Firme", 14, yPosition);
-    yPosition += 6;
-
+    // Firme
+    if (y + 50 > pageHeight) { doc.addPage(); y = 20; }
+    const boxW = (pageWidth - margin * 2 - 10) / 2;
     addSignatureBox(doc, {
-      label: 'Firma Cliente',
-      dataUrl: clientSig,
+      label: 'Firma Cliente:',
+      dataUrl: wr.client_signature,
       x: margin,
-      y: yPosition,
+      y: y + 5,
       w: boxW,
-      h: boxH,
-      note: clientAbsent ? 'Cliente assente' : undefined,
+      h: 28,
+      note: wr.client_absent ? 'Cliente assente' : undefined,
+      footer: wr.client_signer_name ? `Firmato da: ${sanitizeText(wr.client_signer_name)}` : undefined
     });
-
-    // IMPORTANT: client must always see this label as "Firma Tecnico" (even if supplier)
     addSignatureBox(doc, {
-      label: 'Firma Tecnico',
-      dataUrl: techSig,
-      x: margin + boxW + gap,
-      y: yPosition,
+      label: 'Firma Tecnico:',
+      dataUrl: wr.technician_signature,
+      x: margin + boxW + 10,
+      y: y + 5,
       w: boxW,
-      h: boxH,
+      h: 28
     });
 
-    const pdfData = doc.output('datauristring');
-    const pdfBase64 = pdfData.split(',')[1];
-
-    const fromEmailEnv = Deno.env.get('RESEND_FROM_EMAIL');
-    const fromEmail = fromEmailEnv ?? '"Antonelli & Zanni Refrigerazione Srl" <bolla@send.lumafinsrl.com>';
-
-    const subject = `Bolla di Consegna - ${intervention.client_company_name}`;
-    const emailContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Gentile ${intervention.client_company_name},</h2>
-        <p style="color: #333;">
-          Le inviamo alleghata la bolla di consegna in formato PDF relativa all'intervento sul suo impianto 
-          <b>${intervention.system_type} ${intervention.brand} ${intervention.model}</b>.
-        </p>
-        <p style="color: #333;">Cordiali saluti,</p>
-        <p style="color: #333; font-weight: bold;">Antonelli & Zanni Refrigerazione Srl</p>
-      </div>
-    `;
-
-    console.log("[send-work-report-email] Sending per-recipient...", { fromEmail, recipientsCount: recipients.length });
-
-    const results: Array<{ to: string; ok: boolean; error?: string }> = [];
+    const pdfBase64 = doc.output('datauristring').split(',')[1];
+    const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') ?? '"Antonelli & Zanni Refrigerazione Srl" <bolla@send.lumafinsrl.com>';
 
     for (const to of recipients) {
-      const { data, error: resendError } = await resend.emails.send({
+      await resend.emails.send({
         from: fromEmail,
         to,
-        subject,
-        html: emailContent,
-        attachments: [
-          {
-            filename: `Bolla_${(intervention.client_company_name || 'sconosciuto').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')}.pdf`,
-            content: pdfBase64
-          }
-        ]
+        subject: `Bolla di Consegna - ${intervention.client_company_name}`,
+        html: `<p>Gentile ${intervention.client_company_name}, alleghiamo la bolla di consegna relativa all'intervento.</p>`,
+        attachments: [{ filename: `Bolla_${interventionId.substring(0, 8)}.pdf`, content: pdfBase64 }]
       });
-
-      if (resendError) {
-        console.error("[send-work-report-email] Error sending email", { to, message: resendError.message });
-        results.push({ to, ok: false, error: resendError.message });
-      } else {
-        console.log("[send-work-report-email] Email accepted", { to, id: data?.id });
-        results.push({ to, ok: true });
-      }
     }
 
-    const allOk = results.every(r => r.ok);
-    return new Response(JSON.stringify({ message: allOk ? 'Email inviate' : 'Alcune email non sono state inviate', results }), {
-      status: allOk ? 200 : 207,
+    return new Response(JSON.stringify({ message: 'Email inviate' }), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-
   } catch (error: any) {
-    console.error("[send-work-report-email] Generic error:", error.message);
-    console.error("[send-work-report-email] Error stack:", error.stack);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
