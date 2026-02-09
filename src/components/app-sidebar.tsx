@@ -41,48 +41,17 @@ interface AppSidebarProps {
 }
 
 function SidebarFooter() {
-  const router = useRouter();
-  const { user, signOut } = useAuth();
-
-  if (!user) {
-    return (
-      <div className="px-3 pt-4">
-        <Link href="/login" className="block">
-          <Button
-            variant="secondary"
-            className="w-full justify-start rounded-xl bg-primary/10 text-primary hover:bg-primary/15"
-          >
-            <LogIn className="mr-2 h-4 w-4" />
-            Accedi
-          </Button>
-        </Link>
-        <div className="mt-3">
-          <ThemeToggle />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="px-3 pt-4">
-      <div className="mb-3 rounded-xl border bg-card/60 px-3 py-2">
-        <p className="text-xs text-muted-foreground">Connesso come</p>
-        <p className="truncate text-sm font-medium">{user.email}</p>
-      </div>
-      <div className="mb-3 flex justify-center">
-        <ThemeToggle />
-      </div>
-      <Button
-        variant="ghost"
-        className="w-full justify-start rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40"
-        onClick={async () => {
-          await signOut();
-          router.push('/login');
-        }}
-      >
-        <LogOut className="mr-2 h-4 w-4" />
-        Logout
-      </Button>
+      <Link href="/login" className="block">
+        <Button
+          variant="secondary"
+          className="w-full justify-start rounded-xl bg-primary/10 text-primary hover:bg-primary/15"
+        >
+          <LogIn className="mr-2 h-4 w-4" />
+          Accedi
+        </Button>
+      </Link>
     </div>
   );
 }
