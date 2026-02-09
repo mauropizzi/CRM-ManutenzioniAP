@@ -110,13 +110,20 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
 
         {/* Pulsante Stampa Bolla */}
         {interventionId && (
-          <Link 
-            href={`/interventions/${interventionId}/print-work-report`} 
-            className="ml-auto flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const printWindow = window.open(`/interventions/${interventionId}/print-work-report`, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+              if (!printWindow) {
+                toast.error("Popup bloccato. Abilita i popup per questo sito.");
+              }
+            }}
+            className="flex items-center gap-2 rounded-lg border-border hover:bg-accent"
           >
             <Printer size={16} />
             Stampa bolla
-          </Link>
+          </Button>
         )}
 
         {/* Pulsante Invia Email */}
