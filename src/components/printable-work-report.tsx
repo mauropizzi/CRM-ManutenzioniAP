@@ -67,7 +67,7 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
   };
 
   return (
-    <div className="p-8 bg-white text-gray-900 print:p-0 print:text-black print:font-sans max-w-[210mm] mx-auto min-h-screen print:min-h-0 print:bg-white">
+    <div className="p-8 bg-white text-gray-900 print:p-0 print:text-black print:font-sans max-w-[210mm] mx-auto">
       {/* Header */}
       <div className="flex justify-between items-start mb-8 print:mb-6 border-b pb-4 print:border-black">
         <div className="flex flex-col items-start">

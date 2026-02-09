@@ -40,7 +40,7 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
   }
 
   return (
-    <div className="print:block w-full">
+    <div className="print:block hidden">
       <PrintableWorkReport intervention={intervention} />
     </div>
   );
