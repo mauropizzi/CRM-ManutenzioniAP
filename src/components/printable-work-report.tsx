@@ -68,19 +68,19 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
   };
 
   return (
-    <div className="p-8 bg-white text-gray-900 print:p-8 print:text-black print:font-sans">
+    <div className="p-8 bg-white text-gray-900 print:p-0 print:text-black print:font-sans">
       {/* Header */}
       <div className="flex justify-between items-start mb-8 print:mb-6 border-b pb-4 print:border-black">
         <div className="flex flex-col items-start">
           <Image
-            src="/nuovo-logo.jpeg"
+            src="/logo-crm-antonelli-zani.jpg"
             alt="Antonelli & Zani Logo"
             width={180}
             height={100}
-            className="mb-2 print:opacity-100"
+            className="mb-2"
           />
-          <h1 className="text-2xl font-bold text-gray-900 print:text-black">Antonelli & Zani</h1>
-          <p className="text-lg text-gray-700 print:text-black">Refrigerazioni</p>
+          <h1 className="text-2xl font-bold text-gray-900 print:text-black">Antonelli & Zanni</h1>
+          <p className="text-lg text-gray-700 print:text-black">Refrigerazione</p>
         </div>
         <div className="text-right mt-4">
           <h2 className="text-3xl font-bold text-blue-700 print:text-blue-900 mb-2">Bolla di Consegna</h2>
