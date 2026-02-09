@@ -1,54 +1,47 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { CustomerProvider } from "@/context/customer-context";
-import { InterventionProvider } from "@/context/intervention-context";
-import { MaterialProvider } from "@/context/material-context";
-import { TechnicianProvider } from "@/context/technician-context";
-import { SupplierProvider } from "@/context/supplier-context";
-import { AuthProvider } from "@/context/auth-context";
-import { ThemeProvider } from "@/components/theme-provider";
-import { AppShell } from "@/components/app-shell";
-import { SystemTypeProvider } from "@/context/system-type-context";
-import { BrandProvider } from "@/context/brand-context";
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { Providers } from "./providers"
+import { AppSidebar } from "@/components/app-sidebar"
+import { MobileSidebar } from "@/components/app-sidebar"
+import { Search } from "@/components/search"
+import { UserNav } from "@/components/user-nav"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Gestione Interventi",
-  description: "Gestione anagrafica clienti e richieste di intervento",
-};
+  title: "Gestionale Aziendale",
+  description: "Sistema di gestione aziendale completo",
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="it" suppressHydrationWarning>
-      <body className="min-h-screen bg-background text-foreground">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange={false}
-        >
-          <AuthProvider>
-            <SystemTypeProvider>
-              <BrandProvider>
-                <CustomerProvider>
-                  <InterventionProvider>
-                    <MaterialProvider>
-                      <TechnicianProvider>
-                        <SupplierProvider>
-                          <AppShell>{children}</AppShell>
-                        </SupplierProvider>
-                      </TechnicianProvider>
-                    </MaterialProvider>
-                  </InterventionProvider>
-                </CustomerProvider>
-              </BrandProvider>
-            </SystemTypeProvider>
-          </AuthProvider>
-        </ThemeProvider>
+      <body className={inter.className}>
+        <Providers>
+          <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+            <AppSidebar />
+            <div className="flex flex-col">
+              <header className="flex h-14 items-center gap-4 border-b border-border bg-surface px-4 lg:h-[60px] lg:px-6">
+                <MobileSidebar />
+                <div className="w-full flex-1">
+                  <Search />
+                </div>
+                <UserNav />
+              </header>
+              <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
+                <div className="container-custom">
+                  {children}
+                </div>
+              </main>
+            </div>
+          </div>
+        </Providers>
       </body>
     </html>
-  );
+  )
 }
