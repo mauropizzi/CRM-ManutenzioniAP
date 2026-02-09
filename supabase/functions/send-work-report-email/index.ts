@@ -127,6 +127,22 @@ serve(async (req: Request) => {
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
 
+    // Add logo
+    try {
+      const logoResponse = await fetch('https://nrdsgtuzpnamcovuzghb.supabase.co/storage/v1/object/public/images/nuovo-logo.jpeg');
+      if (logoResponse.ok) {
+        const logoData = await logoResponse.arrayBuffer();
+        const logoBase64 = btoa(String.fromCharCode(...new Uint8Array(logoData)));
+        const logoDataUrl = `data:image/jpeg;base64,${logoBase64}`;
+        
+        // Add logo to PDF
+        doc.addImage(logoDataUrl, 'JPEG', 14, yPosition, 50, 30);
+        yPosition += 35;
+      }
+    } catch (error) {
+      console.warn("[send-work-report-email] Could not fetch logo, using text instead");
+    }
+
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.text("Antonelli & Zanni Refrigerazione Srl", 14, yPosition);
@@ -137,8 +153,8 @@ serve(async (req: Request) => {
 
     doc.setFontSize(16);
     doc.setTextColor(100, 100, 100);
-    doc.text("Bolla di Consegna", pageWidth - 60, 20);
-    doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, pageWidth - 70, 28);
+    doc.text("Bolla di Consegna", pageWidth - 60, yPosition - 20);
+    doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, pageWidth - 70, yPosition - 12);
     yPosition += 10;
     doc.setDrawColor(200, 200, 200);
     doc.line(14, yPosition, pageWidth - 14, yPosition);
