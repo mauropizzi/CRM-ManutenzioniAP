@@ -8,6 +8,8 @@ import { SupplierProvider } from "@/context/supplier-context";
 import { AuthProvider } from "@/context/auth-context";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppShell } from "@/components/app-shell";
+import { SystemTypeProvider } from "@/context/system-type-context";
+import { BrandProvider } from "@/context/brand-context";
 
 export const metadata: Metadata = {
   title: "Gestione Interventi",
@@ -29,17 +31,21 @@ export default function RootLayout({
           disableTransitionOnChange={false}
         >
           <AuthProvider>
-            <CustomerProvider>
-              <InterventionProvider>
-                <MaterialProvider>
-                  <TechnicianProvider>
-                    <SupplierProvider>
-                      <AppShell>{children}</AppShell>
-                    </SupplierProvider>
-                  </TechnicianProvider>
-                </MaterialProvider>
-              </InterventionProvider>
-            </CustomerProvider>
+            <SystemTypeProvider>
+              <BrandProvider>
+                <CustomerProvider>
+                  <InterventionProvider>
+                    <MaterialProvider>
+                      <TechnicianProvider>
+                        <SupplierProvider>
+                          <AppShell>{children}</AppShell>
+                        </SupplierProvider>
+                      </TechnicianProvider>
+                    </MaterialProvider>
+                  </InterventionProvider>
+                </CustomerProvider>
+              </BrandProvider>
+            </SystemTypeProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
