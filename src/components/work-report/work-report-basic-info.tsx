@@ -110,24 +110,13 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
 
         {/* Pulsante Stampa Bolla */}
         {interventionId && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              // Apro la pagina di stampa in una nuova finestra/tab
-              const printUrl = `/interventions/${interventionId}/print-work-report`;
-              const printWindow = window.open(printUrl, '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
-              
-              if (!printWindow) {
-                // Se il popup è bloccato, provo con l'approccio corrente
-                window.location.href = printUrl;
-              }
-            }}
-            className="flex items-center gap-2 rounded-lg border-border hover:bg-accent"
+          <Link 
+            href={`/interventions/${interventionId}/print-work-report`} 
+            className="ml-auto flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <Printer size={16} />
             Stampa bolla
-          </Button>
+          </Link>
         )}
 
         {/* Pulsante Invia Email */}

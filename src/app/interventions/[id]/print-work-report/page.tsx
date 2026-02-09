@@ -14,43 +14,33 @@ interface PrintWorkReportPageProps {
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
   const { id } = use(params);
   const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
+  const router = useRouter();
 
   const intervention = interventionRequests.find((request) => request.id === id);
 
   useEffect(() => {
     if (!interventionsLoading && intervention) {
-      // Rimuovi eventuali stili indesiderati prima della stampa
-      document.body.style.backgroundColor = 'white';
-      document.body.style.margin = '0';
-      document.body.style.padding = '0';
-      
       const timer = setTimeout(() => {
         window.print();
-        // Chiudi la finestra dopo la stampa
-        setTimeout(() => {
-          window.close();
-        }, 100);
-      }, 1000);
-      
-      return () => {
-        clearTimeout(timer);
-      };
+        router.push(`/interventions/${id}/work-report`);
+      }, 500);
+      return () => clearTimeout(timer);
     } else if (!interventionsLoading && !intervention) {
       notFound();
     }
-  }, [interventionsLoading, intervention, id]);
+  }, [interventionsLoading, intervention, router, id]);
 
   if (interventionsLoading || !intervention) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white no-print">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <p className="ml-2 text-gray-700">Caricamento bolla di consegna...</p>
+        <p className="ml-2 text-gray-700 dark:text-gray-300">Caricamento bolla di consegna...</p>
       </div>
     );
   }
 
   return (
-    <div className="print-content w-full bg-white">
+    <div className="print:block hidden">
       <PrintableWorkReport intervention={intervention} />
     </div>
   );

@@ -19,6 +19,7 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
     client_referent,
     system_type,
     brand,
+    model,
     serial_number,
     system_location,
     internal_ref,
@@ -67,42 +68,19 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
   };
 
   return (
-    <div className="max-w-none bg-white text-gray-900 print:text-black print:font-sans">
-      <style jsx>{`
-        @page {
-          margin: 1.5cm;
-          size: A4;
-        }
-        
-        @media print {
-          body {
-            background: white !important;
-            -webkit-print-color-adjust: exact;
-            color-adjust: exact;
-          }
-          
-          .print-only {
-            display: block !important;
-          }
-          
-          .no-print {
-            display: none !important;
-          }
-        }
-      `}</style>
-      
+    <div className="p-8 bg-white text-gray-900 print:p-0 print:text-black print:font-sans">
       {/* Header */}
       <div className="flex justify-between items-start mb-8 print:mb-6 border-b pb-4 print:border-black">
         <div className="flex flex-col items-start">
           <Image
-            src="/nuovo-logo.jpeg"
+            src="/logo-crm-antonelli-zani.jpg"
             alt="Antonelli & Zani Logo"
             width={180}
             height={100}
             className="mb-2"
           />
-          <h1 className="text-2xl font-bold text-gray-900 print:text-black">Antonelli & Zani</h1>
-          <p className="text-lg text-gray-700 print:text-black">Refrigerazioni</p>
+          <h1 className="text-2xl font-bold text-gray-900 print:text-black">Antonelli & Zanni</h1>
+          <p className="text-lg text-gray-700 print:text-black">Refrigerazione</p>
         </div>
         <div className="text-right mt-4">
           <h2 className="text-3xl font-bold text-blue-700 print:text-blue-900 mb-2">Bolla di Consegna</h2>
@@ -134,6 +112,7 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
           <div>
             <p><span className="font-medium">Tipo Impianto:</span> {system_type}</p>
             <p><span className="font-medium">Marca:</span> {brand}</p>
+            <p><span className="font-medium">Modello:</span> {model}</p>
           </div>
           <div>
             <p><span className="font-medium">Matricola:</span> {serial_number}</p>
