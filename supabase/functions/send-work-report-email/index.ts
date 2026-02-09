@@ -302,7 +302,7 @@ serve(async (req: Request) => {
     const pdfBase64 = pdfData.split(',')[1];
 
     const fromEmailEnv = Deno.env.get('RESEND_FROM_EMAIL');
-    const fromEmail = fromEmailEnv ?? '"Antonelli & Pellizzari Refrigerazioni" <bolla@send.lumafinsrl.com>';
+    const fromEmail = fromEmailEnv ?? '"Antonelli & Zanni Refrigerazione Srl" <bolla@send.lumafinsrl.com>';
 
     const subject = `Bolla di Consegna - ${intervention.client_company_name}`;
     const emailContent = `
