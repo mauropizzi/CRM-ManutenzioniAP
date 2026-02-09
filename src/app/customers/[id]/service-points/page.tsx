@@ -83,7 +83,7 @@ function CustomerServicePointsContent() {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        {point.telefono && <div className="flex items-center gap-1"><Phone className="h-3 w-3" />{point.telefono}</div>}
+                        {point.phone && <div className="flex items-center gap-1"><Phone className="h-3 w-3" />{point.phone}</div>}
                         {point.email && <div className="flex items-center gap-1"><Mail className="h-3 w-3" />{point.email}</div>}
                       </div>
                     </TableCell>

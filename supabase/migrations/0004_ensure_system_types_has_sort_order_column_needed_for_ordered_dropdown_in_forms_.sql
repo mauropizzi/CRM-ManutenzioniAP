@@ -1,1 +1,0 @@
-ALTER TABLE public.system_types ADD COLUMN IF NOT EXISTS sort_order integer;
