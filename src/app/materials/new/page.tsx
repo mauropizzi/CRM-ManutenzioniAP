@@ -4,6 +4,7 @@ import React from 'react';
 import { MaterialForm, MaterialFormValues } from '@/components/material-form';
 import { useMaterials } from '@/context/material-context';
 import { useRouter } from 'next/navigation';
+import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 
@@ -31,6 +32,7 @@ export default function NewMaterialPage() {
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Aggiungi Nuovo Materiale</h1>
           <MaterialForm onSubmit={handleSubmit} />
         </div>
+        <Toaster />
       </div>
     </ProtectedRoute>
   );

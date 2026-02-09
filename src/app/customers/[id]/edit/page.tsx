@@ -6,6 +6,7 @@ import { useCustomers } from '@/context/customer-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Customer } from '@/types/customer';
+import { Toaster } from '@/components/ui/sonner';
 import { use } from 'react';
 
 interface EditCustomerPageProps {
@@ -34,6 +35,7 @@ export default function EditCustomerPage({ params }: EditCustomerPageProps) {
         <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Modifica Cliente</h1>
         <CustomerForm initialData={customerToEdit} onSubmit={handleSubmit} />
       </div>
+      <Toaster />
     </div>
   );
 }

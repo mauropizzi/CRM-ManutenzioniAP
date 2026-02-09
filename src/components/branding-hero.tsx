@@ -19,7 +19,7 @@ export const BrandingHero = () => {
 
       <div className="relative z-10 flex flex-col items-center justify-center text-center">
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-2 drop-shadow-lg">
-          Antonelli & Zanni Refrigerazione Srl
+          Antonelli & Zanni Refrigerazione
         </h1>
         <p className="text-xl sm:text-2xl font-light opacity-90 drop-shadow-md">
           Via Fabio Filzi, 10, 25062 Concesio BS

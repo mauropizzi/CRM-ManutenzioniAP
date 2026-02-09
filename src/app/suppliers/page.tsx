@@ -5,6 +5,7 @@ import { SupplierProvider, useSuppliers } from "@/context/supplier-context";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { SupplierTable } from "@/components/supplier-table";
+import { Toaster } from "@/components/ui/sonner";
 import { ProtectedRoute } from "@/components/protected-route";
 
 const SuppliersContent: React.FC = () => {
@@ -36,6 +37,7 @@ export default function SuppliersPage() {
             <SuppliersContent />
           </SupplierProvider>
         </div>
+        <Toaster />
       </div>
     </ProtectedRoute>
   );

@@ -4,6 +4,7 @@ import React from "react";
 import SupplierForm, { SupplierFormValues } from "@/components/supplier-form";
 import { SupplierProvider, useSuppliers } from "@/context/supplier-context";
 import { useRouter } from "next/navigation";
+import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -47,6 +48,7 @@ export default function NewSupplierPage() {
             <NewSupplierContent />
           </SupplierProvider>
         </div>
+        <Toaster />
       </div>
     </ProtectedRoute>
   );

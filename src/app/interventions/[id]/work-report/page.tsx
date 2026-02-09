@@ -6,6 +6,7 @@ import { WorkReportForm, WorkReportFormValues } from '@/components/work-report-f
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
+import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { useMaterials } from '@/context/material-context';
 import { supabase } from '@/integrations/supabase/client';
@@ -111,6 +112,7 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
 
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }

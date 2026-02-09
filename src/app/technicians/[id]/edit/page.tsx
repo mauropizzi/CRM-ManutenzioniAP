@@ -6,6 +6,7 @@ import { useTechnicians } from '@/context/technician-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Technician } from '@/types/technician';
+import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 import { use } from 'react';
 
@@ -36,6 +37,7 @@ export default function EditTechnicianPage({ params }: EditTechnicianPageProps) 
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Modifica Tecnico</h1>
           <TechnicianForm initialData={technicianToEdit} onSubmit={handleSubmit} />
         </div>
+        <Toaster />
       </div>
     </ProtectedRoute>
   );

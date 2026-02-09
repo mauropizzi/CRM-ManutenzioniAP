@@ -6,6 +6,7 @@ import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { InterventionRequest } from '@/types/intervention';
+import { Toaster } from '@/components/ui/sonner';
 import { use } from 'react';
 
 interface ConcludeInterventionPageProps {
@@ -42,6 +43,7 @@ export default function ConcludeInterventionPage({ params }: ConcludeInterventio
         <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Concludi Richiesta di Intervento</h1>
         <InterventionConclusionForm initialData={interventionToConclude} onSubmit={handleSubmit} />
       </div>
+      <Toaster />
     </div>
   );
 }

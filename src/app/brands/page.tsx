@@ -1,6 +1,7 @@
 "use client";
 
 import { ProtectedRoute } from '@/components/protected-route';
+import { Toaster } from '@/components/ui/sonner';
 import { BrandManager } from '@/components/brand-manager';
 import { BrandProvider } from '@/context/brand-context';
 
@@ -11,6 +12,7 @@ export default function BrandsPage() {
         <BrandProvider>
           <BrandManager />
         </BrandProvider>
+        <Toaster />
       </div>
     </ProtectedRoute>
   );

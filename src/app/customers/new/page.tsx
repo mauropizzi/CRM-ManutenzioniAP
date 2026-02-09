@@ -4,6 +4,7 @@ import React from 'react';
 import { CustomerForm, CustomerFormValues } from '@/components/customer-form';
 import { useCustomers } from '@/context/customer-context';
 import { useRouter } from 'next/navigation';
+import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
 export default function NewCustomerPage() {
@@ -22,6 +23,7 @@ export default function NewCustomerPage() {
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Aggiungi Nuovo Cliente</h1>
           <CustomerForm onSubmit={handleSubmit} />
         </div>
+        <Toaster />
       </div>
     </ProtectedRoute>
   );

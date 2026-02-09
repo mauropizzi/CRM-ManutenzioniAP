@@ -20,20 +20,11 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
 
   useEffect(() => {
     if (!interventionsLoading && intervention) {
-      // Hide all body content except our print container
-      const originalBodyContent = document.body.innerHTML;
-      const printContainer = document.getElementById('print-container');
-      
-      if (printContainer) {
-        document.body.innerHTML = printContainer.innerHTML;
+      const timer = setTimeout(() => {
         window.print();
-        document.body.innerHTML = originalBodyContent;
-        
-        // Re-attach event listeners by reloading the page
-        setTimeout(() => {
-          router.push(`/interventions/${id}/work-report`);
-        }, 100);
-      }
+        router.push(`/interventions/${id}/work-report`);
+      }, 500);
+      return () => clearTimeout(timer);
     } else if (!interventionsLoading && !intervention) {
       notFound();
     }
@@ -49,10 +40,8 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
   }
 
   return (
-    <div className="p-8 bg-white">
-      <div id="print-container" className="print-container">
-        <PrintableWorkReport intervention={intervention} />
-      </div>
+    <div className="print:block hidden">
+      <PrintableWorkReport intervention={intervention} />
     </div>
   );
 }
