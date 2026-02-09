@@ -25,11 +25,11 @@ import { useAuth } from '@/context/auth-context';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Interventi', href: '/interventions', icon: Wrench },
   { name: 'Clienti', href: '/customers', icon: Users },
   { name: 'Punti Servizio', href: '/service-points', icon: MapPin },
   { name: 'Tipo Impianto', href: '/system-types', icon: Tag },
   { name: 'Marche', href: '/brands', icon: Factory },
-  { name: 'Interventi', href: '/interventions', icon: Wrench },
   { name: 'Materiali', href: '/materials', icon: Package },
   { name: 'Tecnici', href: '/technicians', icon: Truck },
   { name: 'Fornitori', href: '/suppliers', icon: Settings },
