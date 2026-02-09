@@ -56,6 +56,9 @@ function SidebarFooter() {
             Accedi
           </Button>
         </Link>
+        <div className="mt-3">
+          <ThemeToggle />
+        </div>
       </div>
     );
   }
@@ -65,6 +68,9 @@ function SidebarFooter() {
       <div className="mb-3 rounded-xl border bg-card/60 px-3 py-2">
         <p className="text-xs text-muted-foreground">Connesso come</p>
         <p className="truncate text-sm font-medium">{user.email}</p>
+      </div>
+      <div className="mb-3 flex justify-center">
+        <ThemeToggle />
       </div>
       <Button
         variant="ghost"
