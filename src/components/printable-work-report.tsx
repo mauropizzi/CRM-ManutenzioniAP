@@ -72,7 +72,8 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
       {/* Header */}
       <div className="flex justify-between items-start mb-8 print:mb-6 border-b pb-4 print:border-black">
         <div className="flex flex-col items-start">
-          <Image
+          {/* Use regular img tag for printing */}
+          <img
             src="/logo-crm-antonelli-zani.jpg"
             alt="Antonelli & Zani Logo"
             width={180}
