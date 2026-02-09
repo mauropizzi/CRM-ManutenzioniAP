@@ -129,7 +129,7 @@ serve(async (req: Request) => {
 
     // Add logo and company info side by side
     try {
-      const logoResponse = await fetch('https://nrdsgtuzpnamcovuzghb.supabase.co/storage/v1/object/public/images/nuovo-logo.jpeg');
+      const logoResponse = await fetch('https://nrdsgtuzpnamcovuzghb.supabase.co/storage/v1/object/public/public/images/nuovo-logo.jpeg');
       if (logoResponse.ok) {
         const logoData = await logoResponse.arrayBuffer();
         const logoBase64 = btoa(String.fromCharCode(...new Uint8Array(logoData)));
