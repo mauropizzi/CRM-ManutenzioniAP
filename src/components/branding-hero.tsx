@@ -22,7 +22,10 @@ export const BrandingHero = () => {
           Antonelli & Zanni Refrigerazione
         </h1>
         <p className="text-xl sm:text-2xl font-light opacity-90 drop-shadow-md">
-          
+          Via Fabio Filzi, 10, 25062 Concesio BS
+Partita IVA: 03509590984 
+Codice Fiscale: 03509590984
+PEC: antonelli.zanni@legalmail.it 
         </p>
       </div>
     </div>
