@@ -188,3 +188,34 @@
     @apply rounded-xl border border-border bg-surface shadow-sm hover:shadow-md transition-shadow;
   }
 }
+
+@media print {
+  /* Hide UI elements */
+  [data-dyad-component="AppShell"] > aside,
+  [data-dyad-component="AppShell"] nav,
+  [data-dyad-component="Main"] > div:first-child,
+  .no-print,
+  button,
+  footer {
+    display: none !important;
+  }
+
+  /* Reset main container for print */
+  [data-dyad-component="Main"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    display: block !important;
+  }
+
+  /* Ensure background is white and text is black */
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  /* Specific fix for sidebar provider layout */
+  [data-dyad-component="AppShell"] {
+    display: block !important;
+  }
+}
