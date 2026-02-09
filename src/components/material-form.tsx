@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,7 +13,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import {
   Select,
@@ -22,29 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Material } from '@/types/material';
+import { Material, Unit, UNITS } from '@/types/material';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const commonUnits = [
-  { value: 'PZ', label: 'Pezzi', icon: '📦' },
-  { value: 'MT', label: 'Metri', icon: '📏' },
-  { value: 'KG', label: 'Kilogrammi', icon: '⚖️' },
-  { value: 'LT', label: 'Litri', icon: '🥤' },
-  { value: 'KG', label: 'Chilogrammi', icon: '⚖️' },
-  { value: 'M2', label: 'Metri Quadri', icon: '📐' },
-  { value: 'M3', label: 'Metri Cubi', icon: '📦' },
-  { value: 'HZ', label: 'Hertz', icon: '📊' },
-  { value: 'BTU', label: 'BTU', icon: '🌡️' },
-  { value: 'BAR', label: 'Bar', icon: '🔧' },
-];
-
-export const formSchema = z.object({
-  unit: z.string().min(1, { message: "Seleziona un'unità di misura." }),
+export const materialFormSchema = z.object({
+  unit: z.enum(UNITS, { required_error: "Seleziona un'unità di misura." }),
+  // quantity: z.coerce.number().min(0, { message: "La quantità non può essere negativa." }), // Rimosso
   description: z.string().min(2, { message: "La descrizione deve contenere almeno 2 caratteri." }),
 });
 
-export type MaterialFormValues = z.infer<typeof formSchema>;
+export type MaterialFormValues = z.infer<typeof materialFormSchema>;
 
 interface MaterialFormProps {
   initialData?: Material;
@@ -53,118 +39,82 @@ interface MaterialFormProps {
 
 export const MaterialForm = ({ initialData, onSubmit }: MaterialFormProps) => {
   const form = useForm<MaterialFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(materialFormSchema),
     defaultValues: {
-      unit: initialData?.unit ?? '',
+      unit: initialData?.unit ?? 'PZ',
+      // quantity: initialData?.quantity ?? 0, // Rimosso
       description: initialData?.description ?? '',
     },
   });
 
-  const getUnitIcon = (unit: string) => {
-    const unitData = commonUnits.find(u => u.value === unit);
-    return unitData?.icon || '📋';
+  useEffect(() => {
+    form.reset({
+      unit: initialData?.unit ?? 'PZ',
+      // quantity: initialData?.quantity ?? 0, // Rimosso
+      description: initialData?.description ?? '',
+    });
+  }, [initialData, form]);
+
+  const handleSubmit = (values: MaterialFormValues) => {
+    onSubmit(values);
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {initialData ? 'Modifica Materiale' : 'Nuovo Materiale'}
-            {form.watch('unit') && (
-              <span className="text-lg">{getUnitIcon(form.watch('unit'))}</span>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 p-4">
+        <div className="grid gap-6 rounded-lg border p-4 bg-white dark:bg-gray-900 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Dettagli Materiale</h3>
+          <FormField
+            control={form.control}
+            name="unit"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-gray-700 dark:text-gray-300">Unità di Misura *</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Seleziona U.M." />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
+                    {UNITS.map((unit) => (
+                      <SelectItem key={unit} value={unit}>
+                        {unit}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
             )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="unit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unità di Misura *</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleziona unità di misura" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {commonUnits.map((unit) => (
-                            <SelectItem key={unit.value} value={unit.value}>
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg">{unit.icon}</span>
-                                <span>{unit.label}</span>
-                                <span className="text-xs text-text-secondary ml-auto">({unit.value})</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Descrizione *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Es: Filadro HEPA 395x280mm" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Inserisci una descrizione chiara e precisa del materiale
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+          />
+          {/* Campo Quantità rimosso */}
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-gray-700 dark:text-gray-300">Descrizione *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Descrizione del materiale" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-              {/* Anteprima */}
-              {form.watch('unit') && form.watch('description') && (
-                <Card className="border-dashed border-primary/30 bg-primary/5">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg">
-                          {getUnitIcon(form.watch('unit'))}
-                        </div>
-                        <div>
-                          <div className="font-medium text-foreground">{form.watch('description')}</div>
-                          <div className="text-sm text-text-secondary">Unità: {form.watch('unit')}</div>
-                        </div>
-                      </div>
-                      <Badge className="rounded-full px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary border-primary/20">
-                        Anteprima
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                <Link href="/materials">
-                  <Button type="button" variant="outline">
-                    Annulla
-                  </Button>
-                </Link>
-                <Button
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                >
-                  {form.formState.isSubmitting ? 'Salvataggio...' : initialData ? 'Salva Modifiche' : 'Aggiungi Materiale'}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+        <div className="flex justify-end gap-2 pt-4">
+          <Link href="/materials" passHref>
+            <Button type="button" variant="outline" className="rounded-md px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+              Annulla
+            </Button>
+          </Link>
+          <Button type="submit" className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2">
+            {initialData ? 'Salva Modifiche' : 'Aggiungi Materiale'}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
