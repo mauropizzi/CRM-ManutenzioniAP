@@ -190,27 +190,117 @@
 }
 
 @layer utilities {
-  /* Hide everything by default when printing */
+  /* Print-specific styles */
   @media print {
-    body > * {
+    /* Reset body for printing */
+    body {
+      margin: 0;
+      padding: 0;
+      background: white !important;
+      color: black !important;
+      font-size: 12pt;
+      line-height: 1.2;
+    }
+    
+    /* Hide all elements except those with print-specific classes */
+    body > *:not([data-printable-work-report]):not(.print-block) {
       display: none !important;
     }
     
-    /* Show only the printable work report content */
-    body > div:has([data-printable-work-report]),
-    body > [data-printable-work-report] {
+    /* Ensure printable content is visible */
+    [data-printable-work-report],
+    .print-block {
       display: block !important;
+      visibility: visible !important;
       position: static !important;
       width: 100% !important;
-      height: auto !important;
-      overflow: visible !important;
+      max-width: 100% !important;
       margin: 0 !important;
-      padding: 0 !important;
+      padding: 20px !important;
+      background: white !important;
+      color: black !important;
+      overflow: visible !important;
     }
     
-    /* Ensure the work report content is visible */
-    [data-printable-work-report] {
+    /* Ensure all child elements of printable content are visible */
+    [data-printable-work-report] *,
+    .print-block * {
+      visibility: visible !important;
       display: block !important;
+      background: white !important;
+      color: black !important;
+    }
+    
+    /* Override display properties for specific elements within printable content */
+    [data-printable-work-report] h1,
+    [data-printable-work-report] h2,
+    [data-printable-work-report] h3,
+    [data-printable-work-report] h4,
+    [data-printable-work-report] h5,
+    [data-printable-work-report] h6,
+    [data-printable-work-report] p,
+    [data-printable-work-report] div,
+    [data-printable-work-report] span,
+    [data-printable-work-report] table,
+    [data-printable-work-report] thead,
+    [data-printable-work-report] tbody,
+    [data-printable-work-report] tr,
+    [data-printable-work-report] th,
+    [data-printable-work-report] td,
+    .print-block h1,
+    .print-block h2,
+    .print-block h3,
+    .print-block h4,
+    .print-block h5,
+    .print-block h6,
+    .print-block p,
+    .print-block div,
+    .print-block span,
+    .print-block table,
+    .print-block thead,
+    .print-block tbody,
+    .print-block tr,
+    .print-block th,
+    .print-block td {
+      display: block !important;
+      visibility: visible !important;
+      color: black !important;
+    }
+    
+    /* Table-specific fixes */
+    [data-printable-work-report] table,
+    .print-block table {
+      display: table !important;
+    }
+    
+    [data-printable-work-report] thead,
+    .print-block thead {
+      display: table-header-group !important;
+    }
+    
+    [data-printable-work-report] tbody,
+    .print-block tbody {
+      display: table-row-group !important;
+    }
+    
+    [data-printable-work-report] tr,
+    .print-block tr {
+      display: table-row !important;
+    }
+    
+    [data-printable-work-report] th,
+    [data-printable-work-report] td,
+    .print-block th,
+    .print-block td {
+      display: table-cell !important;
+    }
+    
+    /* Image fixes for printing */
+    [data-printable-work-report] img,
+    .print-block img {
+      display: inline !important;
+      max-width: 100% !important;
+      height: auto !important;
     }
     
     /* Hide all UI elements during print */
@@ -226,6 +316,35 @@
     [role="button"],
     [data-no-print] {
       display: none !important;
+    }
+    
+    /* Page breaks */
+    .break-inside-avoid {
+      break-inside: avoid;
+    }
+    
+    /* Remove all backgrounds and shadows for printing */
+    * {
+      box-shadow: none !important;
+      text-shadow: none !important;
+      background: transparent !important;
+    }
+    
+    /* Ensure borders are visible */
+    [data-printable-work-report] .border,
+    .print-block .border {
+      border: 1px solid black !important;
+    }
+    
+    /* Grid fixes */
+    [data-printable-work-report] .grid,
+    .print-block .grid {
+      display: grid !important;
+    }
+    
+    [data-printable-work-report] .grid-cols-2,
+    .print-block .grid-cols-2 {
+      grid-template-columns: repeat(2, 1fr) !important;
     }
   }
 }
