@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { InterventionRequest } from '@/types/intervention';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { Edit, Trash2, PlusCircle, FileText, MessageCircle } from 'lucide-react';
-import { Toaster } from '@/components/ui/sonner';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -294,7 +293,6 @@ export const InterventionTable = () => {
           </Table>
         </div>
       )}
-      <Toaster />
     </div>
   );
 };
