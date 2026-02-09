@@ -273,6 +273,32 @@ serve(async (req: Request) => {
       y += 12;
     }
 
+    // Materiali
+    const materials = (wr.materials || []).filter((m: any) => String(m?.description || '').trim().length > 0);
+    if (materials.length > 0) {
+      if (y + 30 > pageHeight) { doc.addPage(); y = 20; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("Ricambi / Materiali utilizzati", margin, y);
+      y += 5;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Q.tà', 'Unità', 'Descrizione']],
+        body: materials.map((m: any) => [
+          (typeof m.quantity === 'number' ? String(m.quantity) : '-'),
+          (m.unit || 'PZ'),
+          sanitizeText(m.description || '')
+        ]),
+        theme: 'plain',
+        styles: { fontSize: 8 },
+        headStyles: { fontStyle: 'bold', borderBottom: { color: [0, 0, 0], width: 0.1 } },
+        margin: { left: margin, right: margin }
+      });
+
+      y = (doc as any).lastAutoTable.finalY + 12;
+    }
+
     // Firme
     if (y + 50 > pageHeight) { doc.addPage(); y = 20; }
     const boxW = (pageWidth - margin * 2 - 10) / 2;
