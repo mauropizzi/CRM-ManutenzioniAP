@@ -127,7 +127,7 @@ serve(async (req: Request) => {
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
 
-    // Add logo
+    // Add logo and company info side by side
     try {
       const logoResponse = await fetch('https://nrdsgtuzpnamcovuzghb.supabase.co/storage/v1/object/public/images/nuovo-logo.jpeg');
       if (logoResponse.ok) {
@@ -135,27 +135,38 @@ serve(async (req: Request) => {
         const logoBase64 = btoa(String.fromCharCode(...new Uint8Array(logoData)));
         const logoDataUrl = `data:image/jpeg;base64,${logoBase64}`;
         
-        // Add logo to PDF
-        doc.addImage(logoDataUrl, 'JPEG', 14, yPosition, 50, 30);
-        yPosition += 35;
+        // Add logo to PDF - smaller size to prevent overlap
+        doc.addImage(logoDataUrl, 'JPEG', 14, yPosition, 40, 25);
       }
     } catch (error) {
       console.warn("[send-work-report-email] Could not fetch logo, using text instead");
     }
 
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text("Antonelli & Zanni Refrigerazione Srl", 14, yPosition);
-    yPosition += 8;
-    doc.setFontSize(14);
-    doc.text("Via Fabio Filzi, 10, 25062 Concesio BS Partita IVA: 03509590984 ", 14, yPosition);
-    yPosition += 10;
-
+    // Company info on the right side
     doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Antonelli & Zanni", 60, yPosition + 8);
+    yPosition += 8;
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text("Refrigerazione", 60, yPosition + 8);
+    yPosition += 6;
+    doc.setFontSize(9);
+    doc.text("Via Fabio Filzi, 10, 25062 Concesio BS", 60, yPosition + 8);
+    yPosition += 6;
+    doc.text("P.IVA: 03509590984", 60, yPosition + 8);
+    yPosition += 15;
+
+    // Document title and date on the right
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
     doc.setTextColor(100, 100, 100);
-    doc.text("Bolla di Consegna", pageWidth - 60, yPosition - 20);
-    doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, pageWidth - 70, yPosition - 12);
-    yPosition += 10;
+    doc.text("Bolla di Consegna", pageWidth - 70, yPosition - 30);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, pageWidth - 70, yPosition - 22);
+    yPosition += 5;
+    
     doc.setDrawColor(200, 200, 200);
     doc.line(14, yPosition, pageWidth - 14, yPosition);
     yPosition += 10;
