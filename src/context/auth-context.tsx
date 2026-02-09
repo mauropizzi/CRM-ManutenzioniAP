@@ -29,7 +29,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          // Detect invalid refresh token error and clear session
+          if (error.message.includes('refresh_token_not_found') || error.message.includes('Invalid Refresh Token')) {
+            console.warn('[auth-context] Invalid refresh token detected, signing out...');
+            await supabase.auth.signOut();
+            setUser(null);
+          } else {
+            throw error;
+          }
+        }
+
         if (session?.user) {
           await fetchUserProfile(session.user);
         }
@@ -47,6 +59,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        // Handle explicit sign out or user update events
+      }
+
       if (session?.user) {
         await fetchUserProfile(session.user);
       } else {
