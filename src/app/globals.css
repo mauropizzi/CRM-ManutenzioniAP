@@ -188,3 +188,44 @@
     @apply rounded-xl border border-border bg-surface shadow-sm hover:shadow-md transition-shadow;
   }
 }
+
+@layer utilities {
+  /* Hide everything by default when printing */
+  @media print {
+    body > * {
+      display: none !important;
+    }
+    
+    /* Show only the printable work report content */
+    body > div:has([data-printable-work-report]),
+    body > [data-printable-work-report] {
+      display: block !important;
+      position: static !important;
+      width: 100% !important;
+      height: auto !important;
+      overflow: visible !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    /* Ensure the work report content is visible */
+    [data-printable-work-report] {
+      display: block !important;
+    }
+    
+    /* Hide all UI elements during print */
+    header,
+    nav,
+    aside,
+    .sidebar,
+    .navbar,
+    .menu,
+    button,
+    .btn,
+    .no-print,
+    [role="button"],
+    [data-no-print] {
+      display: none !important;
+    }
+  }
+}
