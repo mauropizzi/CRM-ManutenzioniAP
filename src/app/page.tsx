@@ -5,49 +5,36 @@ import { ProtectedRoute } from "@/components/protected-route";
 export default function Home() {
   return (
     <ProtectedRoute>
-      <div className="grid min-h-screen grid-rows-[1fr_auto] items-center justify-items-center bg-background p-6 pb-16 sm:p-12">
-        <main className="row-start-1 flex w-full max-w-4xl flex-col items-center gap-8 text-center animate-fade-in">
-          <div className="relative w-full overflow-hidden rounded-2xl border border-border bg-surface shadow-lg">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary-dark/5" />
-            <div className="relative flex flex-col items-center justify-center gap-6 px-6 py-12 sm:px-10 sm:py-16">
-              <div className="rounded-xl bg-surface p-4 shadow-md border border-border">
+      <div className="grid min-h-screen grid-rows-[1fr_auto] items-center justify-items-center bg-gray-50 p-6 pb-16 dark:bg-gray-950 sm:p-12">
+        <main className="row-start-1 flex w-full max-w-3xl flex-col items-center gap-8 text-center">
+          <div className="relative w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_-30px_rgba(2,132,199,0.55)] dark:border-slate-800 dark:bg-slate-950">
+            <div className="absolute inset-0 bg-sky-50/70 dark:bg-sky-950/25" />
+            <div className="relative flex flex-col items-center justify-center gap-5 px-6 py-10 sm:px-10 sm:py-12">
+              <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 dark:bg-slate-950 dark:ring-slate-800">
                 <Image
                   src="/nuovo-logo.jpeg"
                   alt="Antonelli & Zani Refrigerazione"
                   width={760}
                   height={240}
                   priority
-                  className="h-auto w-[280px] sm:w-[380px] transition-transform hover:scale-105"
+                  className="h-auto w-[240px] sm:w-[340px]"
                 />
               </div>
 
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold text-foreground sm:text-4xl tracking-tight">
+              <div className="space-y-1">
+                <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 sm:text-3xl">
                   Dashboard
                 </h1>
-                <p className="text-base text-text-secondary font-medium sm:text-lg">
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-300 sm:text-base">
                   Gestione interventi, clienti, tecnici e fornitori
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="max-w-2xl space-y-4">
-            <p className="text-lg text-text-secondary sm:text-xl leading-relaxed">
-              Benvenuto nel sistema di gestione interventi. Utilizza il menu laterale per navigare tra le diverse sezioni.
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 text-sm">
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium">
-                📊 Dashboard Analitica
-              </span>
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-success/10 text-success font-medium">
-                👥 Gestione Clienti
-              </span>
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground font-medium">
-                🔧 Interventi
-              </span>
-            </div>
-          </div>
+          <p className="max-w-2xl text-base text-slate-700 dark:text-slate-300 sm:text-lg">
+            Benvenuto nel sistema di gestione interventi. Utilizza il menu laterale per navigare.
+          </p>
         </main>
 
         <MadeWithDyad />

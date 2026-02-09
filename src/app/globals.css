@@ -2,127 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Inter Font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 @layer base {
   :root {
-    /* Color System */
-    --background: 210 40% 98%; /* #f8fafc */
-    --foreground: 220 20% 10%; /* #0f172a */
-    --surface: 0 0% 100%; /* #ffffff */
-    --border: 210 40% 92%; /* #e2e8f0 */
-    
-    /* Primary Colors */
-    --primary: 217 91% 60%; /* #3b82f6 */
-    --primary-dark: 217 91% 54%; /* #2563eb */
-    --primary-foreground: 0 0% 100%;
-    
-    /* Text Colors */
-    --text: 220 20% 10%; /* #0f172a */
-    --text-secondary: 215 25% 27%; /* #475569 */
-    
-    /* Status Colors */
-    --danger: 0 84% 60%; /* #ef4444 */
-    --danger-foreground: 0 0% 100%;
-    --success: 160 84% 39%; /* #10b981 */
-    --success-foreground: 0 0% 100%;
-    
-    /* Muted Colors */
-    --muted: 210 40% 96%; /* #f1f5f9 */
-    --muted-foreground: 215 25% 27%;
-    
-    /* Accent & Secondary */
-    --accent: 210 40% 96%;
-    --accent-foreground: 220 20% 10%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 220 20% 10%;
-    
-    /* Card */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
-    
-    /* Ring & Input */
-    --ring: 217 91% 60%;
-    --input: 210 40% 92%;
-    
-    /* Chart Colors */
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    
-    /* Radius */
-    --radius: 0.75rem;
-    
-    /* Sidebar */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 20% 10%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 220 20% 10%;
-    --sidebar-border: 210 40% 92%;
-    --sidebar-ring: 217 91% 60%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    /* Dark Color System */
-    --background: 220 20% 8%; /* ~#0f172a */
-    --foreground: 210 40% 98%; /* ~#f8fafc */
-    --surface: 220 20% 12%; /* ~#1e293b */
-    --border: 220 20% 20%; /* ~#334155 */
-    
-    /* Primary Colors */
-    --primary: 217 91% 60%; /* #3b82f6 */
-    --primary-dark: 217 91% 65%; /* Lighter for dark mode */
-    --primary-foreground: 220 20% 10%;
-    
-    /* Text Colors */
-    --text: 210 40% 98%; /* ~#f8fafc */
-    --text-secondary: 210 20% 65%; /* ~#94a3b8 */
-    
-    /* Status Colors */
-    --danger: 0 84% 60%; /* #ef4444 */
-    --danger-foreground: 0 0% 100%;
-    --success: 160 84% 39%; /* #10b981 */
-    --success-foreground: 0 0% 100%;
-    
-    /* Muted Colors */
-    --muted: 220 20% 16%; /* ~#1e293b */
-    --muted-foreground: 210 20% 65%;
-    
-    /* Accent & Secondary */
-    --accent: 220 20% 16%;
-    --accent-foreground: 210 40% 98%;
-    --secondary: 220 20% 16%;
-    --secondary-foreground: 210 40% 98%;
-    
-    /* Card */
-    --card: 220 20% 12%;
-    --card-foreground: 210 40% 98%;
-    
-    /* Ring & Input */
-    --ring: 217 91% 60%;
-    --input: 220 20% 20%;
-    
-    /* Chart Colors */
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    
-    /* Sidebar */
-    --sidebar-background: 220 20% 8%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
+    --radius: 0.5rem;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 16%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 220 20% 20%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -130,46 +80,7 @@
   * {
     @apply border-border;
   }
-  
   body {
-    @apply bg-background text-foreground font-sans;
-    font-family: 'Inter', sans-serif;
-  }
-  
-  /* Typography */
-  .text-xs { font-size: 0.75rem; }
-  .text-sm { font-size: 0.875rem; }
-  .text-base { font-size: 1rem; }
-  .text-lg { font-size: 1.125rem; }
-  .text-xl { font-size: 1.25rem; }
-  
-  .font-normal { font-weight: 400; }
-  .font-medium { font-weight: 500; }
-  .font-semibold { font-weight: 600; }
-  .font-bold { font-weight: 700; }
-  
-  /* Custom component styles */
-  .btn-primary {
-    @apply py-2.5 px-5 rounded-lg font-medium bg-primary text-white hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20;
-  }
-  
-  .btn-outline {
-    @apply py-2.5 px-5 rounded-lg font-medium border border-primary text-primary hover:bg-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20;
-  }
-  
-  .input-base {
-    @apply rounded-lg border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors;
-  }
-  
-  .card-base {
-    @apply rounded-xl border bg-surface shadow-sm hover:shadow transition-shadow;
-  }
-  
-  .modal-base {
-    @apply rounded-2xl max-w-lg;
-  }
-  
-  .container-base {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply bg-background text-foreground;
   }
 }

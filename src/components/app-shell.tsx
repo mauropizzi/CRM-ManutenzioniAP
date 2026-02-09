@@ -23,10 +23,10 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-base text-text-secondary font-medium">Caricamento...</p>
+      <div className="flex h-screen w-full items-center justify-center bg-background/80">
+        <div className="text-center">
+          <div className="inline-block h-6 w-6 animate-spin rounded-full border-b-2 border-primary" />
+          <p className="mt-3 text-sm text-muted-foreground">Caricamento...</p>
         </div>
       </div>
     );
@@ -34,19 +34,16 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-background" data-dyad-component="AppShell">
+      <div className="flex min-h-screen" data-dyad-component="AppShell">
         <AppSidebar />
         <main className="flex-1 overflow-auto" data-dyad-component="Main">
-          <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 lg:hidden">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger className="h-10 w-10" />
-              <span className="text-lg font-semibold text-foreground">Menu</span>
-            </div>
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-white font-bold text-sm">A</span>
+          <div className="flex items-center justify-between border-b p-4 lg:hidden">
+            <div className="flex items-center">
+              <SidebarTrigger />
+              <span className="ml-2 font-semibold">Menu</span>
             </div>
           </div>
-          <div className="container-base py-6" data-dyad-component="Content">
+          <div className="p-4 sm:p-8" data-dyad-component="Content">
             {children}
           </div>
         </main>
