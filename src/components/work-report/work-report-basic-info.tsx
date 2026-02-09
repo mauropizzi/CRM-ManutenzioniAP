@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { sendWorkReportEmail } from '@/lib/email-utils'; // Importa la utility per l'invio email
+import { fetchWorkReportPdf, sendWorkReportEmail } from '@/lib/email-utils';
 import { toast } from 'sonner';
 
 interface WorkReportBasicInfoProps {
@@ -39,6 +39,40 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState(clientEmail || '');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (!interventionId) {
+      toast.error('ID intervento non disponibile per la generazione del PDF.');
+      return;
+    }
+
+    setIsGeneratingPdf(true);
+    try {
+      const { pdfBase64, filename } = await fetchWorkReportPdf(interventionId);
+      const bytes = Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0));
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+
+      // Apri in una nuova scheda (più comodo per stampa/salvataggio)
+      window.open(url, '_blank', 'noopener,noreferrer');
+
+      // E in parallelo avvia anche il download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'Bolla.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      // cleanup (lasciamo un attimo tempo al browser di aprire/scaricare)
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (e: any) {
+      toast.error(e?.message || 'Errore durante la generazione del PDF');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const handleSendEmail = async () => {
     if (!interventionId) {
@@ -108,15 +142,18 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
           )}
         />
 
-        {/* Pulsante Stampa Bolla */}
+        {/* Pulsante PDF (stesso identico dell'email) */}
         {interventionId && (
-          <Link 
-            href={`/interventions/${interventionId}/print-work-report`} 
-            className="ml-auto flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          <Button
+            type="button"
+            variant="outline"
+            className="ml-auto flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-800 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+            onClick={handleDownloadPdf}
+            disabled={isGeneratingPdf}
           >
             <Printer size={16} />
-            Stampa bolla
-          </Link>
+            {isGeneratingPdf ? 'Generazione...' : 'Scarica PDF'}
+          </Button>
         )}
 
         {/* Pulsante Invia Email */}

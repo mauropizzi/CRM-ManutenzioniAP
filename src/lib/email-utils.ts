@@ -21,20 +21,20 @@ async function getLogoDataUrl() {
   return dataUrl;
 }
 
+const SEND_WORK_REPORT_EMAIL_URL =
+  'https://nrdsgtuzpnamcovuzghb.supabase.co/functions/v1/send-work-report-email';
+
 export async function sendWorkReportEmail(interventionId: string, recipients: string[] | string) {
   const recipientEmails = Array.isArray(recipients) ? recipients : [recipients];
   const logoDataUrl = await getLogoDataUrl();
 
-  const res = await fetch(
-    'https://nrdsgtuzpnamcovuzghb.supabase.co/functions/v1/send-work-report-email',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ interventionId, recipientEmails, logoDataUrl }),
-    }
-  );
+  const res = await fetch(SEND_WORK_REPORT_EMAIL_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ interventionId, recipientEmails, logoDataUrl }),
+  });
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
@@ -42,4 +42,23 @@ export async function sendWorkReportEmail(interventionId: string, recipients: st
   }
 
   return res.json();
+}
+
+export async function fetchWorkReportPdf(interventionId: string) {
+  const logoDataUrl = await getLogoDataUrl();
+
+  const res = await fetch(SEND_WORK_REPORT_EMAIL_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ interventionId, logoDataUrl, pdfOnly: true }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error?.error || 'Errore durante la generazione del PDF');
+  }
+
+  return res.json() as Promise<{ pdfBase64: string; filename: string }>;
 }

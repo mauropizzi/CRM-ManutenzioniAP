@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useEffect, use } from 'react';
-import { useInterventionRequests } from '@/context/intervention-context';
+import { fetchWorkReportPdf } from '@/lib/email-utils';
 import { useRouter } from 'next/navigation';
-import { notFound } from 'next/navigation';
-import { PrintableWorkReport } from '@/components/printable-work-report';
 import { Loader2 } from 'lucide-react';
 
 interface PrintWorkReportPageProps {
@@ -13,35 +11,45 @@ interface PrintWorkReportPageProps {
 
 export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps) {
   const { id } = use(params);
-  const { interventionRequests, loading: interventionsLoading } = useInterventionRequests();
   const router = useRouter();
 
-  const intervention = interventionRequests.find((request) => request.id === id);
-
   useEffect(() => {
-    if (!interventionsLoading && intervention) {
-      const timer = setTimeout(() => {
-        window.print();
-        router.push(`/interventions/${id}/work-report`);
-      }, 500);
-      return () => clearTimeout(timer);
-    } else if (!interventionsLoading && !intervention) {
-      notFound();
-    }
-  }, [interventionsLoading, intervention, router, id]);
+    let cancelled = false;
 
-  if (interventionsLoading || !intervention) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <p className="ml-2 text-gray-700 dark:text-gray-300">Caricamento bolla di consegna...</p>
-      </div>
-    );
-  }
+    (async () => {
+      try {
+        const { pdfBase64, filename } = await fetchWorkReportPdf(id);
+        if (cancelled) return;
+
+        const bytes = Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0));
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+
+        window.open(url, '_blank', 'noopener,noreferrer');
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || 'Bolla.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      } finally {
+        // Torna alla bolla (operativo)
+        router.replace(`/interventions/${id}/work-report`);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, router]);
 
   return (
-    <div className="print:block hidden">
-      <PrintableWorkReport intervention={intervention} />
+    <div className="flex items-center justify-center min-h-[60vh] bg-gray-50 dark:bg-gray-950">
+      <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <p className="ml-2 text-gray-700 dark:text-gray-300">Generazione PDF in corso...</p>
     </div>
   );
 }

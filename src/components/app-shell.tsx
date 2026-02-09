@@ -11,8 +11,8 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
   const { loading } = useAuth();
   const pathname = usePathname();
 
-  // On the login page we render a clean layout (no sidebar)
-  if (pathname === "/login") {
+  // On the login page (and print pages) we render a clean layout (no sidebar)
+  if (pathname === "/login" || pathname.includes("/print-work-report")) {
     return (
       <>
         {children}

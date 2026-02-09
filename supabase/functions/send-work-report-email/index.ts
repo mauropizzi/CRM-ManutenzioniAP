@@ -17,18 +17,32 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { interventionId, recipientEmails, logoDataUrl } = await req.json();
-    console.log("[send-work-report-email] Received request", { interventionId, recipientEmails, hasLogo: Boolean(logoDataUrl) });
+    const { interventionId, recipientEmails, logoDataUrl, pdfOnly } = await req.json();
+    console.log("[send-work-report-email] Received request", {
+      interventionId,
+      recipientEmails,
+      pdfOnly: Boolean(pdfOnly),
+      hasLogo: Boolean(logoDataUrl),
+    });
 
-    if (!interventionId || !recipientEmails || !Array.isArray(recipientEmails) || recipientEmails.length === 0) {
-      return new Response(JSON.stringify({ error: 'Missing interventionId or recipientEmails' }), {
+    if (!interventionId) {
+      return new Response(JSON.stringify({ error: 'Missing interventionId' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    if (!pdfOnly) {
+      if (!recipientEmails || !Array.isArray(recipientEmails) || recipientEmails.length === 0) {
+        return new Response(JSON.stringify({ error: 'Missing recipientEmails' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     const recipients = Array.from(
-      new Set(recipientEmails.map((e: any) => String(e || '').trim().toLowerCase()).filter(Boolean))
+      new Set((recipientEmails || []).map((e: any) => String(e || '').trim().toLowerCase()).filter(Boolean))
     );
 
     const supabaseClient = createClient(
@@ -50,7 +64,14 @@ serve(async (req: Request) => {
     }
 
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    const resend = new Resend(resendApiKey);
+    if (!pdfOnly && !resendApiKey) {
+      return new Response(JSON.stringify({ error: 'Missing RESEND_API_KEY' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const resend = pdfOnly ? null : new Resend(resendApiKey);
 
     const sanitizeText = (text: any) => {
       if (!text) return "";
@@ -275,6 +296,14 @@ serve(async (req: Request) => {
     });
 
     const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+    if (pdfOnly) {
+      return new Response(JSON.stringify({ pdfBase64, filename: `Bolla_${interventionId.substring(0, 8)}.pdf` }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') ?? '"Antonelli & Zanni Refrigerazione Srl" <bolla@send.lumafinsrl.com>';
 
     for (const to of recipients) {
