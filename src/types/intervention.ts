@@ -55,6 +55,7 @@ export interface InterventionRequest {
   // Impianto / Modello macchina
   system_type: string;
   brand: string;
+  model: string;
   serial_number: string;
   system_location: string;
   internal_ref?: string; // Opzionale

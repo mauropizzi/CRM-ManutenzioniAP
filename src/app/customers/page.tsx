@@ -7,7 +7,7 @@ import { ProtectedRoute } from '@/components/protected-route';
 export default function CustomersPage() {
   return (
     <ProtectedRoute>
-      <div className="container-base py-6">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4 sm:p-8">
         <CustomerTable />
         <Toaster />
       </div>
