@@ -17,8 +17,8 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { interventionId, recipientEmails } = await req.json();
-    console.log("[send-work-report-email] Received request", { interventionId, recipientEmails });
+    const { interventionId, recipientEmails, logoDataUrl } = await req.json();
+    console.log("[send-work-report-email] Received request", { interventionId, recipientEmails, hasLogo: Boolean(logoDataUrl) });
 
     if (!interventionId || !recipientEmails || !Array.isArray(recipientEmails) || recipientEmails.length === 0) {
       return new Response(JSON.stringify({ error: 'Missing interventionId or recipientEmails' }), {
@@ -66,6 +66,8 @@ serve(async (req: Request) => {
       return '';
     };
 
+    const logo = clampToDataUrl(logoDataUrl);
+
     const addSignatureBox = (doc: any, opts: { label: string; dataUrl?: string; x: number; y: number; w: number; h: number; note?: string; footer?: string }) => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
@@ -103,29 +105,39 @@ serve(async (req: Request) => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 14;
-    let y = 20;
 
     // Header
+    const headerTop = 10;
+
+    if (logo) {
+      try {
+        const fmt = logo.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+        doc.addImage(logo, fmt, margin, headerTop, 46, 18, undefined, 'FAST');
+      } catch (e) {
+        console.warn('[send-work-report-email] Logo addImage error', e);
+      }
+    }
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
     doc.setTextColor(0, 0, 0);
-    doc.text("Antonelli & Zanni", margin, y + 10);
+    doc.text("Antonelli & Zanni", margin, headerTop + 30);
     doc.setFontSize(14);
     doc.setFont("helvetica", "normal");
-    doc.text("Refrigerazione", margin, y + 18);
+    doc.text("Refrigerazione", margin, headerTop + 38);
 
     doc.setFontSize(28);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(26, 54, 140); // Matches #1a368c
-    doc.text("Bolla di Consegna", pageWidth - margin, y + 10, { align: 'right' });
+    doc.text("Bolla di Consegna", pageWidth - margin, headerTop + 12, { align: 'right' });
     
     doc.setFontSize(10);
     doc.setTextColor(80, 80, 80);
     doc.setFont("helvetica", "normal");
-    doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, pageWidth - margin, y + 18, { align: 'right' });
-    doc.text(`Intervento ID: ${intervention.id.substring(0, 8).toUpperCase()}`, pageWidth - margin, y + 23, { align: 'right' });
+    doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, pageWidth - margin, headerTop + 20, { align: 'right' });
+    doc.text(`Intervento ID: ${intervention.id.substring(0, 8).toUpperCase()}`, pageWidth - margin, headerTop + 25, { align: 'right' });
 
-    y += 35;
+    let y = headerTop + 45;
     doc.setDrawColor(0, 0, 0);
     doc.line(margin, y, pageWidth - margin, y);
     y += 10;
