@@ -22,7 +22,7 @@ export const BrandingHero = () => {
           Antonelli & Zanni Refrigerazione
         </h1>
         <p className="text-xl sm:text-2xl font-light opacity-90 drop-shadow-md">
-          
+          Refrigerazione
         </p>
       </div>
     </div>

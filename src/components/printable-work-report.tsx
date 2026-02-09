@@ -79,8 +79,8 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
             height={100}
             className="mb-2"
           />
-          <h1 className="text-2xl font-bold text-gray-900 print:text-black">Antonelli & Zanni</h1>
-          <p className="text-lg text-gray-700 print:text-black">Refrigerazione</p>
+          <h1 className="text-2xl font-bold text-gray-900 print:text-black">Antonelli & Zani</h1>
+          <p className="text-lg text-gray-700 print:text-black">Refrigerazioni</p>
         </div>
         <div className="text-right mt-4">
           <h2 className="text-3xl font-bold text-blue-700 print:text-blue-900 mb-2">Bolla di Consegna</h2>
