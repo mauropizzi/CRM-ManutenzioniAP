@@ -1,41 +1,36 @@
 "use client";
 
 import React from 'react';
-import { CustomerForm, CustomerFormValues } from '@/components/customer-form';
-import { useCustomers } from '@/context/customer-context';
-import { useRouter } from 'next/navigation';
-import { notFound } from 'next/navigation';
-import { Customer } from '@/types/customer';
-import { Toaster } from '@/components/ui/sonner';
-import { use } from 'react';
+import { useParams } from 'next/navigation';
+import CustomerForm from '@/components/customer-form';
+import { CustomerProvider, useCustomers } from '@/context/customer-context';
+import { SystemTypeProvider } from '@/context/system-type-context';
+import { BrandProvider } from '@/context/brand-context';
+import { ProtectedRoute } from '@/components/protected-route';
 
-interface EditCustomerPageProps {
-  params: Promise<{ id: string }>;
+function EditCustomerContent() {
+  const params = useParams();
+  const { customers, loading } = useCustomers();
+  const customer = customers.find((c) => c.id === params.id);
+
+  if (loading) return <div>Caricamento...</div>;
+  if (!customer) return <div>Cliente non trovato</div>;
+
+  return <CustomerForm customer={customer} />;
 }
 
-export default function EditCustomerPage({ params }: EditCustomerPageProps) {
-  const { id } = use(params);
-  const { customers, updateCustomer } = useCustomers();
-  const router = useRouter();
-
-  const customerToEdit = customers.find((customer) => customer.id === id);
-
-  if (!customerToEdit) {
-    notFound();
-  }
-
-  const handleSubmit = async (data: CustomerFormValues) => {
-    await updateCustomer({ ...customerToEdit, ...data } as Customer);
-    router.push('/customers');
-  };
-
+export default function EditCustomerPage() {
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4 sm:p-8">
-      <div className="max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Modifica Cliente</h1>
-        <CustomerForm initialData={customerToEdit} onSubmit={handleSubmit} />
-      </div>
-      <Toaster />
-    </div>
+    <ProtectedRoute>
+      <CustomerProvider>
+        <SystemTypeProvider>
+          <BrandProvider>
+            <div className="min-h-screen bg-slate-50 p-4 sm:p-8 dark:bg-slate-950">
+              <EditCustomerContent />
+            </div>
+          </BrandProvider>
+        </SystemTypeProvider>
+      </CustomerProvider>
+    </ProtectedRoute>
   );
 }
