@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/context/auth-context";
-import { AppHeader } from "@/components/app-header";
 import { AppSidebar } from "@/components/app-sidebar";
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
