@@ -15,9 +15,18 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Customer } from '@/types/customer';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { useSystemTypes } from '@/context/system-type-context';
+import { useBrands } from '@/context/brand-context';
 import Link from 'next/link';
 
 export const formSchema = z.object({
@@ -31,10 +40,14 @@ export const formSchema = z.object({
   telefono: z.string().min(10, { message: "Il numero di telefono deve contenere almeno 10 cifre." }),
   email: z.string().email({ message: "Inserisci un'email valida." }),
   referente: z.string().optional(),
-  pec: z.string().email({ message: "Inserisci una PEC valida." }).optional(),
+  pec: z.string().optional(),
   sdi: z.string().optional(),
   attivo: z.boolean(),
   note: z.string().optional(),
+  system_type_id: z.string().optional().nullable(),
+  brand_id: z.string().optional().nullable(),
+  system_type: z.string().optional().nullable(),
+  brand: z.string().optional().nullable(),
 });
 
 export type CustomerFormValues = z.infer<typeof formSchema>;
@@ -45,6 +58,9 @@ interface CustomerFormProps {
 }
 
 export const CustomerForm = ({ initialData, onSubmit }: CustomerFormProps) => {
+  const { systemTypes, loading: systemTypesLoading } = useSystemTypes();
+  const { brands, loading: brandsLoading } = useBrands();
+
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -62,6 +78,10 @@ export const CustomerForm = ({ initialData, onSubmit }: CustomerFormProps) => {
       sdi: initialData?.sdi ?? '',
       attivo: initialData?.attivo ?? true,
       note: initialData?.note ?? '',
+      system_type_id: initialData?.system_type_id ?? null,
+      brand_id: initialData?.brand_id ?? null,
+      system_type: initialData?.system_type ?? null,
+      brand: initialData?.brand ?? null,
     },
   });
 
@@ -81,10 +101,23 @@ export const CustomerForm = ({ initialData, onSubmit }: CustomerFormProps) => {
       sdi: initialData?.sdi ?? '',
       attivo: initialData?.attivo ?? true,
       note: initialData?.note ?? '',
+      system_type_id: initialData?.system_type_id ?? null,
+      brand_id: initialData?.brand_id ?? null,
+      system_type: initialData?.system_type ?? null,
+      brand: initialData?.brand ?? null,
     });
   }, [initialData, form]);
 
   const handleSubmit = (values: CustomerFormValues) => {
+    // If we have an ID for system type or brand, let's also set the names
+    if (values.system_type_id) {
+      const type = systemTypes.find(t => t.id === values.system_type_id);
+      if (type) values.system_type = type.name;
+    }
+    if (values.brand_id) {
+      const brand = brands.find(b => b.id === values.brand_id);
+      if (brand) values.brand = brand.name;
+    }
     onSubmit(values);
   };
 
@@ -130,6 +163,77 @@ export const CustomerForm = ({ initialData, onSubmit }: CustomerFormProps) => {
                   <FormControl>
                     <Input placeholder="Partita IVA" {...field} className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Sezione Impianto Predefinito */}
+        <div className="grid gap-6 rounded-lg border p-4 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Impianto / Marca Predefiniti</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="system_type_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Tipo impianto</FormLabel>
+                  <Select
+                    value={field.value || ''}
+                    onValueChange={(val) => field.onChange(val)}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        <SelectValue placeholder="Seleziona tipo impianto" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
+                      {systemTypesLoading ? (
+                        <SelectItem value="__loading__" disabled>
+                          Caricamento...
+                        </SelectItem>
+                      ) : (
+                        systemTypes.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="brand_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">Marca</FormLabel>
+                  <Select value={field.value || ''} onValueChange={(val) => field.onChange(val)}>
+                    <FormControl>
+                      <SelectTrigger className="rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        <SelectValue placeholder="Seleziona marca" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="rounded-md border-gray-300 bg-white dark:bg-gray-900">
+                      {brandsLoading ? (
+                        <SelectItem value="__loading__" disabled>
+                          Caricamento...
+                        </SelectItem>
+                      ) : (
+                        brands.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

@@ -9,9 +9,13 @@ export interface Customer {
   provincia: string;
   telefono: string;
   email: string;
-  referente?: string; // Reso opzionale
-  pec?: string;       // Reso opzionale
-  sdi?: string;       // Reso opzionale
+  referente?: string;
+  pec?: string;
+  sdi?: string;
   attivo: boolean;
-  note?: string;      // Reso opzionale
+  note?: string;
+  system_type_id?: string | null;
+  brand_id?: string | null;
+  system_type?: string | null;
+  brand?: string | null;
 }
