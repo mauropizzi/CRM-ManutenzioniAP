@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Material } from '@/types/material';
 import { useMaterials } from '@/context/material-context';
 import { Edit, Trash2, PlusCircle, Search, Filter, Eye, Package } from 'lucide-react';
-import { Toaster } from '@/components/ui/sonner';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
@@ -289,7 +288,6 @@ export const MaterialTable = () => {
           </div>
         )}
       </Card>
-      <Toaster />
     </div>
   );
 };
