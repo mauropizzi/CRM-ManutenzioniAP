@@ -118,13 +118,18 @@ serve(async (req: Request) => {
       }
     }
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
     doc.setTextColor(0, 0, 0);
-    doc.text("Antonelli & Zanni", margin, headerTop + 30);
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
+    doc.text("Antonelli & Zanni Refrigerazione Srl", margin, headerTop + 30);
+
     doc.setFont("helvetica", "normal");
-    doc.text("Refrigerazione", margin, headerTop + 38);
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    doc.text("Via Fabio Filzi, 10, 25062 Concesio BS", margin, headerTop + 36);
+    doc.text("Partita IVA: 03509590984", margin, headerTop + 41);
+    doc.text("PEC: antonelli.zanni@legalmail.it", margin, headerTop + 46);
+    doc.text("Tel. 030 258 4894", margin, headerTop + 51);
 
     doc.setFontSize(28);
     doc.setFont("helvetica", "bold");
@@ -137,7 +142,7 @@ serve(async (req: Request) => {
     doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, pageWidth - margin, headerTop + 20, { align: 'right' });
     doc.text(`Intervento ID: ${intervention.id.substring(0, 8).toUpperCase()}`, pageWidth - margin, headerTop + 25, { align: 'right' });
 
-    let y = headerTop + 45;
+    let y = headerTop + 60;
     doc.setDrawColor(0, 0, 0);
     doc.line(margin, y, pageWidth - margin, y);
     y += 10;

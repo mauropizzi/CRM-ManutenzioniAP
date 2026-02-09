@@ -78,8 +78,15 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
             height={100}
             className="mb-2"
           />
-          <h1 className="text-2xl font-bold text-gray-900 print:text-black">Antonelli & Zanni</h1>
-          <p className="text-lg text-gray-700 print:text-black">Refrigerazione</p>
+          <h1 className="text-xl font-extrabold leading-tight text-gray-900 print:text-black">
+            Antonelli &amp; Zanni Refrigerazione Srl
+          </h1>
+          <div className="mt-1 space-y-0.5 text-[12px] leading-snug text-gray-700 print:text-black">
+            <p>Via Fabio Filzi, 10, 25062 Concesio BS</p>
+            <p>Partita IVA: 03509590984</p>
+            <p>PEC: antonelli.zanni@legalmail.it</p>
+            <p>Tel. 030 258 4894</p>
+          </div>
         </div>
         <div className="text-right mt-4">
           <h2 className="text-4xl font-bold text-[#1a368c] print:text-[#1a368c] mb-2">Bolla di Consegna</h2>
