@@ -145,8 +145,8 @@ serve(async (req: Request) => {
     // Company info on the right side
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("Antonelli & Zanni Refrigerazione Srl", 60, yPosition + 4);
-    yPosition += 4;
+    doc.text("Antonelli & Zanni Refrigerazione Srl", 60, yPosition + 8);
+    yPosition += 8;
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     yPosition += 6;
