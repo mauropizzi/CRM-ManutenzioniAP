@@ -185,7 +185,7 @@ export const InterventionTable = () => {
   };
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+    <div className="card-base p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Richieste di Intervento</h2>
         <Link href="/interventions/new" passHref>

@@ -65,7 +65,7 @@ function SidebarFooter() {
 
   return (
     <div className="px-3 pt-4">
-      <div className="mb-3 rounded-xl border bg-card/60 px-3 py-2">
+      <div className="mb-3 card-base px-3 py-2">
         <p className="text-xs text-muted-foreground">Connesso come</p>
         <p className="truncate text-sm font-medium">{user.email}</p>
       </div>
