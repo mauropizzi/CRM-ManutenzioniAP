@@ -11,8 +11,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useServicePoint } from '@/context/service-point-context';
 import { useCustomers } from '@/context/customer-context';
 import { ServicePointWithSystems } from '@/types/service-point';
-import { Edit, Trash2, Plus, Search } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 export default function ServicePointTable() {
   const router = useRouter();
@@ -114,7 +115,7 @@ export default function ServicePointTable() {
                   </TableCell>
                   <TableCell>{point.telefono || '-'}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex gap-2 justify-end items-center">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -122,6 +123,23 @@ export default function ServicePointTable() {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
+
+                      {/* Naviga button: opens Google Maps directions if address exists */}
+                      { (point.address || point.city || point.cap || point.provincia) ? (
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                            [point.address, point.city, point.cap, point.provincia].filter(Boolean).join(', ')
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center rounded-md text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-700 border border-transparent px-2 py-1 text-sm"
+                          title="Naviga"
+                        >
+                          <MapPin className="h-4 w-4" />
+                          <span className="ml-1 hidden sm:inline">Naviga</span>
+                        </a>
+                      ) : null}
+
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" size="sm">
