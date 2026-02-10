@@ -54,18 +54,10 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
       const blob = new Blob([bytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
 
-      // Apri in una nuova scheda (più comodo per stampa/salvataggio)
+      // Apri in una nuova scheda (evita download automatico per non creare doppio evento)
       window.open(url, '_blank', 'noopener,noreferrer');
 
-      // E in parallelo avvia anche il download
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename || 'Bolla.pdf';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      // cleanup (lasciamo un attimo tempo al browser di aprire/scaricare)
+      // cleanup (lasciamo un attimo tempo al browser)
       setTimeout(() => URL.revokeObjectURL(url), 10_000);
     } catch (e: any) {
       toast.error(e?.message || 'Errore durante la generazione del PDF');

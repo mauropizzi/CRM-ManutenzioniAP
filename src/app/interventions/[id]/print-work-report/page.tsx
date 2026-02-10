@@ -27,13 +27,6 @@ export default function PrintWorkReportPage({ params }: PrintWorkReportPageProps
 
         window.open(url, '_blank', 'noopener,noreferrer');
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename || 'Bolla.pdf';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
         setTimeout(() => URL.revokeObjectURL(url), 10_000);
       } finally {
         // Torna alla bolla (operativo)
