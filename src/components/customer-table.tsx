@@ -9,10 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Customer } from '@/types/customer';
 import { useCustomers } from '@/context/customer-context';
-import { Edit, Trash2, PlusCircle, Eye, MapPin, Building2, HardDrive, Tag } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Building2, HardDrive, Tag, MapPin, Users } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -31,113 +31,107 @@ export const CustomerTable = () => {
   };
 
   return (
-    <div className="card-base p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Anagrafica Clienti</h2>
+    <div className="ds-card">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-foreground">Clienti</h1>
+          <p className="text-sm text-muted-foreground">Gestione anagrafica e punti servizio</p>
+        </div>
+
         <Link href="/customers/new" passHref>
-          <Button className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 flex items-center gap-2">
-            <PlusCircle size={18} /> Aggiungi Cliente
+          <Button variant="default" className="w-full sm:w-auto">
+            <PlusCircle className="ds-icon" />
+            <span>Aggiungi Cliente</span>
           </Button>
         </Link>
       </div>
 
       {customers.length === 0 ? (
-        <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessun cliente trovato. Aggiungi un nuovo cliente per iniziare!</p>
+        <div className="text-center py-12 bg-muted/30 rounded-[14px] border border-dashed">
+          <Users className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
+          <p className="text-muted-foreground">Nessun cliente trovato. Inizia aggiungendone uno.</p>
+        </div>
       ) : (
-        <div className="overflow-x-auto rounded-md border border-gray-200 dark:border-gray-700">
-          <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <TableHeader className="bg-gray-50 dark:bg-gray-800">
-              <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tl-md">Ragione Sociale</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Impianto / Marca</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Indirizzo / Città</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Contatti</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Attivo</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tr-md">Azioni</TableHead>
+        <div className="table-responsive rounded-[14px] border border-border/50">
+          <Table className="table-compact">
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead>Ragione Sociale</TableHead>
+                <TableHead>Impianto / Marca</TableHead>
+                <TableHead>Indirizzo</TableHead>
+                <TableHead>Contatti</TableHead>
+                <TableHead>Stato</TableHead>
+                <TableHead className="text-right">Azioni</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            <TableBody>
               {customers.map((customer: Customer) => (
-                <TableRow key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <TableCell className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{customer.ragione_sociale}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{customer.referente || 'Nessun referente'}</div>
+                <TableRow key={customer.id}>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{customer.ragione_sociale}</span>
+                      <span className="text-xs text-muted-foreground">{customer.referente || 'Nessun referente'}</span>
+                    </div>
                   </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col gap-1">
-                      {customer.system_type ? (
-                        <div className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
-                          <HardDrive size={14} className="text-blue-500" />
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      {customer.system_type && (
+                        <div className="flex items-center gap-1 text-xs">
+                          <HardDrive size={12} className="text-primary" />
                           {customer.system_type}
                         </div>
-                      ) : null}
-                      {customer.brand ? (
-                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 italic">
-                          <Tag size={14} className="text-orange-500" />
+                      )}
+                      {customer.brand && (
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <Tag size={10} className="text-accent" />
                           {customer.brand}
                         </div>
-                      ) : null}
-                      {!customer.system_type && !customer.brand && (
-                        <span className="text-xs text-gray-400">N/D</span>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-700 dark:text-gray-300">{customer.indirizzo}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{customer.citta} ({customer.provincia})</div>
+                  <TableCell>
+                    <div className="flex flex-col text-xs">
+                      <span>{customer.indirizzo}</span>
+                      <span className="text-muted-foreground">{customer.citta} ({customer.provincia})</span>
+                    </div>
                   </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-700 dark:text-gray-300">{customer.telefono}</div>
-                    <div className="text-xs text-blue-600 dark:text-blue-400">{customer.email}</div>
+                  <TableCell>
+                    <div className="flex flex-col text-xs">
+                      <span>{customer.telefono}</span>
+                      <span className="text-primary truncate max-w-[120px]">{customer.email}</span>
+                    </div>
                   </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
-                    <Badge className={`rounded-full px-2 py-1 text-xs font-semibold ${customer.attivo ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
-                      {customer.attivo ? 'Sì' : 'No'}
+                  <TableCell>
+                    <Badge variant="secondary" className={cn("rounded-full border-none px-2 py-0.5 text-[10px]", customer.attivo ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200')}>
+                      {customer.attivo ? 'Attivo' : 'Inattivo'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-1">
-                    <Link
-                      href={`/customers/${customer.id}/service-points`}
-                      className={cn(
-                        buttonVariants({ variant: "ghost", size: "sm" }),
-                        "rounded-md text-violet-600 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-gray-700"
-                      )}
-                      title="Punti Servizio"
-                    >
-                      <Building2 size={16} className="mr-1" />
-                      Punti
-                    </Link>
-                    <Link
-                      href={getGoogleMapsLink(customer)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(
-                        buttonVariants({ variant: "ghost", size: "icon" }),
-                        "rounded-md text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-700 h-8 w-8"
-                      )}
-                      title="Naviga"
-                    >
-                      <MapPin size={16} />
-                    </Link>
-                    <Link href={`/customers/${customer.id}/edit`} passHref>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Link href={`/customers/${customer.id}/service-points`} passHref>
+                        <Button variant="ghost" size="icon" title="Punti Servizio">
+                          <Building2 className="ds-icon text-primary" />
+                        </Button>
+                      </Link>
+                      <Button variant="ghost" size="icon" asChild title="Naviga">
+                        <a href={getGoogleMapsLink(customer)} target="_blank" rel="noopener noreferrer">
+                          <MapPin className="ds-icon text-green-600" />
+                        </a>
+                      </Button>
+                      <Link href={`/customers/${customer.id}/edit`} passHref>
+                        <Button variant="ghost" size="icon" title="Modifica">
+                          <Edit className="ds-icon text-muted-foreground" />
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="rounded-md text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700 h-8 w-8"
-                        title="Modifica"
+                        onClick={() => handleDeleteClick(customer.id)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
-                        <Edit size={16} />
+                        <Trash2 className="ds-icon" />
                       </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(customer.id)}
-                      className="rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700 h-8 w-8"
-                      title="Elimina"
-                    >
-                      <Trash2 size={16} />
-                    </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
