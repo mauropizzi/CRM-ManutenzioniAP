@@ -6,6 +6,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/context/auth-context";
 import { AppSidebar } from "@/components/app-sidebar";
+import { AppTopnav } from "@/components/app-topnav";
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
   const { loading } = useAuth();
@@ -35,18 +36,17 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen" data-dyad-component="AppShell">
-        <AppSidebar />
-        <main className="flex-1 overflow-auto" data-dyad-component="Main">
-          <div className="flex items-center justify-between border-b p-4 lg:hidden">
-            <div className="flex items-center">
-              <SidebarTrigger />
-              <span className="ml-2 font-semibold">Menu</span>
-            </div>
+        <div className="flex-1 flex flex-col">
+          <AppTopnav />
+          <div className="flex flex-1 overflow-auto">
+            <AppSidebar />
+            <main className="flex-1 overflow-auto" data-dyad-component="Main">
+              <div className="p-4 sm:p-8" data-dyad-component="Content">
+                {children}
+              </div>
+            </main>
           </div>
-          <div className="p-4 sm:p-8" data-dyad-component="Content">
-            {children}
-          </div>
-        </main>
+        </div>
       </div>
       <Toaster />
     </SidebarProvider>
