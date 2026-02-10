@@ -10,9 +10,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Technician } from '@/types/technician';
 import { useTechnicians } from '@/context/technician-context';
-import { Edit, Trash2, PlusCircle, Truck, Phone, Mail } from 'lucide-react';
+import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner';
+import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 
 export const TechnicianTable = () => {
@@ -23,78 +25,65 @@ export const TechnicianTable = () => {
   };
 
   return (
-    <div className="ds-card">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-foreground">Tecnici</h1>
-          <p className="text-sm text-muted-foreground">Gestione della forza lavoro e qualifiche</p>
-        </div>
-
+    <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Anagrafica Tecnici</h2>
         <Link href="/technicians/new" passHref>
-          <Button variant="default" className="w-full sm:w-auto">
-            <PlusCircle className="ds-icon" />
-            <span>Aggiungi Tecnico</span>
+          <Button className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 flex items-center gap-2">
+            <PlusCircle size={18} /> Aggiungi Tecnico
           </Button>
         </Link>
       </div>
 
       {technicians.length === 0 ? (
-        <div className="text-center py-12 bg-muted/30 rounded-[14px] border border-dashed">
-          <Truck className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
-          <p className="text-muted-foreground">Nessun tecnico trovato. Inizia aggiungendone uno.</p>
-        </div>
+        <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessun tecnico trovato. Aggiungi un nuovo tecnico per iniziare!</p>
       ) : (
-        <div className="table-responsive rounded-[14px] border border-border/50">
-          <Table className="table-compact">
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead>Nome e Cognome</TableHead>
-                <TableHead>Specializzazione</TableHead>
-                <TableHead>Contatti</TableHead>
-                <TableHead className="text-right">Azioni</TableHead>
+        <div className="overflow-x-auto rounded-md border border-gray-200 dark:border-gray-700">
+          <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <TableHeader className="bg-gray-50 dark:bg-gray-800">
+              <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tl-md">Nome</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Cognome</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Email</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Telefono</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Specializzazione</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Attivo</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Note</TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tr-md">Azioni</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {technicians.map((technician) => (
-                <TableRow key={technician.id}>
-                  <TableCell className="font-medium">
-                    {technician.first_name} {technician.last_name}
+            <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+              {technicians.map((technician: Technician) => (
+                <TableRow key={technician.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{technician.first_name}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{technician.last_name}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{technician.email}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{technician.phone}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{technician.specialization}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
+                    <Badge className={`rounded-full px-2 py-1 text-xs font-semibold ${technician.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+                      {technician.is_active ? 'Sì' : 'No'}
+                    </Badge>
                   </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{technician.specialization || '-'}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col text-xs gap-1">
-                      {technician.phone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3 text-muted-foreground" />
-                          {technician.phone}
-                        </div>
-                      )}
-                      {technician.email && (
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3 text-muted-foreground" />
-                          {technician.email}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Link href={`/technicians/${technician.id}/edit`} passHref>
-                        <Button variant="ghost" size="icon" title="Modifica">
-                          <Edit className="ds-icon text-muted-foreground" />
-                        </Button>
-                      </Link>
+                  <TableCell className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate">{technician.notes}</TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
+                    <Link href={`/technicians/${technician.id}/edit`} passHref>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteClick(technician.id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="rounded-md text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700"
                       >
-                        <Trash2 className="ds-icon" />
+                        <Edit size={18} />
                       </Button>
-                    </div>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteClick(technician.id)}
+                      className="rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700"
+                    >
+                      <Trash2 size={18} />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

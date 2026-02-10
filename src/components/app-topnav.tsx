@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -26,29 +26,21 @@ const navigation = [
 export function AppTopnav() {
   const router = useRouter();
   const { user, signOut } = useAuth();
-  const pathname = usePathname();
 
   return (
-    <header className="w-full border-b bg-card/60 shadow-sm sticky top-0 z-40">
-      <div className="container-custom flex h-12 sm:h-14 items-center justify-between">
-        <div className="flex items-center gap-4 sm:gap-6">
-          <Link href="/" className="no-underline">
-            <div className="text-sm sm:text-lg font-semibold rounded-md px-2 sm:px-3 py-1 bg-primary/10 text-primary">Gestione</div>
-          </Link>
+    <header className="w-full border-b bg-card/60">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
+        <div className="flex items-center gap-4">
+          <div className="text-lg font-semibold">Gestione</div>
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-2 md:flex">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href;
               return (
                 <Link key={item.name} href={item.href} className="no-underline">
-                  <Button
-                    variant={isActive ? "secondary" : "ghost"}
-                    size="sm"
-                    className={cn("rounded-lg px-3 py-1 flex items-center gap-2", isActive && "bg-primary/10 text-primary")}
-                  >
-                    <Icon className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" className="rounded-md">
+                    <Icon className="mr-2 h-4 w-4" />
                     <span className="hidden md:inline">{item.name}</span>
                   </Button>
                 </Link>
@@ -76,7 +68,7 @@ export function AppTopnav() {
             </Button>
           ) : (
             <Link href="/login" className="hidden md:block">
-              <Button variant="secondary" size="sm" className="rounded-lg">
+              <Button variant="secondary" size="sm">
                 <LogIn className="mr-2 h-4 w-4" />
                 Accedi
               </Button>

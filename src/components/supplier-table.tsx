@@ -1,104 +1,76 @@
 "use client";
 
-import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { useSuppliers } from '@/context/supplier-context';
-import { Edit, Trash2, PlusCircle, Factory, Phone, Mail } from 'lucide-react';
-import { Toaster } from '@/components/ui/sonner';
-import Link from 'next/link';
+import React from "react";
+import { Supplier } from "@/types/supplier";
+import { useSuppliers } from "@/context/supplier-context";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import Link from "next/link";
+import { Trash2, Pencil } from "lucide-react";
 
-export const SupplierTable = () => {
-  const { suppliers, deleteSupplier } = useSuppliers();
+interface SupplierTableProps {
+  suppliers: Supplier[];
+}
 
-  const handleDeleteClick = (id: string) => {
-    deleteSupplier(id);
-  };
+export const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers }) => {
+  const { deleteSupplier } = useSuppliers();
 
   return (
-    <div className="ds-card">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-foreground">Fornitori</h1>
-          <p className="text-sm text-muted-foreground">Gestione dei fornitori di servizi e materiali</p>
-        </div>
-
-        <Link href="/suppliers/new" passHref>
-          <Button variant="default" className="w-full sm:w-auto">
-            <PlusCircle className="ds-icon" />
-            <span>Aggiungi Fornitore</span>
-          </Button>
-        </Link>
-      </div>
-
-      {suppliers.length === 0 ? (
-        <div className="text-center py-12 bg-muted/30 rounded-[14px] border border-dashed">
-          <Factory className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
-          <p className="text-muted-foreground">Nessun fornitore trovato. Inizia aggiungendone uno.</p>
-        </div>
-      ) : (
-        <div className="table-responsive rounded-[14px] border border-border/50">
-          <Table className="table-compact">
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead>Ragione Sociale</TableHead>
-                <TableHead>Contatti</TableHead>
-                <TableHead className="text-right">Azioni</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {suppliers.map((supplier) => (
-                <TableRow key={supplier.id}>
-                  <TableCell className="font-medium text-gray-900 dark:text-gray-100">
-                    {supplier.ragione_sociale}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col text-xs gap-1">
-                      {supplier.telefono && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3 text-muted-foreground" />
-                          {supplier.telefono}
-                        </div>
-                      )}
-                      {supplier.email && (
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3 text-muted-foreground" />
-                          {supplier.email}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Link href={`/suppliers/${supplier.id}/edit`} passHref>
-                        <Button variant="ghost" size="icon" title="Modifica">
-                          <Edit className="ds-icon text-muted-foreground" />
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteClick(supplier.id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="ds-icon" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-      <Toaster />
+    <div className="rounded-lg border bg-white dark:bg-gray-900">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Ragione sociale</TableHead>
+            <TableHead>Partita IVA</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>PEC</TableHead>
+            <TableHead>Telefono</TableHead>
+            <TableHead>Tipo servizio</TableHead>
+            <TableHead>Attivo</TableHead>
+            <TableHead className="text-right">Azioni</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {suppliers.map((s) => (
+            <TableRow key={s.id}>
+              <TableCell className="font-medium">{s.ragione_sociale}</TableCell>
+              <TableCell>{s.partita_iva || "-"}</TableCell>
+              <TableCell>{s.email || "-"}</TableCell>
+              <TableCell>{s.pec || "-"}</TableCell>
+              <TableCell>{s.telefono || "-"}</TableCell>
+              <TableCell>{s.tipo_servizio || "-"}</TableCell>
+              <TableCell>{s.attivo ? "Sì" : "No"}</TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <Link href={`/suppliers/${s.id}/edit`}>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Pencil size={16} />
+                      Modifica
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="destructive"
+                    className="flex items-center gap-2"
+                    onClick={() => deleteSupplier(s.id)}
+                  >
+                    <Trash2 size={16} />
+                    Elimina
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+          {suppliers.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center text-gray-500">
+                Nessun fornitore presente
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 };
+
+export default SupplierTable;
