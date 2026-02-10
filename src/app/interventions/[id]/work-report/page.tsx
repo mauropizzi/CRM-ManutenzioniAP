@@ -1,7 +1,6 @@
 "use client";
 
-import React from 'react';
-import { use } from 'react';
+import React, { use, useState } from 'react';
 import { WorkReportForm, WorkReportFormValues } from '@/components/work-report-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
@@ -22,6 +21,7 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const { materials: catalogMaterials, refreshMaterials } = useMaterials();
   const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
 
   const intervention = interventionRequests.find((request) => request.id === id);
 
@@ -58,6 +58,9 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
   };
 
   const handleSubmit = async (data: WorkReportFormValues) => {
+    if (isSaving) return; // Evita doppio submit
+    setIsSaving(true);
+    
     const { status, ...workReportDataFields } = data;
 
     try {
@@ -87,6 +90,8 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
       router.push('/interventions');
     } catch (e: any) {
       toast.error(e?.message || 'Errore durante il salvataggio della bolla');
+    } finally {
+      setIsSaving(false);
     }
   };
 
