@@ -12,7 +12,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { InterventionRequest } from '@/types/intervention';
 import { useInterventionRequests } from '@/context/intervention-context';
-import { Edit, Trash2, PlusCircle, FileText, MessageCircle, MapPin } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, FileText, MessageCircle, MapPin, Wrench } from 'lucide-react';
+
 import { Toaster } from '@/components/ui/sonner';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -22,6 +23,7 @@ import { useTechnicians } from '@/context/technician-context';
 import { useSuppliers } from '@/context/supplier-context';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 export const InterventionTable = () => {
   const { interventionRequests, deleteInterventionRequest } = useInterventionRequests();
@@ -164,15 +166,15 @@ export const InterventionTable = () => {
   const getStatusBadgeClass = (status: InterventionRequest['status']) => {
     switch (status) {
       case 'Da fare':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200';
       case 'In corso':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        return 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary';
       case 'Completato':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200';
       case 'Annullato':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -185,140 +187,116 @@ export const InterventionTable = () => {
   };
 
   return (
-    <div className="card-base p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Richieste di Intervento</h2>
-
-        <div className="flex items-center gap-2">
-          {/* Full button for sm+ */}
-          <Link href="/interventions/new" passHref>
-            <Button variant="default" size="sm" className="hide-on-mobile">
-              <PlusCircle size={16} />
-              <span>Nuova Richiesta</span>
-            </Button>
-          </Link>
-
-          {/* Icon-only button on mobile */}
-          <Link href="/interventions/new" passHref>
-            <Button variant="default" size="icon" className="show-on-mobile">
-              <PlusCircle size={16} />
-            </Button>
-          </Link>
+    <div className="ds-card">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-foreground">Interventi</h1>
+          <p className="text-sm text-muted-foreground">Gestione delle richieste e pianificazione</p>
         </div>
+
+        <Link href="/interventions/new" passHref>
+          <Button variant="default" className="w-full sm:w-auto">
+            <PlusCircle className="ds-icon" />
+            <span>Nuova Richiesta</span>
+          </Button>
+        </Link>
       </div>
 
       {interventionRequests.length === 0 ? (
-        <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna richiesta di intervento trovata. Aggiungi una nuova richiesta per iniziare!</p>
+        <div className="text-center py-12 bg-muted/30 rounded-[14px] border border-dashed">
+          <Wrench className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
+          <p className="text-muted-foreground">Nessuna richiesta trovata. Inizia creandone una nuova.</p>
+        </div>
       ) : (
-        <div className="table-responsive">
-          <Table className="table-compact min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <TableHeader className="bg-gray-50 dark:bg-gray-800">
-              <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tl-md">Cliente</TableHead>
-                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Tipo Impianto</TableHead>
-                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Marca</TableHead>
-                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Modello</TableHead>
-                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Data Prevista</TableHead>
-                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Stato</TableHead>
-                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Assegnato</TableHead>
-                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tr-md">Azioni</TableHead>
+        <div className="table-responsive rounded-[14px] border border-border/50">
+          <Table className="table-compact">
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead className="w-[200px]">Cliente</TableHead>
+                <TableHead>Impianto</TableHead>
+                <TableHead>Data Prevista</TableHead>
+                <TableHead>Stato</TableHead>
+                <TableHead>Assegnato</TableHead>
+                <TableHead className="text-right">Azioni</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            <TableBody>
               {interventionRequests.map((request: InterventionRequest) => {
                 const assigned = getAssignedInfo(request);
                 return (
-                  <TableRow key={request.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{request.client_company_name}</TableCell>
-                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{request.system_type}</TableCell>
-                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{request.brand}</TableCell>
-                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{request.model}</TableCell>
-                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                      {request.scheduled_date ? format(new Date(request.scheduled_date), 'dd/MM/yyyy', { locale: it }) : 'N/D'}
-                      {request.scheduled_time && ` ${request.scheduled_time}`}
+                  <TableRow key={request.id}>
+                    <TableCell className="font-medium">{request.client_company_name}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="text-sm">{request.system_type}</span>
+                        <span className="text-xs text-muted-foreground">{request.brand} {request.model}</span>
+                      </div>
                     </TableCell>
-                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm">
-                      <Badge className={`rounded-full px-2 py-1 text-xs font-semibold ${getStatusBadgeClass(request.status)}`}>
+                    <TableCell>
+                      <div className="flex flex-col text-sm">
+                        <span>{request.scheduled_date ? format(new Date(request.scheduled_date), 'dd MMM yyyy', { locale: it }) : 'N/D'}</span>
+                        <span className="text-muted-foreground text-xs">{request.scheduled_time}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={cn("rounded-full border-none px-3", getStatusBadgeClass(request.status))}>
                         {request.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    <TableCell>
                       {assigned.type === 'none' ? (
-                        <span className="text-gray-500 dark:text-gray-400">Nessuno</span>
+                        <span className="text-xs text-muted-foreground">Non assegnato</span>
                       ) : (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900 dark:text-gray-100">{assigned.name}</span>
-                          <Badge
-                            className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                              assigned.type === 'technician'
-                                ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
-                                : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
-                            }`}
-                          >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">{assigned.name}</span>
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                             {assigned.type === 'technician' ? 'Tecnico' : 'Fornitore'}
-                          </Badge>
+                          </span>
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
                         <Link href={`/interventions/${request.id}/work-report`} passHref>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="rounded-md text-green-700 border-green-600 hover:bg-green-50 dark:text-green-400 dark:border-green-500 dark:hover:bg-gray-700 flex items-center gap-1"
-                            title="Bolla di Consegna"
-                          >
-                            <FileText size={16} />
-                            <span className="hidden sm:inline">Bolla</span>
+                          <Button variant="ghost" size="icon" title="Bolla">
+                            <FileText className="ds-icon text-primary" />
                           </Button>
                         </Link>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => void handleWhatsAppClick(request)}
-                          className="rounded-md text-emerald-700 border-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-500 dark:hover:bg-gray-700 flex items-center gap-1"
-                          title="Invia WhatsApp"
-                        >
-                          <MessageCircle size={16} />
-                          <span className="hidden sm:inline">WhatsApp</span>
-                        </Button>
-
+                        
                         {(() => {
                           const maps = getGoogleMapsLink(request);
                           if (!maps) return null;
                           return (
-                            <a
-                              href={maps}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center rounded-md text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-700 border border-transparent px-2 py-1 text-sm"
-                              title="Naviga"
-                            >
-                              <MapPin size={16} />
-                              <span className="ml-1 hidden sm:inline">Naviga</span>
-                            </a>
+                            <Button variant="ghost" size="icon" asChild title="Naviga">
+                              <a href={maps} target="_blank" rel="noopener noreferrer">
+                                <MapPin className="ds-icon text-green-600" />
+                              </a>
+                            </Button>
                           );
                         })()}
 
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => void handleWhatsAppClick(request)}
+                          title="WhatsApp"
+                        >
+                          <MessageCircle className="ds-icon text-emerald-600" />
+                        </Button>
+                        
                         <Link href={`/interventions/${request.id}/edit`} passHref>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="rounded-md text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-gray-700"
-                            title="Modifica Intervento"
-                          >
-                            <Edit size={18} />
+                          <Button variant="ghost" size="icon" title="Modifica">
+                            <Edit className="ds-icon text-muted-foreground" />
                           </Button>
                         </Link>
+                        
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteClick(request.id)}
-                          className="rounded-md text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700"
-                          title="Elimina Intervento"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 className="ds-icon" />
                         </Button>
                       </div>
                     </TableCell>
