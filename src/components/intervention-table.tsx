@@ -186,30 +186,42 @@ export const InterventionTable = () => {
 
   return (
     <div className="card-base p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Richieste di Intervento</h2>
-        <Link href="/interventions/new" passHref>
-          <Button className="rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 flex items-center gap-2">
-            <PlusCircle size={18} /> Nuova Richiesta
-          </Button>
-        </Link>
+
+        <div className="flex items-center gap-2">
+          {/* Full button for sm+ */}
+          <Link href="/interventions/new" passHref>
+            <Button variant="default" size="sm" className="hide-on-mobile">
+              <PlusCircle size={16} />
+              <span>Nuova Richiesta</span>
+            </Button>
+          </Link>
+
+          {/* Icon-only button on mobile */}
+          <Link href="/interventions/new" passHref>
+            <Button variant="default" size="icon" className="show-on-mobile">
+              <PlusCircle size={16} />
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {interventionRequests.length === 0 ? (
         <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna richiesta di intervento trovata. Aggiungi una nuova richiesta per iniziare!</p>
       ) : (
-        <div className="overflow-x-auto rounded-md border border-gray-200 dark:border-gray-700">
-          <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <div className="table-responsive">
+          <Table className="table-compact min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <TableHeader className="bg-gray-50 dark:bg-gray-800">
               <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tl-md">Cliente</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Tipo Impianto</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Marca</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Modello</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Data Prevista</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Stato</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Assegnato</TableHead>
-                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tr-md">Azioni</TableHead>
+                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tl-md">Cliente</TableHead>
+                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Tipo Impianto</TableHead>
+                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Marca</TableHead>
+                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Modello</TableHead>
+                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Data Prevista</TableHead>
+                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Stato</TableHead>
+                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Assegnato</TableHead>
+                <TableHead className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 rounded-tr-md">Azioni</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
@@ -217,20 +229,20 @@ export const InterventionTable = () => {
                 const assigned = getAssignedInfo(request);
                 return (
                   <TableRow key={request.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{request.client_company_name}</TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{request.system_type}</TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{request.brand}</TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{request.model}</TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{request.client_company_name}</TableCell>
+                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{request.system_type}</TableCell>
+                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{request.brand}</TableCell>
+                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{request.model}</TableCell>
+                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                       {request.scheduled_date ? format(new Date(request.scheduled_date), 'dd/MM/yyyy', { locale: it }) : 'N/D'}
                       {request.scheduled_time && ` ${request.scheduled_time}`}
                     </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
+                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm">
                       <Badge className={`rounded-full px-2 py-1 text-xs font-semibold ${getStatusBadgeClass(request.status)}`}>
                         {request.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                       {assigned.type === 'none' ? (
                         <span className="text-gray-500 dark:text-gray-400">Nessuno</span>
                       ) : (
@@ -248,7 +260,7 @@ export const InterventionTable = () => {
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <TableCell className="px-4 py-2 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <Link href={`/interventions/${request.id}/work-report`} passHref>
                           <Button
@@ -258,7 +270,7 @@ export const InterventionTable = () => {
                             title="Bolla di Consegna"
                           >
                             <FileText size={16} />
-                            <span>Bolla</span>
+                            <span className="hidden sm:inline">Bolla</span>
                           </Button>
                         </Link>
                         <Button
@@ -269,7 +281,7 @@ export const InterventionTable = () => {
                           title="Invia WhatsApp"
                         >
                           <MessageCircle size={16} />
-                          <span>WhatsApp</span>
+                          <span className="hidden sm:inline">WhatsApp</span>
                         </Button>
 
                         {(() => {

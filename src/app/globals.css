@@ -170,7 +170,7 @@
   
   /* Container spacing */
   .container-custom {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply max-w-7xl mx-auto px-3 sm:px-6 lg:px-8;
   }
   
   /* Custom button styles */
@@ -187,4 +187,39 @@
   .card-base {
     @apply rounded-xl border border-border bg-surface shadow-sm hover:shadow-md transition-shadow;
   }
+
+  /* Mobile refinements */
+  .card-base > * {
+    @apply px-0;
+  }
+
+  .table-responsive {
+    @apply w-full overflow-auto;
+  }
+
+  /* Custom table header for compact mobile */
+  .table-compact th, .table-compact td {
+    @apply px-2 py-2 text-sm;
+  }
+
+  /* Custom layout for small screens */
+  @screen sm {
+    .container-custom { @apply px-4; }
+  }
+
+  @screen md {
+    .container-custom { @apply px-6; }
+  }
+
+  .text-sm-responsive { @apply text-sm sm:text-base; }
+
+  .btn-icon-only {
+    @apply w-9 h-9 p-0 inline-flex items-center justify-center;
+  }
+
+  .hide-on-mobile { @apply hidden md:block; }
+  .show-on-mobile { @apply block md:hidden; }
+
+  .rounded-md-mobile { @apply rounded-md; }
+
 }

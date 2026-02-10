@@ -30,10 +30,10 @@ export function AppTopnav() {
 
   return (
     <header className="w-full border-b bg-card/60 shadow-sm sticky top-0 z-40">
-      <div className="container-custom flex h-14 items-center justify-between">
-        <div className="flex items-center gap-6">
+      <div className="container-custom flex h-12 sm:h-14 items-center justify-between">
+        <div className="flex items-center gap-4 sm:gap-6">
           <Link href="/" className="no-underline">
-            <div className="text-lg font-semibold rounded-md px-3 py-1 bg-primary/10 text-primary">Gestione</div>
+            <div className="text-sm sm:text-lg font-semibold rounded-md px-2 sm:px-3 py-1 bg-primary/10 text-primary">Gestione</div>
           </Link>
 
           {/* Desktop nav */}
