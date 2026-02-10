@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { InterventionRequest, WorkReportData, TimeEntry } from '@/types/intervention';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +58,8 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { refreshCustomers } = useCustomers();
+  // Lock per evitare aggiornamenti concorrenti dello stesso intervento
+  const updateLocks = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (typeof window !== 'undefined' && user) {
@@ -225,45 +227,56 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const updateInterventionRequest = async (updatedRequest: InterventionRequest) => {
     console.log('Updating intervention:', updatedRequest);
 
-    const {
-      client_codice_fiscale,
-      client_partita_iva,
-      client_citta,
-      client_cap,
-      client_provincia,
-      client_pec,
-      client_sdi,
-      ...rest
-    } = updatedRequest as any;
-
-    const updatePayload = {
-      ...rest,
-      customer_id: normalizeCustomerId((updatedRequest as any).customer_id),
-      scheduled_date: updatedRequest.scheduled_date ? updatedRequest.scheduled_date.toISOString().split('T')[0] : null,
-      work_report_data: serializeWorkReportData(updatedRequest.work_report_data),
-    };
-
-    const { data, error } = await supabase
-      .from('interventions')
-      .update(updatePayload)
-      .eq('id', updatedRequest.id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Supabase error updating intervention:', error);
-      throw error;
+    // Evita doppie chiamate concorrenti sullo stesso ID
+    if (updateLocks.current.has(updatedRequest.id)) {
+      console.warn('Duplicate update ignored for intervention:', updatedRequest.id);
+      return;
     }
+    updateLocks.current.add(updatedRequest.id);
 
-    console.log('Intervention updated:', data);
+    try {
+      const {
+        client_codice_fiscale,
+        client_partita_iva,
+        client_citta,
+        client_cap,
+        client_provincia,
+        client_pec,
+        client_sdi,
+        ...rest
+      } = updatedRequest as any;
 
-    if (data) {
-      const parsedData = {
-        ...data,
-        scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
-        work_report_data: parseWorkReportData(data.work_report_data),
-      } as InterventionRequest;
-      setInterventionRequests((prev) => prev.map((req) => (req.id === updatedRequest.id ? parsedData : req)));
+      const updatePayload = {
+        ...rest,
+        customer_id: normalizeCustomerId((updatedRequest as any).customer_id),
+        scheduled_date: updatedRequest.scheduled_date ? updatedRequest.scheduled_date.toISOString().split('T')[0] : null,
+        work_report_data: serializeWorkReportData(updatedRequest.work_report_data),
+      };
+
+      const { data, error } = await supabase
+        .from('interventions')
+        .update(updatePayload)
+        .eq('id', updatedRequest.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error updating intervention:', error);
+        throw error;
+      }
+
+      console.log('Intervention updated:', data);
+
+      if (data) {
+        const parsedData = {
+          ...data,
+          scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
+          work_report_data: parseWorkReportData(data.work_report_data),
+        } as InterventionRequest;
+        setInterventionRequests((prev) => prev.map((req) => (req.id === updatedRequest.id ? parsedData : req)));
+      }
+    } finally {
+      updateLocks.current.delete(updatedRequest.id);
     }
   };
 
