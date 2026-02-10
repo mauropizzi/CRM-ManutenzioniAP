@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { InterventionRequest } from '@/types/intervention';
 import { useInterventionRequests } from '@/context/intervention-context';
-import { Edit, Trash2, PlusCircle, FileText, MessageCircle } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, FileText, MessageCircle, MapPin } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -50,9 +50,7 @@ export const InterventionTable = () => {
     }
 
     if (supplierName) {
-      const match = suppliers.find(
-        (s) => normalize(s.ragione_sociale) === normalize(supplierName)
-      );
+      const match = suppliers.find((s) => normalize(s.ragione_sociale) === normalize(supplierName));
       return {
         type: 'supplier' as const,
         name: supplierName,
@@ -66,7 +64,6 @@ export const InterventionTable = () => {
   const toIntlWhatsAppNumber = (raw?: string) => {
     const digits = String(raw || '').replace(/\D/g, '');
     if (!digits) return '';
-    // If number already starts with 39 (Italy), keep it. Otherwise, prefix 39.
     if (digits.startsWith('39')) return digits;
     return `39${digits}`;
   };
@@ -143,9 +140,7 @@ export const InterventionTable = () => {
     }
 
     if (!assigned.phone || !toIntlWhatsAppNumber(assigned.phone)) {
-      toast.error(
-        `Numero di telefono non disponibile per ${assigned.name}. Aggiorna l'anagrafica per inviare WhatsApp.`
-      );
+      toast.error(`Numero di telefono non disponibile per ${assigned.name}. Aggiorna l'anagrafica per inviare WhatsApp.`);
       return;
     }
 
@@ -179,6 +174,14 @@ export const InterventionTable = () => {
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
+  };
+
+  const getGoogleMapsLink = (request: InterventionRequest) => {
+    const parts = [request.client_address, (request as any).client_citta, (request as any).client_cap, (request as any).client_provincia]
+      .filter(Boolean)
+      .join(', ');
+    if (!parts) return null;
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(parts)}`;
   };
 
   return (
@@ -268,6 +271,24 @@ export const InterventionTable = () => {
                           <MessageCircle size={16} />
                           <span>WhatsApp</span>
                         </Button>
+
+                        {(() => {
+                          const maps = getGoogleMapsLink(request);
+                          if (!maps) return null;
+                          return (
+                            <a
+                              href={maps}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center rounded-md text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-700 border border-transparent px-2 py-1 text-sm"
+                              title="Naviga"
+                            >
+                              <MapPin size={16} />
+                              <span className="ml-1 hidden sm:inline">Naviga</span>
+                            </a>
+                          );
+                        })()}
+
                         <Link href={`/interventions/${request.id}/edit`} passHref>
                           <Button
                             variant="ghost"

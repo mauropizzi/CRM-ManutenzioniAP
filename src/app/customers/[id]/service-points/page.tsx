@@ -12,6 +12,7 @@ import { ServicePointProvider } from '@/context/service-point-context';
 import { CustomerProvider } from '@/context/customer-context';
 import { ProtectedRoute } from '@/components/protected-route';
 import { Plus, Edit, MapPin, Phone, Mail } from 'lucide-react';
+import Link from 'next/link';
 
 function CustomerServicePointsContent() {
   const params = useParams();
@@ -101,13 +102,24 @@ function CustomerServicePointsContent() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.push(`/service-points/${point.id}/edit`)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-2 justify-end">
+                        <Link href={`/service-points/${point.id}/edit`}>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Link
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                            [point.address, point.city, point.cap, point.provincia].filter(Boolean).join(', ')
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center rounded-md text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-gray-700 border border-transparent px-2 py-1 text-sm"
+                        >
+                          <MapPin className="h-4 w-4" />
+                          <span className="ml-1 hidden sm:inline">Naviga</span>
+                        </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
