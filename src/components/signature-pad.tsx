@@ -37,7 +37,10 @@ function exportSignature(canvas: HTMLCanvasElement) {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, outW, outH);
 
-  ctx.drawImage(canvas, 0, 0, cssW, cssH, 0, 0, outW, outH);
+  // Draw the full backing-store of the source canvas into the output canvas.
+  // Use canvas.width/height (the backing-store size) as source to avoid
+  // incorrect scaling / cropping caused by mixing CSS and backing-store units.
+  ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, outW, outH);
 
   // JPEG is significantly smaller and very stable across browsers
   return out.toDataURL("image/jpeg", 0.78);
