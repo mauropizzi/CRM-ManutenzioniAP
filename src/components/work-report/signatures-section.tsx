@@ -60,7 +60,7 @@ export function SignaturesSection() {
           
           <SignaturePad
             label="Firma cliente"
-            hint={clientAbsent ? "Cliente assente: firma non richiesta" : "Firma richiesta"}
+            hint={clientAbsent ? "Cliente assente firma non raccolta" : "Firma richiesta"}
             value={clientSignature}
             onChange={(v) => setValue("client_signature", v, { shouldDirty: true, shouldValidate: true })}
             disabled={clientAbsent}

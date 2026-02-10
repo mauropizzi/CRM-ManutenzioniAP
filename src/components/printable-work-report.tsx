@@ -203,7 +203,7 @@ export const PrintableWorkReport = ({ intervention }: PrintableWorkReportProps) 
             <p className="font-bold mb-2 text-gray-900 print:text-black">Firma Cliente:</p>
             <SignatureBox 
               src={clientSig} 
-              emptyNote={clientAbsent ? 'Cliente assente' : undefined} 
+              emptyNote={clientAbsent ? 'Cliente assente firma non raccolta' : undefined} 
               footerText={signerName ? `Firmato da: ${signerName}` : undefined}
             />
           </div>
