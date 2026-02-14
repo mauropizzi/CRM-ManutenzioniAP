@@ -22,6 +22,27 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const SUPABASE_PROJECT_REF = 'nrdsgtuzpnamcovuzghb';
+const SUPABASE_STORAGE_KEY = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
+
+async function clearLocalAuthSession() {
+  // IMPORTANT: for "Invalid Refresh Token" scenarios we must clear local storage without
+  // hitting the network, otherwise signOut() can keep failing/hanging.
+  try {
+    // v2 supports scope: 'local'
+    await supabase.auth.signOut({ scope: 'local' });
+  } catch {
+    // fallback (shouldn't normally be needed)
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem(SUPABASE_STORAGE_KEY);
+      } catch {
+        // ignore
+      }
+    }
+  }
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,17 +50,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
         if (error) {
-          // Detect invalid refresh token error and clear session
-          if (error.message.includes('refresh_token_not_found') || error.message.includes('Invalid Refresh Token')) {
-            console.warn('[auth-context] Invalid refresh token detected, signing out...');
-            await supabase.auth.signOut();
+          const msg = String(error.message || '');
+          // Detect invalid refresh token error and clear session (local-only)
+          if (msg.includes('refresh_token_not_found') || msg.includes('Invalid Refresh Token')) {
+            console.warn('[auth-context] Invalid refresh token detected, clearing local session...');
+            await clearLocalAuthSession();
             setUser(null);
-          } else {
-            throw error;
+            toast.message('Sessione scaduta', {
+              description: 'Per favore accedi di nuovo.',
+            });
+            return;
           }
+          throw error;
         }
 
         if (session?.user) {
@@ -50,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // Ignora gli abort dovuti a HMR/locks
           return;
         }
-        console.error('Auth initialization error:', error);
+        console.error('[auth-context] Auth initialization error:', error);
       } finally {
         setLoading(false);
       }
@@ -58,11 +86,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
-        // Handle explicit sign out or user update events
-      }
-
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         await fetchUserProfile(session.user);
       } else {
@@ -82,13 +108,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error && error.code === 'PGRST116') {
-        await supabase
-          .from('profiles')
-          .insert({
-            id: authUser.id,
-            first_name: authUser.user_metadata?.first_name || '',
-            last_name: authUser.user_metadata?.last_name || '',
-          });
+        await supabase.from('profiles').insert({
+          id: authUser.id,
+          first_name: authUser.user_metadata?.first_name || '',
+          last_name: authUser.user_metadata?.last_name || '',
+        });
         setUser({
           id: authUser.id,
           email: authUser.email,
@@ -107,7 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser({ id: authUser.id, email: authUser.email || '' });
       }
     } catch (error) {
-      console.error('Profile fetch error:', error);
+      console.error('[auth-context] Profile fetch error:', error);
       setUser({ id: authUser.id, email: authUser.email || '' });
     }
   };
@@ -118,37 +142,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast.error(`Errore di accesso: ${error.message}`);
       throw error;
     }
-    toast.success("Accesso effettuato con successo!");
+    toast.success('Accesso effettuato con successo!');
   };
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { first_name: firstName, last_name: lastName } }
+      options: { data: { first_name: firstName, last_name: lastName } },
     });
     if (error) {
       toast.error(`Errore di registrazione: ${error.message}`);
       throw error;
     }
-    toast.success("Registrazione completata! Controlla la tua email per confermare.");
+    toast.success('Registrazione completata! Controlla la tua email per confermare.');
   };
 
   const signOut = async () => {
+    // Try the standard sign out first; if it fails (e.g. corrupted refresh token),
+    // fall back to local-only clear so the UI can recover.
     const { error } = await supabase.auth.signOut();
     if (error) {
-      toast.error(`Errore di logout: ${error.message}`);
-      throw error;
+      console.warn('[auth-context] signOut error, clearing local session...', error);
+      await clearLocalAuthSession();
     }
     setUser(null);
-    toast.success("Logout effettuato!");
+    toast.success('Logout effettuato!');
   };
 
-  return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
