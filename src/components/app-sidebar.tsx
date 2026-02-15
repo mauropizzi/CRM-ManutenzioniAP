@@ -147,8 +147,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
           <div className="flex h-full w-full flex-col">
             <ScrollArea className="flex-1 px-4 py-5">
               <div className="mb-4">
-                <h2 className="text-lg font-semibold tracking-tight">Gestione</h2>
-                <p className="text-xs text-muted-foreground">Clienti • Interventi • Impianti</p>
+                <h2 className="text-lg font-semibold 
               </div>
               <div className="space-y-1">
                 <NavItems />
