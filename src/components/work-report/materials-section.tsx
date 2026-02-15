@@ -2,9 +2,10 @@
 
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Package } from 'lucide-react';
 import { MaterialRow } from './material-row';
 import { WorkReportFormValues } from '@/components/work-report-form';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const DEFAULT_MATERIALS_COUNT = 6;
 
@@ -21,36 +22,40 @@ export const MaterialsSection = () => {
   };
 
   return (
-    <div className="space-y-4 rounded-lg border p-6 bg-white dark:bg-gray-900">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Ricambi / Materiali utilizzati
-        </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          Default 6 righe. Puoi aggiungerne altre.
-        </p>
-      </div>
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Package className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-base sm:text-lg">Ricambi / Materiali utilizzati</CardTitle>
+              <p className="text-sm text-text-secondary mt-0.5">
+                Default 6 righe. Puoi aggiungerne altre.
+              </p>
+            </div>
+          </div>
 
-      <div className="space-y-2">
-        {fields.map((field, index) => (
-          <MaterialRow
-            key={field.id}
-            index={index}
-            onRemove={() => remove(index)}
-            canRemove={fields.length > DEFAULT_MATERIALS_COUNT}
-          />
-        ))}
-      </div>
+          <Button type="button" variant="outline" onClick={handleAddMaterial} className="gap-2 rounded-xl">
+            <PlusCircle size={16} />
+            + Riga
+          </Button>
+        </div>
+      </CardHeader>
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={handleAddMaterial}
-        className="flex items-center gap-2"
-      >
-        <PlusCircle size={16} />
-        + Riga
-      </Button>
-    </div>
+      <CardContent className="pt-0">
+        <div className="space-y-2">
+          {fields.map((field, index) => (
+            <MaterialRow
+              key={field.id}
+              index={index}
+              onRemove={() => remove(index)}
+              canRemove={fields.length > DEFAULT_MATERIALS_COUNT}
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useState } from 'react';
+import React, { use, useMemo, useState } from 'react';
 import { WorkReportForm, WorkReportFormValues } from '@/components/work-report-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter } from 'next/navigation';
@@ -9,6 +9,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { useMaterials } from '@/context/material-context';
 import { supabase } from '@/integrations/supabase/client';
+import { Card } from '@/components/ui/card';
+import { FileText, Package, Timer, Route } from 'lucide-react';
 
 interface WorkReportPageProps {
   params: Promise<{ id: string }>;
@@ -24,6 +26,23 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
   const [isSaving, setIsSaving] = useState(false);
 
   const intervention = interventionRequests.find((request) => request.id === id);
+
+  const stats = useMemo(() => {
+    const timeEntries = intervention?.work_report_data?.time_entries ?? [];
+    const hours = timeEntries.reduce((sum: number, e: any) => sum + (Number(e?.total_hours) || 0), 0);
+
+    const materials = intervention?.work_report_data?.materials ?? [];
+    const usedMaterials = materials.filter((m: any) => String(m?.description || '').trim().length > 0).length;
+
+    const km = Number(intervention?.work_report_data?.kilometers ?? 0) || 0;
+
+    return {
+      hours,
+      usedMaterials,
+      km,
+      status: intervention?.status ?? '—',
+    };
+  }, [intervention]);
 
   if (!intervention) {
     notFound();
@@ -96,26 +115,87 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Bolla di Consegna</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Intervento per: {intervention.client_company_name} - {intervention.system_type}{' '}
-            {intervention.brand} {intervention.model}
-          </p>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4 sm:p-8">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Bolla di Consegna</h2>
+            </div>
+            <p className="text-text-secondary text-sm mt-2">
+              Intervento per: <span className="font-semibold text-foreground">{intervention.client_company_name}</span> —{' '}
+              {intervention.system_type} {intervention.brand} {intervention.model}
+            </p>
+          </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
-          <WorkReportForm
-            initialData={{ ...(intervention.work_report_data ?? {}), id: intervention.id } as any}
-            onSubmit={handleSubmit}
-            clientName={intervention.client_company_name}
-            clientEmail={intervention.client_email}
-            currentStatus={intervention.status}
-          />
+        {/* Stats Cards (stesso stile dei Materiali) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-text-secondary">Stato</p>
+                <p className="text-2xl font-bold text-foreground">{stats.status}</p>
+              </div>
+              <div className="h-10 w-10 rounded-lg bg-info/10 flex items-center justify-center">
+                <FileText className="h-5 w-5 text-info" />
+              </div>
+            </div>
+          </Card>
 
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-text-secondary">Totale ore</p>
+                <p className="text-2xl font-bold text-foreground">{stats.hours.toFixed(2)}</p>
+              </div>
+              <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
+                <Timer className="h-5 w-5 text-success" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-text-secondary">Materiali inseriti</p>
+                <p className="text-2xl font-bold text-foreground">{stats.usedMaterials}</p>
+              </div>
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Package className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-text-secondary">Km</p>
+                <p className="text-2xl font-bold text-foreground">{stats.km}</p>
+              </div>
+              <div className="h-10 w-10 rounded-lg bg-warning/10 flex items-center justify-center">
+                <Route className="h-5 w-5 text-warning" />
+              </div>
+            </div>
+          </Card>
         </div>
+
+        {/* Form */}
+        <Card className="overflow-hidden">
+          <div className="p-4 sm:p-6">
+            <WorkReportForm
+              initialData={{ ...(intervention.work_report_data ?? {}), id: intervention.id } as any}
+              onSubmit={handleSubmit}
+              clientName={intervention.client_company_name}
+              clientEmail={intervention.client_email}
+              currentStatus={intervention.status}
+            />
+          </div>
+        </Card>
       </div>
       <Toaster />
     </div>
