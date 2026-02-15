@@ -33,7 +33,7 @@ export default function Home() {
           </div>
 
           <p className="max-w-2xl text-base text-slate-700 dark:text-slate-300 sm:text-lg">
-            Benvenuto nel sistema di gestione interventi. Utilizza il menu laterale per navigare.
+            Benvenuto nel sistema di gestione interventi. Utilizza il menu in alto per navigare.
           </p>
         </main>
 
