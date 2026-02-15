@@ -1,244 +1,43 @@
-"use client";
-
-import React from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { MadeWithDyad } from "@/components/made-with-dyad";
 import { ProtectedRoute } from "@/components/protected-route";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Package,
-  Users,
-  Wrench,
-  UserCog,
-  PlusCircle,
-  ArrowRight,
-} from "lucide-react";
-import { useCustomers } from "@/context/customer-context";
-import { useInterventionRequests } from "@/context/intervention-context";
-import { useMaterials } from "@/context/material-context";
-import { useTechnicians } from "@/context/technician-context";
-import { useSuppliers } from "@/context/supplier-context";
-
-const statusBadgeClass = (status: string) => {
-  switch (status) {
-    case "Completato":
-      return "bg-success/10 text-success border-success/20";
-    case "In corso":
-      return "bg-info/10 text-info border-info/20";
-    case "Da fare":
-      return "bg-warning/10 text-warning border-warning/20";
-    case "Annullato":
-      return "bg-destructive/10 text-destructive border-destructive/20";
-    default:
-      return "bg-muted text-muted-foreground border-border";
-  }
-};
 
 export default function Home() {
-  const { customers } = useCustomers();
-  const { interventionRequests } = useInterventionRequests();
-  const { materials } = useMaterials();
-  const { technicians } = useTechnicians();
-  const { suppliers } = useSuppliers();
-
-  const stats = React.useMemo(() => {
-    const totalInterventions = interventionRequests.length;
-    const totalCustomers = customers.length;
-    const totalMaterials = materials.length;
-
-    const activeTechnicians = technicians.filter((t) => t.is_active).length;
-    const activeSuppliers = suppliers.filter((s) => s.attivo !== false).length;
-
-    return {
-      totalInterventions,
-      totalCustomers,
-      totalMaterials,
-      activeResources: activeTechnicians + activeSuppliers,
-    };
-  }, [customers.length, interventionRequests.length, materials.length, technicians, suppliers]);
-
-  const recentInterventions = React.useMemo(() => {
-    return interventionRequests.slice(0, 6);
-  }, [interventionRequests]);
-
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4 sm:p-8">
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-              <p className="text-text-secondary text-sm mt-1">
-                Panoramica rapida e accesso immediato alle funzioni principali
-              </p>
+      <div className="grid min-h-screen grid-rows-[1fr_auto] items-center justify-items-center bg-gray-50 p-6 pb-16 dark:bg-gray-950 sm:p-12">
+        <main className="row-start-1 flex w-full max-w-3xl flex-col items-center gap-8 text-center">
+          <div className="relative w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_-30px_rgba(2,132,199,0.55)] dark:border-slate-800 dark:bg-slate-950">
+            <div className="absolute inset-0 bg-sky-50/70 dark:bg-sky-950/25" />
+            <div className="relative flex flex-col items-center justify-center gap-5 px-6 py-10 sm:px-10 sm:py-12">
+              <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 dark:bg-slate-950 dark:ring-slate-800">
+                <Image
+                  src="/nuovo-logo.jpeg"
+                  alt="Antonelli & Zanni Refrigerazione"
+                  width={760}
+                  height={240}
+                  priority
+                  className="h-auto w-[240px] sm:w-[340px]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 sm:text-3xl">
+                  Dashboard
+                </h1>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-300 sm:text-base">
+                  Gestione interventi, clienti, tecnici e fornitori
+                </p>
+              </div>
             </div>
-
-            <Link href="/interventions/new">
-              <Button variant="default" className="gap-2">
-                <PlusCircle size={18} />
-                Nuovo intervento
-              </Button>
-            </Link>
           </div>
 
-          {/* Stats cards (stesso layout di Materiali) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-text-secondary">Interventi</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.totalInterventions}</p>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Wrench className="h-5 w-5 text-primary" />
-                </div>
-              </div>
-            </Card>
+          <p className="max-w-2xl text-base text-slate-700 dark:text-slate-300 sm:text-lg">
+            Benvenuto nel sistema di gestione interventi. Utilizza il menu in alto per navigare.
+          </p>
+        </main>
 
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-text-secondary">Clienti</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.totalCustomers}</p>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-success" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-text-secondary">Materiali</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.totalMaterials}</p>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-info/10 flex items-center justify-center">
-                  <Package className="h-5 w-5 text-info" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-text-secondary">Risorse attive</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.activeResources}</p>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-warning/10 flex items-center justify-center">
-                  <UserCog className="h-5 w-5 text-warning" />
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Quick actions + Recent */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <Card className="lg:col-span-5 overflow-hidden">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Image
-                      src="/nuovo-logo.jpeg"
-                      alt="Antonelli & Zanni Refrigerazione"
-                      width={96}
-                      height={96}
-                      className="h-10 w-10 rounded-xl object-cover"
-                      priority
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-base font-semibold text-foreground">Azioni rapide</div>
-                    <p className="text-sm text-text-secondary mt-0.5">
-                      Crea nuovi elementi o vai alle anagrafiche in un click.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <Link href="/customers/new" className="block">
-                    <Button variant="outline" className="w-full justify-between rounded-xl">
-                      Nuovo cliente
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href="/materials/new" className="block">
-                    <Button variant="outline" className="w-full justify-between rounded-xl">
-                      Nuovo materiale
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href="/technicians/new" className="block">
-                    <Button variant="outline" className="w-full justify-between rounded-xl">
-                      Nuovo tecnico
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href="/suppliers/new" className="block">
-                    <Button variant="outline" className="w-full justify-between rounded-xl">
-                      Nuovo fornitore
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="lg:col-span-7 overflow-hidden">
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-base font-semibold text-foreground">Interventi recenti</div>
-                    <p className="text-sm text-text-secondary mt-0.5">
-                      Ultimi interventi creati (apri la lista completa per i filtri avanzati).
-                    </p>
-                  </div>
-                  <Link href="/interventions">
-                    <Button variant="ghost" className="rounded-xl">
-                      Vai
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
-
-                <div className="mt-4 space-y-2">
-                  {recentInterventions.length === 0 ? (
-                    <div className="rounded-xl border bg-muted/20 p-4 text-sm text-text-secondary">
-                      Nessun intervento presente.
-                    </div>
-                  ) : (
-                    recentInterventions.map((i) => (
-                      <Link
-                        key={i.id}
-                        href={`/interventions/${i.id}/edit`}
-                        className="block"
-                      >
-                        <div className="rounded-xl border bg-card/60 px-4 py-3 hover:bg-muted/30 transition-colors">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="text-sm font-medium text-foreground truncate">
-                                {i.client_company_name}
-                              </div>
-                              <div className="text-xs text-text-secondary truncate mt-0.5">
-                                {i.system_type} • {i.brand} {i.model}
-                              </div>
-                            </div>
-                            <Badge className={`rounded-full px-2.5 py-1 text-xs font-medium border ${statusBadgeClass(i.status)}`}>
-                              {i.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </Link>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        <MadeWithDyad />
       </div>
     </ProtectedRoute>
   );
