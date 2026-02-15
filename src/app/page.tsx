@@ -1,43 +1,137 @@
-import Image from "next/image";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import Link from "next/link";
+import {
+  Package,
+  ClipboardList,
+  Users,
+  UserCog,
+  Truck,
+  MapPin,
+  Tag,
+  Layers,
+  ArrowRight,
+  LayoutDashboard,
+} from "lucide-react";
+
 import { ProtectedRoute } from "@/components/protected-route";
+import { Card } from "@/components/ui/card";
+
+type DashboardLink = {
+  title: string;
+  description: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  accentClassName: string;
+};
+
+const LINKS: DashboardLink[] = [
+  {
+    title: "Interventi",
+    description: "Gestisci richieste, assegnazioni e bolla di lavoro",
+    href: "/interventions",
+    icon: ClipboardList,
+    accentClassName: "bg-info/10 text-info",
+  },
+  {
+    title: "Clienti",
+    description: "Anagrafica clienti e dettagli contatto",
+    href: "/customers",
+    icon: Users,
+    accentClassName: "bg-success/10 text-success",
+  },
+  {
+    title: "Materiali",
+    description: "Catalogo ricambi e materiali utilizzati",
+    href: "/materials",
+    icon: Package,
+    accentClassName: "bg-primary/10 text-primary",
+  },
+  {
+    title: "Tecnici",
+    description: "Anagrafica tecnici e reperibilità",
+    href: "/technicians",
+    icon: UserCog,
+    accentClassName: "bg-warning/10 text-warning",
+  },
+  {
+    title: "Fornitori",
+    description: "Gestisci fornitori e contatti",
+    href: "/suppliers",
+    icon: Truck,
+    accentClassName: "bg-primary/10 text-primary",
+  },
+  {
+    title: "Punti servizio",
+    description: "Sedi/impianti collegati ai clienti",
+    href: "/service-points",
+    icon: MapPin,
+    accentClassName: "bg-info/10 text-info",
+  },
+  {
+    title: "Marche",
+    description: "Lista marche disponibili per impianti",
+    href: "/brands",
+    icon: Tag,
+    accentClassName: "bg-success/10 text-success",
+  },
+  {
+    title: "Tipi impianto",
+    description: "Tipologie e classificazioni impianti",
+    href: "/system-types",
+    icon: Layers,
+    accentClassName: "bg-warning/10 text-warning",
+  },
+];
 
 export default function Home() {
   return (
     <ProtectedRoute>
-      <div className="grid min-h-screen grid-rows-[1fr_auto] items-center justify-items-center bg-gray-50 p-6 pb-16 dark:bg-gray-950 sm:p-12">
-        <main className="row-start-1 flex w-full max-w-3xl flex-col items-center gap-8 text-center">
-          <div className="relative w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_-30px_rgba(2,132,199,0.55)] dark:border-slate-800 dark:bg-slate-950">
-            <div className="absolute inset-0 bg-sky-50/70 dark:bg-sky-950/25" />
-            <div className="relative flex flex-col items-center justify-center gap-5 px-6 py-10 sm:px-10 sm:py-12">
-              <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 dark:bg-slate-950 dark:ring-slate-800">
-                <Image
-                  src="/nuovo-logo.jpeg"
-                  alt="Antonelli & Zanni Refrigerazione"
-                  width={760}
-                  height={240}
-                  priority
-                  className="h-auto w-[240px] sm:w-[340px]"
-                />
+      <div className="min-h-screen bg-gray-100 p-4 dark:bg-gray-950 sm:p-8">
+        <div className="space-y-6">
+          {/* Header (stesso linguaggio visivo della pagina Materiali) */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                  <LayoutDashboard className="h-5 w-5 text-primary" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
               </div>
-
-              <div className="space-y-1">
-                <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 sm:text-3xl">
-                  Dashboard
-                </h1>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-300 sm:text-base">
-                  Gestione interventi, clienti, tecnici e fornitori
-                </p>
-              </div>
+              <p className="mt-2 text-sm text-text-secondary">
+                Accesso rapido alle sezioni principali
+              </p>
             </div>
           </div>
 
-          <p className="max-w-2xl text-base text-slate-700 dark:text-slate-300 sm:text-lg">
-            Benvenuto nel sistema di gestione interventi. Utilizza il menu laterale per navigare.
-          </p>
-        </main>
+          {/* Link cards (stesso stile delle card in Materiali) */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {LINKS.map((item) => (
+              <Link key={item.href} href={item.href} className="group">
+                <Card className="h-full rounded-2xl p-4 transition-all hover:-translate-y-0.5 hover:shadow-md">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                      <p className="mt-1 line-clamp-2 text-sm text-text-secondary">
+                        {item.description}
+                      </p>
+                    </div>
 
-        <MadeWithDyad />
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${item.accentClassName}`}
+                      aria-hidden="true"
+                    >
+                      <item.icon className="h-5 w-5" />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-sm font-medium text-primary">Apri</span>
+                    <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </ProtectedRoute>
   );
