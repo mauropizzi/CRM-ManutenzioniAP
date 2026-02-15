@@ -48,12 +48,6 @@ export function AppTopnav() {
             <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
               <Wrench className="h-4 w-4 text-primary" />
             </div>
-            <div className="leading-tight">
-              <div className="text-sm font-semibold tracking-tight">Gestione</div>
-              <div className="hidden sm:block text-[11px] text-text-secondary">
-                Clienti • Interventi • Impianti
-              </div>
-            </div>
           </div>
 
           {/* Desktop nav (pill bar stile Materiali) */}
@@ -128,10 +122,6 @@ export function AppTopnav() {
                     <div className="flex items-center gap-2">
                       <div className="h-9 w-9 rounded-2xl bg-primary/10 flex items-center justify-center">
                         <Wrench className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <div className="text-base font-semibold tracking-tight">Gestione</div>
-                        <p className="text-xs text-muted-foreground">Clienti • Interventi • Impianti</p>
                       </div>
                     </div>
                     <ThemeToggle />
