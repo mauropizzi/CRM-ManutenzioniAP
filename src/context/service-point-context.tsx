@@ -54,7 +54,7 @@ export const ServicePointProvider: React.FC<ServicePointProviderProps> = ({ chil
     try {
       const points = await getServicePoints();
       setServicePoints(points);
-    } catch (error) {
+    } catch (error: any) {
       if (String(error?.message || '').includes('AbortError')) {
         return;
       }
