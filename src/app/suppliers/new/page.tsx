@@ -11,12 +11,12 @@ import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/protected-route";
 
 const NewSupplierContent: React.FC = () => {
-  const { addSupplier } = useSuppliers();
+  const { createSupplier } = useSuppliers();
   const router = useRouter();
 
   const handleSubmit = async (data: SupplierFormValues) => {
     try {
-      await addSupplier(data);
+      await createSupplier(data);
       router.push("/suppliers");
     } catch (error: any) {
       const msg = error?.message || "Errore durante il salvataggio del fornitore.";

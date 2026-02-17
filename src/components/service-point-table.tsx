@@ -82,7 +82,7 @@ export default function ServicePointTable() {
   const filteredServicePoints = React.useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
 
-    return servicePoints.filter((point) => {
+    return servicePoints.filter((point: ServicePoint) => {
       const customerName = (customerNameById.get(point.customer_id) || "").toLowerCase();
       const matchesSearch =
         !q ||
@@ -99,9 +99,9 @@ export default function ServicePointTable() {
 
   const stats = React.useMemo(() => {
     const total = servicePoints.length;
-    const withSystems = servicePoints.filter((p) => (p.systems?.length || 0) > 0).length;
+    const withSystems = servicePoints.filter((p: ServicePoint) => (p.systems?.length || 0) > 0).length;
     const withoutSystems = total - withSystems;
-    const uniqueCustomers = new Set(servicePoints.map((p) => p.customer_id).filter(Boolean)).size;
+    const uniqueCustomers = new Set(servicePoints.map((p: ServicePoint) => p.customer_id).filter(Boolean)).size;
 
     return {
       total,
@@ -283,7 +283,7 @@ export default function ServicePointTable() {
               </TableHeader>
 
               <TableBody className="divide-y divide-border">
-                {filteredServicePoints.map((point) => {
+                {filteredServicePoints.map((point: ServicePoint) => {
                   const customerName = customerNameById.get(point.customer_id) || "Cliente";
                   const systemsCount = point.systems?.length || 0;
                   const navigateUrl = getNavigateUrl(point);
@@ -327,7 +327,7 @@ export default function ServicePointTable() {
                         </Badge>
                         {systemsCount > 0 && (
                           <div className="mt-2 flex flex-wrap gap-1">
-                            {point.systems.slice(0, 3).map((s, idx) => (
+                            {point.systems.slice(0, 3).map((s: any, idx: number) => (
                               <Badge
                                 key={`${point.id}-${idx}`}
                                 className="rounded-full bg-muted text-foreground border border-border text-[11px]"

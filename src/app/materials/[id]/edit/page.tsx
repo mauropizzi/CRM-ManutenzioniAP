@@ -26,7 +26,7 @@ export default function EditMaterialPage({ params }: EditMaterialPageProps) {
   }
 
   const handleSubmit = async (data: MaterialFormValues) => {
-    await updateMaterial({ ...materialToEdit, ...data } as Material);
+    await updateMaterial(materialToEdit.id, { ...materialToEdit, ...data });
     router.push('/materials');
   };
 

@@ -21,7 +21,7 @@ function CustomerServicePointsContent() {
   const { customers } = useCustomers();
   
   const customer = customers.find((c: any) => c.id === params.id);
-  const customerServicePoints = servicePoints.filter(sp => sp.customer_id === params.id);
+  const customerServicePoints = servicePoints.filter((sp: ServicePoint) => sp.customer_id === params.id);
 
   if (loading) {
     return <div>Caricamento...</div>;
@@ -69,7 +69,7 @@ function CustomerServicePointsContent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {customerServicePoints.map((point) => (
+                {customerServicePoints.map((point: ServicePoint) => (
                   <TableRow key={point.id}>
                     <TableCell className="font-medium">{point.name}</TableCell>
                     <TableCell>
@@ -93,7 +93,7 @@ function CustomerServicePointsContent() {
                         {point.systems.length === 0 ? (
                           <Badge variant="outline">Nessun impianto</Badge>
                         ) : (
-                          point.systems.map((system, index) => (
+                          point.systems.map((system: any, index: number) => (
                             <Badge key={index} variant="secondary" className="text-xs">
                               {system.system_type} - {system.brand}
                             </Badge>

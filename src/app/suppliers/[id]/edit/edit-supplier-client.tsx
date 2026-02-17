@@ -71,7 +71,7 @@ export default function EditSupplierClient({ supplierId }: { supplierId: string 
     if (!currentSupplier) return;
 
     try {
-      await updateSupplier({ ...currentSupplier, ...data });
+      await updateSupplier(currentSupplier.id, { ...currentSupplier, ...data });
       toast.success("Fornitore aggiornato");
       router.push("/suppliers");
     } catch (error: any) {

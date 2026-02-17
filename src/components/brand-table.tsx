@@ -182,7 +182,7 @@ function UpsertBrandDialog({
 }
 
 export function BrandTable() {
-  const { brands, loading, addBrand, updateBrand, deleteBrand } = useBrands();
+  const { brands, loading, createBrand, updateBrand, deleteBrand } = useBrands();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [rangeFilter, setRangeFilter] = React.useState<RangeFilter>("all");
 
@@ -224,7 +224,7 @@ export function BrandTable() {
             Gestisci l'anagrafica delle marche usate nei punti di servizio
           </p>
         </div>
-        <UpsertBrandDialog mode="create" onSave={addBrand} />
+        <UpsertBrandDialog mode="create" onSave={createBrand} />
       </div>
 
       {/* Stats Cards */}
@@ -332,7 +332,7 @@ export function BrandTable() {
                   : "Prova a modificare i filtri di ricerca"}
               </p>
               {brands.length === 0 && (
-                <UpsertBrandDialog mode="create" onSave={addBrand} />
+                <UpsertBrandDialog mode="create" onSave={createBrand} />
               )}
             </div>
           </CardContent>
@@ -384,7 +384,7 @@ export function BrandTable() {
                           <UpsertBrandDialog
                             mode="edit"
                             initial={brand}
-                            onSave={async (name) => updateBrand(brand.id, name)}
+                            onSave={async (name) => updateBrand(brand.id, { name })}
                           />
 
                           <AlertDialog>

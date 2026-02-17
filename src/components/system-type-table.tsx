@@ -154,7 +154,7 @@ function UpsertSystemTypeDialog({
 }
 
 export function SystemTypeTable() {
-  const { systemTypes, loading, addSystemType, updateSystemType, deleteSystemType } = useSystemTypes();
+  const { systemTypes, loading, createSystemType, updateSystemType, deleteSystemType } = useSystemTypes();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [orderFilter, setOrderFilter] = React.useState<OrderFilter>("all");
 
@@ -199,7 +199,7 @@ export function SystemTypeTable() {
             Gestisci l'anagrafica dei tipi impianto per clienti e punti di servizio
           </p>
         </div>
-        <UpsertSystemTypeDialog mode="create" onSave={addSystemType} />
+        <UpsertSystemTypeDialog mode="create" onSave={createSystemType} />
       </div>
 
       {/* Stats Cards */}
@@ -322,7 +322,7 @@ export function SystemTypeTable() {
                   : "Prova a modificare i filtri di ricerca"}
               </p>
               {systemTypes.length === 0 && (
-                <UpsertSystemTypeDialog mode="create" onSave={addSystemType} />
+                <UpsertSystemTypeDialog mode="create" onSave={createSystemType} />
               )}
             </div>
           </CardContent>
@@ -372,7 +372,7 @@ export function SystemTypeTable() {
                         <UpsertSystemTypeDialog
                           mode="edit"
                           initial={row}
-                          onSave={async (name) => updateSystemType(row.id, name)}
+                          onSave={async (name) => updateSystemType(row.id, { name })}
                         />
 
                         <AlertDialog>

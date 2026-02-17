@@ -1,129 +1,139 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import type { SystemType } from '@/types/system-type';
+import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/auth-context';
-import type { SystemType } from '@/types/system-type';
 
-interface SystemTypeContextValue {
+interface SystemTypeContextType {
   systemTypes: SystemType[];
   loading: boolean;
-  refresh: () => Promise<void>;
-  addSystemType: (name: string) => Promise<void>;
-  updateSystemType: (id: string, name: string) => Promise<void>;
+  error: string | null;
+  refreshSystemTypes: () => Promise<void>;
+  createSystemType: (systemType: Omit<SystemType, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateSystemType: (id: string, systemType: Partial<SystemType>) => Promise<void>;
   deleteSystemType: (id: string) => Promise<void>;
+  hasFetched: boolean;
 }
 
-const SystemTypeContext = createContext<SystemTypeContextValue | undefined>(undefined);
+const SystemTypeContext = createContext<SystemTypeContextType | undefined>(undefined);
 
 export function SystemTypeProvider({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
   const [systemTypes, setSystemTypes] = useState<SystemType[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
 
-  const refresh = async () => {
-    if (!user) return;
-    setLoading(true);
+  const fetchSystemTypes = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('system_types')
-        .select('*')
-        .order('sort_order', { ascending: true, nullsFirst: false })
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-      setSystemTypes((data as SystemType[]) || []);
-    } catch (err: any) {
-      if (String(err?.message || '').includes('AbortError')) return;
-      console.error('[system-type-context] Error fetching system types:', err);
-      toast.error(err?.message || 'Errore nel caricamento dei tipi impianto');
+      setLoading(true);
+      setError(null);
+      
+      const data = await apiClient.fetchSystemTypes();
+      setSystemTypes(data);
+      setHasFetched(true);
+    } catch (error: any) {
+      console.error('Error fetching system types:', error);
+      setError(error.message);
+      toast.error(`Errore nel caricamento dei tipi di impianto: ${error.message}`);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      refresh();
-    } else if (!authLoading && !user) {
-      setSystemTypes([]);
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user?.id]);
+  const refreshSystemTypes = useCallback(async () => {
+    // Invalidate cache before refreshing
+    apiClient.invalidate('system-types');
+    await fetchSystemTypes();
+  }, [fetchSystemTypes]);
 
-  const addSystemType = async (name: string) => {
-    const cleanName = name.trim();
-    if (!cleanName) {
-      toast.error('Inserisci un nome');
-      return;
-    }
-
+  const createSystemType = useCallback(async (systemType: Omit<SystemType, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data: authData, error: authErr } = await supabase.auth.getUser();
-      if (authErr) throw authErr;
-      if (!authData.user) throw new Error('Devi essere autenticato');
-
-      const { error } = await supabase.from('system_types').insert({
-        user_id: authData.user.id,
-        name: cleanName,
-      });
-
-      if (error) throw error;
-      toast.success('Tipo impianto creato');
-      await refresh();
-    } catch (err: any) {
-      console.error('[system-type-context] Error adding system type:', err);
-      if (err?.code === '23505') {
-        toast.error('Questo tipo impianto esiste già');
-        return;
-      }
-      toast.error(err?.message || 'Errore nella creazione del tipo impianto');
-    }
-  };
-
-  const updateSystemType = async (id: string, name: string) => {
-    const cleanName = name.trim();
-    if (!cleanName) {
-      toast.error('Inserisci un nome');
-      return;
-    }
-
-    try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('system_types')
-        .update({ name: cleanName })
-        .eq('id', id);
+        .insert([systemType])
+        .select()
+        .single();
 
       if (error) throw error;
-      toast.success('Tipo impianto aggiornato');
-      await refresh();
-    } catch (err: any) {
-      console.error('[system-type-context] Error updating system type:', err);
-      if (err?.code === '23505') {
-        toast.error('Questo tipo impianto esiste già');
-        return;
-      }
-      toast.error(err?.message || 'Errore nell\'aggiornamento del tipo impianto');
-    }
-  };
 
-  const deleteSystemType = async (id: string) => {
+      // Update local state immediately
+      setSystemTypes((prev) => [...prev, data]);
+      
+      // Invalidate cache
+      apiClient.invalidate('system-types');
+      
+      toast.success('Tipo impianto creato con successo');
+    } catch (error: any) {
+      toast.error(`Errore nella creazione del tipo impianto: ${error.message}`);
+      throw error;
+    }
+  }, []);
+
+  const updateSystemType = useCallback(async (id: string, updates: Partial<SystemType>) => {
+    try {
+      const { data, error } = await supabase
+        .from('system_types')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state immediately
+      setSystemTypes((prev) =>
+        prev.map((st) => (st.id === id ? { ...st, ...data } : st))
+      );
+      
+      // Invalidate cache
+      apiClient.invalidate('system-types');
+      
+      toast.success('Tipo impianto aggiornato con successo');
+    } catch (error: any) {
+      toast.error(`Errore nell'aggiornamento del tipo impianto: ${error.message}`);
+      throw error;
+    }
+  }, []);
+
+  const deleteSystemType = useCallback(async (id: string) => {
     try {
       const { error } = await supabase.from('system_types').delete().eq('id', id);
+
       if (error) throw error;
-      toast.success('Tipo impianto eliminato');
-      await refresh();
-    } catch (err: any) {
-      console.error('[system-type-context] Error deleting system type:', err);
-      toast.error(err?.message || 'Errore nell\'eliminazione del tipo impianto');
+
+      // Update local state immediately
+      setSystemTypes((prev) => prev.filter((st) => st.id !== id));
+      
+      // Invalidate cache
+      apiClient.invalidate('system-types');
+      
+      toast.success('Tipo impianto eliminato con successo');
+    } catch (error: any) {
+      toast.error(`Errore nell'eliminazione del tipo impianto: ${error.message}`);
+      throw error;
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!hasFetched) {
+      fetchSystemTypes();
+    }
+  }, [hasFetched, fetchSystemTypes]);
 
   return (
     <SystemTypeContext.Provider
-      value={{ systemTypes, loading, refresh, addSystemType, updateSystemType, deleteSystemType }}
+      value={{
+        systemTypes,
+        loading,
+        error,
+        refreshSystemTypes,
+        createSystemType,
+        updateSystemType,
+        deleteSystemType,
+        hasFetched,
+      }}
     >
       {children}
     </SystemTypeContext.Provider>
@@ -131,7 +141,9 @@ export function SystemTypeProvider({ children }: { children: React.ReactNode }) 
 }
 
 export function useSystemTypes() {
-  const ctx = useContext(SystemTypeContext);
-  if (!ctx) throw new Error('useSystemTypes must be used within SystemTypeProvider');
-  return ctx;
+  const context = useContext(SystemTypeContext);
+  if (!context) {
+    throw new Error('useSystemTypes must be used within a SystemTypeProvider');
+  }
+  return context;
 }

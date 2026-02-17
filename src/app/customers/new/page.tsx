@@ -8,11 +8,11 @@ import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/protected-route';
 
 export default function NewCustomerPage() {
-  const { addCustomer } = useCustomers();
+  const { createCustomer } = useCustomers();
   const router = useRouter();
 
   const handleSubmit = async (data: CustomerFormValues) => {
-    await addCustomer(data);
+    await createCustomer(data);
     router.push('/customers');
   };
 

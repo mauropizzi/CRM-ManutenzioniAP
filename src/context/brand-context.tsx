@@ -1,128 +1,139 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import type { Brand } from '@/types/brand';
+import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/auth-context';
-import type { Brand } from '@/types/brand';
 
-interface BrandContextValue {
+interface BrandContextType {
   brands: Brand[];
   loading: boolean;
-  refresh: () => Promise<void>;
-  addBrand: (name: string) => Promise<void>;
-  updateBrand: (id: string, name: string) => Promise<void>;
+  error: string | null;
+  refreshBrands: () => Promise<void>;
+  createBrand: (brand: Omit<Brand, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateBrand: (id: string, brand: Partial<Brand>) => Promise<void>;
   deleteBrand: (id: string) => Promise<void>;
+  hasFetched: boolean;
 }
 
-const BrandContext = createContext<BrandContextValue | undefined>(undefined);
+const BrandContext = createContext<BrandContextType | undefined>(undefined);
 
 export function BrandProvider({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
 
-  const refresh = async () => {
-    if (!user) return;
-    setLoading(true);
+  const fetchBrands = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('brands')
-        .select('*')
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-      setBrands((data as Brand[]) || []);
-    } catch (err: any) {
-      if (String(err?.message || '').includes('AbortError')) return;
-      console.error('[brand-context] Error fetching brands:', err);
-      toast.error(err?.message || 'Errore nel caricamento delle marche');
+      setLoading(true);
+      setError(null);
+      
+      const data = await apiClient.fetchBrands();
+      setBrands(data);
+      setHasFetched(true);
+    } catch (error: any) {
+      console.error('Error fetching brands:', error);
+      setError(error.message);
+      toast.error(`Errore nel caricamento delle marche: ${error.message}`);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      refresh();
-    } else if (!authLoading && !user) {
-      setBrands([]);
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user?.id]);
+  const refreshBrands = useCallback(async () => {
+    // Invalidate cache before refreshing
+    apiClient.invalidate('brands');
+    await fetchBrands();
+  }, [fetchBrands]);
 
-  const addBrand = async (name: string) => {
-    const cleanName = name.trim();
-    if (!cleanName) {
-      toast.error('Inserisci un nome');
-      return;
-    }
-
+  const createBrand = useCallback(async (brand: Omit<Brand, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data: authData, error: authErr } = await supabase.auth.getUser();
-      if (authErr) throw authErr;
-      if (!authData.user) throw new Error('Devi essere autenticato');
-
-      const { error } = await supabase.from('brands').insert({
-        user_id: authData.user.id,
-        name: cleanName,
-      });
-
-      if (error) throw error;
-      toast.success('Marca creata');
-      await refresh();
-    } catch (err: any) {
-      console.error('[brand-context] Error adding brand:', err);
-      if (err?.code === '23505') {
-        toast.error('Questa marca esiste già');
-        return;
-      }
-      toast.error(err?.message || 'Errore nella creazione della marca');
-    }
-  };
-
-  const updateBrand = async (id: string, name: string) => {
-    const cleanName = name.trim();
-    if (!cleanName) {
-      toast.error('Inserisci un nome');
-      return;
-    }
-
-    try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('brands')
-        .update({ name: cleanName })
-        .eq('id', id);
+        .insert([brand])
+        .select()
+        .single();
 
       if (error) throw error;
-      toast.success('Marca aggiornata');
-      await refresh();
-    } catch (err: any) {
-      console.error('[brand-context] Error updating brand:', err);
-      if (err?.code === '23505') {
-        toast.error('Questa marca esiste già');
-        return;
-      }
-      toast.error(err?.message || 'Errore nell\'aggiornamento della marca');
-    }
-  };
 
-  const deleteBrand = async (id: string) => {
+      // Update local state immediately
+      setBrands((prev) => [...prev, data]);
+      
+      // Invalidate cache
+      apiClient.invalidate('brands');
+      
+      toast.success('Marca creata con successo');
+    } catch (error: any) {
+      toast.error(`Errore nella creazione della marca: ${error.message}`);
+      throw error;
+    }
+  }, []);
+
+  const updateBrand = useCallback(async (id: string, updates: Partial<Brand>) => {
+    try {
+      const { data, error } = await supabase
+        .from('brands')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state immediately
+      setBrands((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, ...data } : b))
+      );
+      
+      // Invalidate cache
+      apiClient.invalidate('brands');
+      
+      toast.success('Marca aggiornata con successo');
+    } catch (error: any) {
+      toast.error(`Errore nell'aggiornamento della marca: ${error.message}`);
+      throw error;
+    }
+  }, []);
+
+  const deleteBrand = useCallback(async (id: string) => {
     try {
       const { error } = await supabase.from('brands').delete().eq('id', id);
+
       if (error) throw error;
-      toast.success('Marca eliminata');
-      await refresh();
-    } catch (err: any) {
-      console.error('[brand-context] Error deleting brand:', err);
-      toast.error(err?.message || 'Errore nell\'eliminazione della marca');
+
+      // Update local state immediately
+      setBrands((prev) => prev.filter((b) => b.id !== id));
+      
+      // Invalidate cache
+      apiClient.invalidate('brands');
+      
+      toast.success('Marca eliminata con successo');
+    } catch (error: any) {
+      toast.error(`Errore nell'eliminazione della marca: ${error.message}`);
+      throw error;
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!hasFetched) {
+      fetchBrands();
+    }
+  }, [hasFetched, fetchBrands]);
 
   return (
     <BrandContext.Provider
-      value={{ brands, loading, refresh, addBrand, updateBrand, deleteBrand }}
+      value={{
+        brands,
+        loading,
+        error,
+        refreshBrands,
+        createBrand,
+        updateBrand,
+        deleteBrand,
+        hasFetched,
+      }}
     >
       {children}
     </BrandContext.Provider>
@@ -130,7 +141,9 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useBrands() {
-  const ctx = useContext(BrandContext);
-  if (!ctx) throw new Error('useBrands must be used within BrandProvider');
-  return ctx;
+  const context = useContext(BrandContext);
+  if (!context) {
+    throw new Error('useBrands must be used within a BrandProvider');
+  }
+  return context;
 }

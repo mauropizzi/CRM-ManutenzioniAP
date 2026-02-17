@@ -195,7 +195,7 @@ function getGoogleMapsLink(request: InterventionRequest) {
 }
 
 export function InterventionTable() {
-  const { interventionRequests, loading, deleteInterventionRequest } = useInterventionRequests();
+  const { interventionRequests, loading } = useInterventionRequests();
   const { technicians } = useTechnicians();
   const { suppliers } = useSuppliers();
 

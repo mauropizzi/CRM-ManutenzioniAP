@@ -9,13 +9,13 @@ import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 
 export default function NewMaterialPage() {
-  const { addMaterial } = useMaterials();
+  const { createMaterial } = useMaterials();
   const router = useRouter();
 
   const handleSubmit = async (data: MaterialFormValues) => {
     console.log('Form submitted with data:', data);
     try {
-      await addMaterial(data);
+      await createMaterial(data);
       console.log('Material added successfully');
       toast.success("Materiale aggiunto con successo!");
       router.push('/materials');
