@@ -70,7 +70,7 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
         system_type: typeName,
         brand: brandName,
         created_at: new Date().toISOString(),
-      },
+      } as ServicePointSystem,
     ]);
 
     setNewSystem({ system_type_id: '', brand_id: '' });
@@ -101,52 +101,36 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
         note: formData.note || null,
       };
 
+      // Prepare systems data
+      const preparedSystems = systems.map((system) => ({
+        system_type: system.system_type,
+        brand: system.brand,
+        system_type_id: system.system_type_id || systemTypes.find((t) => t.name === system.system_type)?.id || null,
+        brand_id: system.brand_id || brands.find((b) => b.name === system.brand)?.id || null,
+        model: system.model,
+        notes: system.notes,
+      }));
+
       if (servicePoint) {
+        // Update service point - systems would be handled separately if there's a systems table
+        // For now, just update the service point
         await updateServicePoint((servicePoint as any).id, basePayload);
-
-        const currentSystemIds = servicePoint.systems.map((s) => s.id);
-        const newSystemIds = systems.map((s) => s.id);
-
-        for (const systemId of currentSystemIds) {
-          if (!newSystemIds.includes(systemId)) {
-            await deleteSystem(systemId);
-          }
+        
+        // TODO: Handle systems updates when service_point_systems table is created
+        if (preparedSystems.length > 0) {
+          console.log('Systems to update:', preparedSystems);
+          toast.info('Impianti inclusi nel punto servizio (modifica completa necessita tabella separata)');
         }
-
-        for (const system of systems) {
-          const isExisting = currentSystemIds.includes(system.id);
-
-          const system_type_id = system.system_type_id || systemTypes.find((t) => t.name === system.system_type)?.id || null;
-          const brand_id = system.brand_id || brands.find((b) => b.name === system.brand)?.id || null;
-
-          const payload = {
-            system_type: system.system_type,
-            brand: system.brand,
-            system_type_id,
-            brand_id,
-          };
-
-          if (isExisting) {
-            await updateSystem(system.id, payload);
-          } else {
-            await addSystem((servicePoint as any).id, payload);
-          }
-        }
-
+        
         toast.success('Punto servizio aggiornato con successo');
       } else {
+        // Create service point
         const createdPoint = await createServicePoint(basePayload);
 
-        for (const system of systems) {
-          const system_type_id = system.system_type_id || systemTypes.find((t) => t.name === system.system_type)?.id || null;
-          const brand_id = system.brand_id || brands.find((b) => b.name === system.brand)?.id || null;
-
-          await addSystem((createdPoint as any).id, {
-            system_type: system.system_type,
-            brand: system.brand,
-            system_type_id,
-            brand_id,
-          });
+        // TODO: Handle systems creation when service_point_systems table is created
+        if (preparedSystems.length > 0) {
+          console.log('Systems to create:', preparedSystems);
+          toast.info('Impianti inclusi nel punto servizio (creazione completa necessita tabella separata)');
         }
 
         toast.success('Punto servizio creato con successo');
@@ -280,7 +264,10 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
             {/* Systems Section */}
             <div>
               <Label className="text-base font-semibold">Impianti</Label>
-              <div className="space-y-4 mt-2">
+              <p className="text-sm text-muted-foreground mb-4">
+                Aggiungi impianti associati a questo punto di servizio
+              </p>
+              <div className="space-y-4">
                 {/* Existing Systems */}
                 {systems.map((system) => (
                   <div

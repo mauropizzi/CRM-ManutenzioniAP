@@ -15,8 +15,11 @@ export interface ServicePoint {
   systems?: ServicePointSystem[];
 }
 
+export type ServicePointCreateInput = Omit<ServicePoint, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'systems'>;
+
 export interface ServicePointSystem {
   id: string;
+  service_point_id?: string;
   system_type: string;
   system_type_id?: string;
   brand: string;

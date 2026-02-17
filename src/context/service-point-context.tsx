@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import type { ServicePoint } from '@/types/service-point';
+import type { ServicePoint, ServicePointCreateInput } from '@/types/service-point';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +11,7 @@ interface ServicePointContextType {
   loading: boolean;
   error: string | null;
   refreshServicePoints: (customerId?: string) => Promise<void>;
-  createServicePoint: (servicePoint: Omit<ServicePoint, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  createServicePoint: (servicePoint: ServicePointCreateInput) => Promise<ServicePoint>;
   updateServicePoint: (id: string, servicePoint: Partial<ServicePoint>) => Promise<void>;
   deleteServicePoint: (id: string) => Promise<void>;
   hasFetched: boolean;
@@ -50,11 +50,16 @@ export function ServicePointProvider({ children }: { children: React.ReactNode }
     await fetchServicePoints(customerId);
   }, [fetchServicePoints]);
 
-  const createServicePoint = useCallback(async (servicePoint: Omit<ServicePoint, 'id' | 'created_at' | 'updated_at'>) => {
+  const createServicePoint = useCallback(async (servicePoint: ServicePointCreateInput): Promise<ServicePoint> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
     try {
       const { data, error } = await supabase
         .from('service_points')
-        .insert([servicePoint])
+        .insert([{ ...servicePoint, created_by: user.id }])
         .select()
         .single();
 
@@ -67,6 +72,7 @@ export function ServicePointProvider({ children }: { children: React.ReactNode }
       apiClient.invalidate('service-points');
       
       toast.success('Punto di servizio creato con successo');
+      return data as ServicePoint;
     } catch (error: any) {
       toast.error(`Errore nella creazione del punto di servizio: ${error.message}`);
       throw error;
