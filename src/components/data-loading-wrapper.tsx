@@ -8,7 +8,6 @@ import { useSuppliers } from "@/context/supplier-context";
 import { useInterventionRequests } from "@/context/intervention-context";
 import { useSystemTypes } from "@/context/system-type-context";
 import { useBrands } from "@/context/brand-context";
-import { useServicePoint } from "@/context/service-point-context";
 import { Loader2 } from "lucide-react";
 
 export function DataLoadingWrapper({ children }: { children: React.ReactNode }) {
@@ -20,7 +19,6 @@ export function DataLoadingWrapper({ children }: { children: React.ReactNode }) 
   const { loading: interventionsLoading } = useInterventionRequests();
   const { loading: systemTypesLoading } = useSystemTypes();
   const { loading: brandsLoading } = useBrands();
-  const { loading: servicePointsLoading } = useServicePoint();
 
   const isLoading = 
     authLoading ||
@@ -30,8 +28,7 @@ export function DataLoadingWrapper({ children }: { children: React.ReactNode }) 
     suppliersLoading ||
     interventionsLoading ||
     systemTypesLoading ||
-    brandsLoading ||
-    servicePointsLoading;
+    brandsLoading;
 
   if (isLoading) {
     return (
