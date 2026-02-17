@@ -13,6 +13,7 @@ import {
 } from '@/lib/service-point-utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from './auth-context';
 
 interface ServicePointContextType {
   servicePoints: ServicePointWithSystems[];
@@ -46,6 +47,7 @@ interface ServicePointProviderProps {
 export const ServicePointProvider: React.FC<ServicePointProviderProps> = ({ children }) => {
   const [servicePoints, setServicePoints] = useState<ServicePointWithSystems[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const refreshServicePoints = async () => {
     setLoading(true);
@@ -53,11 +55,24 @@ export const ServicePointProvider: React.FC<ServicePointProviderProps> = ({ chil
       const points = await getServicePoints();
       setServicePoints(points);
     } catch (error) {
+      if (String(error?.message || '').includes('AbortError')) {
+        return;
+      }
       console.error('Error fetching service points:', error);
+      toast.error('Errore nel caricamento dei punti servizio');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user) {
+      refreshServicePoints();
+    } else if (!user) {
+      setServicePoints([]);
+      setLoading(false);
+    }
+  }, [user]);
 
   const handleCreateServicePoint = async (servicePointData: any) => {
     try {
@@ -142,10 +157,6 @@ export const ServicePointProvider: React.FC<ServicePointProviderProps> = ({ chil
       throw error;
     }
   };
-
-  useEffect(() => {
-    refreshServicePoints();
-  }, []);
 
   return (
     <ServicePointContext.Provider
