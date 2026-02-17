@@ -9,24 +9,21 @@ import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 import { SystemTypeProvider } from '@/context/system-type-context';
 import { BrandProvider } from '@/context/brand-context';
-import { supabase } from '@/integrations/supabase/client';
 
 export default function NewInterventionPage() {
+  const { addInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
   const handleSubmit = async (data: InterventionFormValues) => {
+    console.log('Form submitted with data:', data);
     try {
-      const { data: intervention } = await supabase
-        .from('intervention_requests')
-        .insert([data])
-        .select()
-        .single();
-      
-      if (intervention) {
-        router.push(`/interventions/${intervention.id}/edit`);
-      }
+      await addInterventionRequest(data);
+      console.log('Intervention added successfully');
+      toast.success('Intervento registrato con successo!');
+      router.push('/interventions');
     } catch (error: any) {
-      toast.error(error?.message || 'Errore durante la creazione dell\'intervento');
+      console.error('Error adding intervention:', error);
+      toast.error(`Errore: ${error.message || "Impossibile registrare l'intervento"}`);
     }
   };
 

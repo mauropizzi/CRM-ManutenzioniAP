@@ -1,142 +1,182 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import type { Material } from '@/types/material';
-import { apiClient } from '@/lib/api-client';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Material } from '@/types/material';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './auth-context';
 
 interface MaterialContextType {
   materials: Material[];
-  loading: boolean;
-  error: string | null;
-  refreshMaterials: () => Promise<void>;
-  createMaterial: (material: Omit<Material, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  updateMaterial: (id: string, material: Partial<Material>) => Promise<void>;
+  addMaterial: (material: Omit<Material, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateMaterial: (material: Material) => Promise<void>;
   deleteMaterial: (id: string) => Promise<void>;
-  hasFetched: boolean;
+  refreshMaterials: () => Promise<void>;
+  loading: boolean;
 }
 
 const MaterialContext = createContext<MaterialContextType | undefined>(undefined);
 
-export function MaterialProvider({ children }: { children: React.ReactNode }) {
+export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [hasFetched, setHasFetched] = useState(false);
+  const { user } = useAuth();
 
-  const fetchMaterials = useCallback(async () => {
+  const refreshMaterials = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError(null);
-      
-      const data = await apiClient.fetchMaterials();
-      setMaterials(data);
-      setHasFetched(true);
+      console.log('Fetching materials from Supabase...');
+
+      const { data, error } = await supabase
+        .from('materials')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (String(error?.message || '').includes('AbortError')) {
+          return;
+        }
+        console.error('Supabase error fetching materials:', error);
+        toast.error(`Errore nel caricamento dei materiali: ${error.message}`);
+        return;
+      }
+
+      console.log('Materials fetched:', data);
+
+      setMaterials((data as Material[]) || []);
     } catch (error: any) {
-      console.error('Error fetching materials:', error);
-      setError(error.message);
-      toast.error(`Errore nel caricamento dei materiali: ${error.message}`);
+      if (String(error?.message || '').includes('AbortError')) {
+        return;
+      }
+      console.error('Exception fetching materials:', error);
+      toast.error(`Errore nel caricamento dei materiali: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const refreshMaterials = useCallback(async () => {
-    // Invalidate cache before refreshing
-    apiClient.invalidate('materials');
-    await fetchMaterials();
-  }, [fetchMaterials]);
-
-  const createMaterial = async (material: Omit<Material, 'id' | 'created_at' | 'updated_at'>) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    const { data, error } = await supabase
-      .from('materials')
-      .insert([{ ...material, user_id: user.id }])
-      .select()
-      .single();
-
-    if (error) throw error;
-    setMaterials(prev => [...prev, data as Material]);
   };
 
-  const updateMaterial = useCallback(async (id: string, updates: Partial<Material>) => {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user) {
+      refreshMaterials();
+    } else if (!user) {
+      setMaterials([]);
+      setLoading(false);
+    }
+  }, [user]);
+
+  const addMaterial = async (newMaterial: Omit<Material, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast.error("Devi essere autenticato per aggiungere un materiale");
+        return;
+      }
+
+      const materialWithUserId = {
+        ...newMaterial,
+        user_id: user.id,
+      };
+
+      console.log('Adding material:', materialWithUserId);
+
       const { data, error } = await supabase
         .from('materials')
-        .update(updates)
-        .eq('id', id)
+        .insert([materialWithUserId])
+        .select();
+
+      if (error) {
+        console.error('Supabase error adding material:', error);
+        toast.error(`Errore nell'aggiunta del materiale: ${error.message}`);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setMaterials((prev) => [data[0] as Material, ...prev]);
+        toast.success("Materiale aggiunto con successo!");
+      } else {
+        toast.error("Impossibile aggiungere il materiale. Verifica i permessi o riprova.");
+      }
+    } catch (error: any) {
+      console.error('Exception adding material:', error);
+      toast.error(`Errore nell'aggiunta del materiale: ${error?.message || 'Unknown error'}`);
+    }
+  };
+
+  const updateMaterial = async (updatedMaterial: Material) => {
+    try {
+      console.log('Updating material:', updatedMaterial);
+
+      const { data, error } = await supabase
+        .from('materials')
+        .update(updatedMaterial)
+        .eq('id', updatedMaterial.id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error updating material:', error);
+        toast.error(`Errore nell'aggiornamento del materiale: ${error.message}`);
+        return;
+      }
 
-      // Update local state immediately
-      setMaterials((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, ...data } : m))
-      );
-      
-      // Invalidate cache
-      apiClient.invalidate('materials');
-      
-      toast.success('Materiale aggiornato con successo');
+      console.log('Material updated:', data);
+
+      if (data) {
+        setMaterials((prev) =>
+          prev.map((material) =>
+            material.id === updatedMaterial.id ? (data as Material) : material
+          )
+        );
+        toast.success("Materiale aggiornato con successo!");
+      }
     } catch (error: any) {
-      toast.error(`Errore nell'aggiornamento del materiale: ${error.message}`);
-      throw error;
+      console.error('Exception updating material:', error);
+      toast.error(`Errore nell'aggiornamento del materiale: ${error?.message || 'Unknown error'}`);
     }
-  }, []);
+  };
 
-  const deleteMaterial = useCallback(async (id: string) => {
+  const deleteMaterial = async (id: string) => {
     try {
-      const { error } = await supabase.from('materials').delete().eq('id', id);
+      console.log('Deleting material:', id);
 
-      if (error) throw error;
+      const { error } = await supabase
+        .from('materials')
+        .delete()
+        .eq('id', id);
 
-      // Update local state immediately
-      setMaterials((prev) => prev.filter((m) => m.id !== id));
-      
-      // Invalidate cache
-      apiClient.invalidate('materials');
-      
-      toast.success('Materiale eliminato con successo');
+      if (error) {
+        console.error('Supabase error deleting material:', error);
+        toast.error(`Errore nell'eliminazione del materiale: ${error.message}`);
+        return;
+      }
+
+      setMaterials((prev) => prev.filter((material) => material.id !== id));
+      toast.success("Materiale eliminato con successo!");
     } catch (error: any) {
-      toast.error(`Errore nell'eliminazione del materiale: ${error.message}`);
-      throw error;
+      console.error('Exception deleting material:', error);
+      toast.error(`Errore nell'eliminazione del materiale: ${error?.message || 'Unknown error'}`);
     }
-  }, []);
-
-  useEffect(() => {
-    if (!hasFetched) {
-      fetchMaterials();
-    }
-  }, [hasFetched, fetchMaterials]);
+  };
 
   return (
-    <MaterialContext.Provider
-      value={{
-        materials,
-        loading,
-        error,
-        refreshMaterials,
-        createMaterial,
-        updateMaterial,
-        deleteMaterial,
-        hasFetched,
-      }}
-    >
+    <MaterialContext.Provider value={{
+      materials,
+      addMaterial,
+      updateMaterial,
+      deleteMaterial,
+      refreshMaterials,
+      loading
+    }}>
       {children}
     </MaterialContext.Provider>
   );
-}
+};
 
-export function useMaterials() {
+export const useMaterials = () => {
   const context = useContext(MaterialContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useMaterials must be used within a MaterialProvider');
   }
   return context;
-}
+};

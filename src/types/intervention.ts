@@ -85,6 +85,3 @@ export interface InterventionRequest {
   created_at?: string;
   updated_at?: string;
 }
-
-// The actual type is likely defined in this file, not in a separate file
-// Find the actual interface definition and export it if needed

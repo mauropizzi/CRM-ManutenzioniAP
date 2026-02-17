@@ -25,7 +25,7 @@ export default function EditCustomerPage({ params }: EditCustomerPageProps) {
   }
 
   const handleSubmit = async (data: CustomerFormValues) => {
-    await updateCustomer(customerToEdit.id, { ...customerToEdit, ...data });
+    await updateCustomer({ ...customerToEdit, ...data } as Customer);
     router.push('/customers');
   };
 

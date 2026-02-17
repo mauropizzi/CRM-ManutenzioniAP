@@ -6,9 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useServicePoints } from '@/context/service-point-context';
+import { useServicePoint } from '@/context/service-point-context';
 import { useCustomers } from '@/context/customer-context';
-import type { ServicePoint } from '@/types/service-point';
 import { ServicePointProvider } from '@/context/service-point-context';
 import { CustomerProvider } from '@/context/customer-context';
 import { ProtectedRoute } from '@/components/protected-route';
@@ -18,11 +17,11 @@ import Link from 'next/link';
 function CustomerServicePointsContent() {
   const params = useParams();
   const router = useRouter();
-  const { servicePoints, loading } = useServicePoints();
+  const { servicePoints, loading } = useServicePoint();
   const { customers } = useCustomers();
   
   const customer = customers.find((c: any) => c.id === params.id);
-  const customerServicePoints = servicePoints.filter((sp: ServicePoint) => sp.customer_id === params.id);
+  const customerServicePoints = servicePoints.filter(sp => sp.customer_id === params.id);
 
   if (loading) {
     return <div>Caricamento...</div>;
@@ -70,7 +69,7 @@ function CustomerServicePointsContent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {customerServicePoints.map((point: ServicePoint) => (
+                {customerServicePoints.map((point) => (
                   <TableRow key={point.id}>
                     <TableCell className="font-medium">{point.name}</TableCell>
                     <TableCell>
@@ -91,10 +90,10 @@ function CustomerServicePointsContent() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {point.systems?.length === 0 ? (
+                        {point.systems.length === 0 ? (
                           <Badge variant="outline">Nessun impianto</Badge>
                         ) : (
-                          point.systems?.map((system: any, index: number) => (
+                          point.systems.map((system, index) => (
                             <Badge key={index} variant="secondary" className="text-xs">
                               {system.system_type} - {system.brand}
                             </Badge>

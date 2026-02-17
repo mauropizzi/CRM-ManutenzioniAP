@@ -1,157 +1,167 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import type { ServicePoint, ServicePointCreateInput } from '@/types/service-point';
-import { apiClient } from '@/lib/api-client';
-import { toast } from 'sonner';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { ServicePointWithSystems, ServicePointSystem } from '@/types/service-point';
+import {
+  getServicePoints,
+  createServicePoint,
+  updateServicePoint,
+  deleteServicePoint,
+  addServicePointSystem,
+  updateServicePointSystem,
+  deleteServicePointSystem,
+} from '@/lib/service-point-utils';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface ServicePointContextType {
-  servicePoints: ServicePoint[];
+  servicePoints: ServicePointWithSystems[];
   loading: boolean;
-  error: string | null;
-  refreshServicePoints: (customerId?: string) => Promise<void>;
-  createServicePoint: (servicePoint: ServicePointCreateInput) => Promise<ServicePoint>;
-  updateServicePoint: (id: string, servicePoint: Partial<ServicePoint>) => Promise<void>;
+  refreshServicePoints: () => Promise<void>;
+  createServicePoint: (servicePoint: any) => Promise<any>;
+  updateServicePoint: (id: string, updates: any) => Promise<void>;
   deleteServicePoint: (id: string) => Promise<void>;
-  hasFetched: boolean;
+  addSystem: (
+    servicePointId: string,
+    system: Omit<ServicePointSystem, 'id' | 'created_at' | 'service_point_id'>
+  ) => Promise<void>;
+  updateSystem: (systemId: string, updates: Partial<ServicePointSystem>) => Promise<void>;
+  deleteSystem: (systemId: string) => Promise<void>;
 }
 
 const ServicePointContext = createContext<ServicePointContextType | undefined>(undefined);
 
-export function ServicePointProvider({ children }: { children: React.ReactNode }) {
-  const [servicePoints, setServicePoints] = useState<ServicePoint[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [hasFetched, setHasFetched] = useState(false);
-  const [currentCustomerId, setCurrentCustomerId] = useState<string>();
+export const useServicePoint = () => {
+  const context = useContext(ServicePointContext);
+  if (context === undefined) {
+    throw new Error('useServicePoint must be used within a ServicePointProvider');
+  }
+  return context;
+};
 
-  const fetchServicePoints = useCallback(async (customerId?: string) => {
+interface ServicePointProviderProps {
+  children: ReactNode;
+}
+
+export const ServicePointProvider: React.FC<ServicePointProviderProps> = ({ children }) => {
+  const [servicePoints, setServicePoints] = useState<ServicePointWithSystems[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refreshServicePoints = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError(null);
-      
-      const data = await apiClient.fetchServicePoints(customerId);
-      setServicePoints(data);
-      setCurrentCustomerId(customerId);
-      setHasFetched(true);
-    } catch (error: any) {
+      const points = await getServicePoints();
+      setServicePoints(points);
+    } catch (error) {
       console.error('Error fetching service points:', error);
-      setError(error.message);
-      toast.error(`Errore nel caricamento dei punti di servizio: ${error.message}`);
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  const refreshServicePoints = useCallback(async (customerId?: string) => {
-    // Invalidate cache before refreshing
-    apiClient.invalidate('service-points');
-    await fetchServicePoints(customerId);
-  }, [fetchServicePoints]);
-
-  const createServicePoint = useCallback(async (servicePoint: ServicePointCreateInput): Promise<ServicePoint> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
+  const handleCreateServicePoint = async (servicePointData: any) => {
     try {
-      const { data, error } = await supabase
-        .from('service_points')
-        .insert([{ ...servicePoint, created_by: user.id }])
-        .select()
-        .single();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      if (error) throw error;
+      if (!user) {
+        toast.error('Devi essere autenticato per creare un punto servizio');
+        throw new Error('Not authenticated');
+      }
 
-      // Update local state immediately
-      setServicePoints((prev) => [...prev, data]);
-      
-      // Invalidate cache
-      apiClient.invalidate('service-points');
-      
-      toast.success('Punto di servizio creato con successo');
-      return data as ServicePoint;
-    } catch (error: any) {
-      toast.error(`Errore nella creazione del punto di servizio: ${error.message}`);
+      // RLS: created_by deve essere uguale a auth.uid()
+      const payload = {
+        ...servicePointData,
+        created_by: user.id,
+      };
+
+      const created = await createServicePoint(payload);
+      await refreshServicePoints();
+      return created;
+    } catch (error) {
+      console.error('Error creating service point:', error);
       throw error;
     }
-  }, []);
+  };
 
-  const updateServicePoint = useCallback(async (id: string, updates: Partial<ServicePoint>) => {
+  const handleUpdateServicePoint = async (id: string, updates: any) => {
     try {
-      const { data, error } = await supabase
-        .from('service_points')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setServicePoints((prev) =>
-        prev.map((sp) => (sp.id === id ? { ...sp, ...data } : sp))
-      );
-      
-      // Invalidate cache
-      apiClient.invalidate('service-points');
-      
-      toast.success('Punto di servizio aggiornato con successo');
-    } catch (error: any) {
-      toast.error(`Errore nell'aggiornamento del punto di servizio: ${error.message}`);
+      // Evita di sovrascrivere created_by da client
+      const { created_by, user_id, ...safeUpdates } = updates || {};
+      await updateServicePoint(id, safeUpdates);
+      await refreshServicePoints();
+    } catch (error) {
+      console.error('Error updating service point:', error);
       throw error;
     }
-  }, []);
+  };
 
-  const deleteServicePoint = useCallback(async (id: string) => {
+  const handleDeleteServicePoint = async (id: string) => {
     try {
-      const { error } = await supabase.from('service_points').delete().eq('id', id);
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setServicePoints((prev) => prev.filter((sp) => sp.id !== id));
-      
-      // Invalidate cache
-      apiClient.invalidate('service-points');
-      
-      toast.success('Punto di servizio eliminato con successo');
-    } catch (error: any) {
-      toast.error(`Errore nell'eliminazione del punto di servizio: ${error.message}`);
+      await deleteServicePoint(id);
+      await refreshServicePoints();
+    } catch (error) {
+      console.error('Error deleting service point:', error);
       throw error;
     }
-  }, []);
+  };
+
+  const handleAddSystem = async (
+    servicePointId: string,
+    systemData: Omit<ServicePointSystem, 'id' | 'created_at' | 'service_point_id'>
+  ) => {
+    try {
+      await addServicePointSystem({
+        service_point_id: servicePointId,
+        ...systemData,
+      });
+      await refreshServicePoints();
+    } catch (error) {
+      console.error('Error adding system:', error);
+      throw error;
+    }
+  };
+
+  const handleUpdateSystem = async (systemId: string, updates: Partial<ServicePointSystem>) => {
+    try {
+      await updateServicePointSystem(systemId, updates);
+      await refreshServicePoints();
+    } catch (error) {
+      console.error('Error updating system:', error);
+      throw error;
+    }
+  };
+
+  const handleDeleteSystem = async (systemId: string) => {
+    try {
+      await deleteServicePointSystem(systemId);
+      await refreshServicePoints();
+    } catch (error) {
+      console.error('Error deleting system:', error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
-    if (!hasFetched) {
-      fetchServicePoints();
-    }
-  }, [hasFetched, fetchServicePoints]);
+    refreshServicePoints();
+  }, []);
 
   return (
     <ServicePointContext.Provider
       value={{
         servicePoints,
         loading,
-        error,
         refreshServicePoints,
-        createServicePoint,
-        updateServicePoint,
-        deleteServicePoint,
-        hasFetched,
+        createServicePoint: handleCreateServicePoint,
+        updateServicePoint: handleUpdateServicePoint,
+        deleteServicePoint: handleDeleteServicePoint,
+        addSystem: handleAddSystem,
+        updateSystem: handleUpdateSystem,
+        deleteSystem: handleDeleteSystem,
       }}
     >
       {children}
     </ServicePointContext.Provider>
   );
-}
-
-export function useServicePoints() {
-  const context = useContext(ServicePointContext);
-  if (!context) {
-    throw new Error('useServicePoints must be used within a ServicePointProvider');
-  }
-  return context;
-}
+};

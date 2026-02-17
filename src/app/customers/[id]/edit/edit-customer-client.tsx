@@ -35,7 +35,7 @@ export default function EditCustomerClient() {
         ...data
       };
 
-      await updateCustomer(customer.id, { ...customer, ...data });
+      await updateCustomer(updatedCustomer);
       router.push('/customers');
     } catch (error) {
       console.error('Error updating customer:', error);

@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { Edit, Filter, MapPin, PlusCircle, Search, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
-import { useServicePoints } from "@/context/service-point-context";
+import { useServicePoint } from "@/context/service-point-context";
 import { useCustomers } from "@/context/customer-context";
-import type { ServicePoint } from "@/types/service-point";
+import type { ServicePointWithSystems } from "@/types/service-point";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-function getNavigateUrl(point: ServicePoint) {
+function getNavigateUrl(point: ServicePointWithSystems) {
   const destination = [point.address, point.city, point.cap, point.provincia]
     .filter(Boolean)
     .join(", ");
@@ -57,7 +57,7 @@ function getSystemsBadgeVariant(count: number) {
 
 export default function ServicePointTable() {
   const router = useRouter();
-  const { servicePoints, loading, deleteServicePoint } = useServicePoints();
+  const { servicePoints, loading, deleteServicePoint } = useServicePoint();
   const { customers } = useCustomers();
 
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -82,7 +82,7 @@ export default function ServicePointTable() {
   const filteredServicePoints = React.useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
 
-    return servicePoints.filter((point: ServicePoint) => {
+    return servicePoints.filter((point) => {
       const customerName = (customerNameById.get(point.customer_id) || "").toLowerCase();
       const matchesSearch =
         !q ||
@@ -99,9 +99,9 @@ export default function ServicePointTable() {
 
   const stats = React.useMemo(() => {
     const total = servicePoints.length;
-    const withSystems = servicePoints.filter((p: ServicePoint) => (p.systems?.length || 0) > 0).length;
+    const withSystems = servicePoints.filter((p) => (p.systems?.length || 0) > 0).length;
     const withoutSystems = total - withSystems;
-    const uniqueCustomers = new Set(servicePoints.map((p: ServicePoint) => p.customer_id).filter(Boolean)).size;
+    const uniqueCustomers = new Set(servicePoints.map((p) => p.customer_id).filter(Boolean)).size;
 
     return {
       total,
@@ -283,7 +283,7 @@ export default function ServicePointTable() {
               </TableHeader>
 
               <TableBody className="divide-y divide-border">
-                {filteredServicePoints.map((point: ServicePoint) => {
+                {filteredServicePoints.map((point) => {
                   const customerName = customerNameById.get(point.customer_id) || "Cliente";
                   const systemsCount = point.systems?.length || 0;
                   const navigateUrl = getNavigateUrl(point);
@@ -327,7 +327,7 @@ export default function ServicePointTable() {
                         </Badge>
                         {systemsCount > 0 && (
                           <div className="mt-2 flex flex-wrap gap-1">
-                            {point.systems?.slice(0, 3).map((s: any, idx: number) => (
+                            {point.systems.slice(0, 3).map((s, idx) => (
                               <Badge
                                 key={`${point.id}-${idx}`}
                                 className="rounded-full bg-muted text-foreground border border-border text-[11px]"

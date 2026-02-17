@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCustomers } from '@/context/customer-context';
-import { useServicePoints } from '@/context/service-point-context';
+import { useServicePoint } from '@/context/service-point-context';
 import { useSystemTypes } from '@/context/system-type-context';
 import { useBrands } from '@/context/brand-context';
 import { ServicePointWithSystems, ServicePointSystem } from '@/types/service-point';
@@ -25,7 +25,7 @@ interface ServicePointFormProps {
 export default function ServicePointForm({ servicePoint, customerId }: ServicePointFormProps) {
   const router = useRouter();
   const { customers } = useCustomers();
-  const { createServicePoint, updateServicePoint } = useServicePoints();
+  const { createServicePoint, updateServicePoint, addSystem, updateSystem, deleteSystem } = useServicePoint();
   const { systemTypes } = useSystemTypes();
   const { brands } = useBrands();
 
@@ -70,7 +70,7 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
         system_type: typeName,
         brand: brandName,
         created_at: new Date().toISOString(),
-      } as ServicePointSystem,
+      },
     ]);
 
     setNewSystem({ system_type_id: '', brand_id: '' });
@@ -101,36 +101,52 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
         note: formData.note || null,
       };
 
-      // Prepare systems data
-      const preparedSystems = systems.map((system) => ({
-        system_type: system.system_type,
-        brand: system.brand,
-        system_type_id: system.system_type_id || systemTypes.find((t) => t.name === system.system_type)?.id || null,
-        brand_id: system.brand_id || brands.find((b) => b.name === system.brand)?.id || null,
-        model: system.model,
-        notes: system.notes,
-      }));
-
       if (servicePoint) {
-        // Update service point - systems would be handled separately if there's a systems table
-        // For now, just update the service point
         await updateServicePoint((servicePoint as any).id, basePayload);
-        
-        // TODO: Handle systems updates when service_point_systems table is created
-        if (preparedSystems.length > 0) {
-          console.log('Systems to update:', preparedSystems);
-          toast.info('Impianti inclusi nel punto servizio (modifica completa necessita tabella separata)');
+
+        const currentSystemIds = servicePoint.systems.map((s) => s.id);
+        const newSystemIds = systems.map((s) => s.id);
+
+        for (const systemId of currentSystemIds) {
+          if (!newSystemIds.includes(systemId)) {
+            await deleteSystem(systemId);
+          }
         }
-        
+
+        for (const system of systems) {
+          const isExisting = currentSystemIds.includes(system.id);
+
+          const system_type_id = system.system_type_id || systemTypes.find((t) => t.name === system.system_type)?.id || null;
+          const brand_id = system.brand_id || brands.find((b) => b.name === system.brand)?.id || null;
+
+          const payload = {
+            system_type: system.system_type,
+            brand: system.brand,
+            system_type_id,
+            brand_id,
+          };
+
+          if (isExisting) {
+            await updateSystem(system.id, payload);
+          } else {
+            await addSystem((servicePoint as any).id, payload);
+          }
+        }
+
         toast.success('Punto servizio aggiornato con successo');
       } else {
-        // Create service point
         const createdPoint = await createServicePoint(basePayload);
 
-        // TODO: Handle systems creation when service_point_systems table is created
-        if (preparedSystems.length > 0) {
-          console.log('Systems to create:', preparedSystems);
-          toast.info('Impianti inclusi nel punto servizio (creazione completa necessita tabella separata)');
+        for (const system of systems) {
+          const system_type_id = system.system_type_id || systemTypes.find((t) => t.name === system.system_type)?.id || null;
+          const brand_id = system.brand_id || brands.find((b) => b.name === system.brand)?.id || null;
+
+          await addSystem((createdPoint as any).id, {
+            system_type: system.system_type,
+            brand: system.brand,
+            system_type_id,
+            brand_id,
+          });
         }
 
         toast.success('Punto servizio creato con successo');
@@ -264,10 +280,7 @@ export default function ServicePointForm({ servicePoint, customerId }: ServicePo
             {/* Systems Section */}
             <div>
               <Label className="text-base font-semibold">Impianti</Label>
-              <p className="text-sm text-muted-foreground mb-4">
-                Aggiungi impianti associati a questo punto di servizio
-              </p>
-              <div className="space-y-4">
+              <div className="space-y-4 mt-2">
                 {/* Existing Systems */}
                 {systems.map((system) => (
                   <div

@@ -1,142 +1,180 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import type { Technician } from '@/types/technician';
-import { apiClient } from '@/lib/api-client';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Technician } from '@/types/technician';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './auth-context';
 
 interface TechnicianContextType {
   technicians: Technician[];
-  loading: boolean;
-  error: string | null;
-  refreshTechnicians: () => Promise<void>;
-  createTechnician: (technician: Omit<Technician, 'id'>) => Promise<void>;
-  updateTechnician: (id: string, technician: Partial<Technician>) => Promise<void>;
+  addTechnician: (technician: Omit<Technician, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateTechnician: (technician: Technician) => Promise<void>;
   deleteTechnician: (id: string) => Promise<void>;
-  hasFetched: boolean;
+  loading: boolean;
 }
 
 const TechnicianContext = createContext<TechnicianContextType | undefined>(undefined);
 
-export function TechnicianProvider({ children }: { children: React.ReactNode }) {
+export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [hasFetched, setHasFetched] = useState(false);
+  const { user } = useAuth();
 
-  const fetchTechnicians = useCallback(async () => {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user) {
+      fetchTechnicians();
+    } else if (!user) {
+      setTechnicians([]);
+      setLoading(false);
+    }
+  }, [user]);
+
+  const fetchTechnicians = async () => {
     try {
-      setLoading(true);
-      setError(null);
+      console.log('Fetching technicians from Supabase...');
       
-      const data = await apiClient.fetchTechnicians();
-      setTechnicians(data);
-      setHasFetched(true);
+      const { data, error } = await supabase
+        .from('technicians')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (String(error?.message || '').includes('AbortError')) {
+          return;
+        }
+        console.error('Supabase error fetching technicians:', error);
+        toast.error(`Errore nel caricamento dei tecnici: ${error.message}`);
+        return;
+      }
+
+      console.log('Technicians fetched:', data);
+      
+      if (data) {
+        setTechnicians(data as Technician[]);
+      }
     } catch (error: any) {
-      console.error('Error fetching technicians:', error);
-      setError(error.message);
-      toast.error(`Errore nel caricamento dei tecnici: ${error.message}`);
+      if (String(error?.message || '').includes('AbortError')) {
+        return;
+      }
+      console.error('Exception fetching technicians:', error);
+      toast.error(`Errore nel caricamento dei tecnici: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const refreshTechnicians = useCallback(async () => {
-    // Invalidate cache before refreshing
-    apiClient.invalidate('technicians');
-    await fetchTechnicians();
-  }, [fetchTechnicians]);
-
-  const createTechnician = async (technician: Omit<Technician, 'id'>) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    const { data, error } = await supabase
-      .from('technicians')
-      .insert([{ ...technician, user_id: user.id }])
-      .select()
-      .single();
-
-    if (error) throw error;
-    setTechnicians(prev => [...prev, data as Technician]);
   };
 
-  const updateTechnician = useCallback(async (id: string, updates: Partial<Technician>) => {
+  const addTechnician = async (newTechnician: Omit<Technician, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
+      if (!user) {
+        toast.error("Devi essere autenticato per aggiungere un tecnico");
+        return;
+      }
+
+      const technicianWithUserId = {
+        ...newTechnician,
+        user_id: user.id,
+      };
+
+      console.log('Adding technician:', technicianWithUserId);
+      
       const { data, error } = await supabase
         .from('technicians')
-        .update(updates)
-        .eq('id', id)
+        .insert([technicianWithUserId])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error adding technician:', error);
+        toast.error(`Errore nell'aggiunta del tecnico: ${error.message}`);
+        return;
+      }
 
-      // Update local state immediately
-      setTechnicians((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, ...data } : t))
-      );
-      
-      // Invalidate cache
-      apiClient.invalidate('technicians');
-      
-      toast.success('Tecnico aggiornato con successo');
+      console.log('Technician added:', data);
+
+      if (data) {
+        setTechnicians((prev) => [data as Technician, ...prev]);
+        toast.success("Tecnico aggiunto con successo!");
+      }
     } catch (error: any) {
-      toast.error(`Errore nell'aggiornamento del tecnico: ${error.message}`);
-      throw error;
+      console.error('Exception adding technician:', error);
+      toast.error(`Errore nell'aggiunta del tecnico: ${error?.message || 'Unknown error'}`);
     }
-  }, []);
+  };
 
-  const deleteTechnician = useCallback(async (id: string) => {
+  const updateTechnician = async (updatedTechnician: Technician) => {
     try {
-      const { error } = await supabase.from('technicians').delete().eq('id', id);
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setTechnicians((prev) => prev.filter((t) => t.id !== id));
+      console.log('Updating technician:', updatedTechnician);
       
-      // Invalidate cache
-      apiClient.invalidate('technicians');
-      
-      toast.success('Tecnico eliminato con successo');
+      const { data, error } = await supabase
+        .from('technicians')
+        .update(updatedTechnician)
+        .eq('id', updatedTechnician.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error updating technician:', error);
+        toast.error(`Errore nell'aggiornamento del tecnico: ${error.message}`);
+        return;
+      }
+
+      console.log('Technician updated:', data);
+
+      if (data) {
+        setTechnicians((prev) =>
+          prev.map((technician) =>
+            technician.id === updatedTechnician.id ? (data as Technician) : technician
+          )
+        );
+        toast.success("Tecnico aggiornato con successo!");
+      }
     } catch (error: any) {
-      toast.error(`Errore nell'eliminazione del tecnico: ${error.message}`);
-      throw error;
+      console.error('Exception updating technician:', error);
+      toast.error(`Errore nell'aggiornamento del tecnico: ${error?.message || 'Unknown error'}`);
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    if (!hasFetched) {
-      fetchTechnicians();
+  const deleteTechnician = async (id: string) => {
+    try {
+      console.log('Deleting technician:', id);
+      
+      const { error } = await supabase
+        .from('technicians')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Supabase error deleting technician:', error);
+        toast.error(`Errore nell'eliminazione del tecnico: ${error.message}`);
+        return;
+      }
+
+      setTechnicians((prev) => prev.filter((technician) => technician.id !== id));
+      toast.success("Tecnico eliminato con successo!");
+    } catch (error: any) {
+      console.error('Exception deleting technician:', error);
+      toast.error(`Errore nell'eliminazione del tecnico: ${error?.message || 'Unknown error'}`);
     }
-  }, [hasFetched, fetchTechnicians]);
+  };
 
   return (
-    <TechnicianContext.Provider
-      value={{
-        technicians,
-        loading,
-        error,
-        refreshTechnicians,
-        createTechnician,
-        updateTechnician,
-        deleteTechnician,
-        hasFetched,
-      }}
-    >
+    <TechnicianContext.Provider value={{ 
+      technicians, 
+      addTechnician, 
+      updateTechnician, 
+      deleteTechnician,
+      loading 
+    }}>
       {children}
     </TechnicianContext.Provider>
   );
-}
+};
 
-export function useTechnicians() {
+export const useTechnicians = () => {
   const context = useContext(TechnicianContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useTechnicians must be used within a TechnicianProvider');
   }
   return context;
-}
+};

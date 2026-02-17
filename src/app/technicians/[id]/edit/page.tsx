@@ -26,7 +26,7 @@ export default function EditTechnicianPage({ params }: EditTechnicianPageProps) 
   }
 
   const handleSubmit = async (data: TechnicianFormValues) => {
-    await updateTechnician(technicianToEdit.id, { ...technicianToEdit, ...data });
+    await updateTechnician({ ...technicianToEdit, ...data } as Technician);
     router.push('/technicians');
   };
 

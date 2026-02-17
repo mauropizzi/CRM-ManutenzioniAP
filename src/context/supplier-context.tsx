@@ -1,149 +1,133 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import type { Supplier } from '@/types/supplier';
-import { apiClient } from '@/lib/api-client';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Supplier } from "@/types/supplier";
+import { useAuth } from "@/context/auth-context";
+import { ensureSuppliersTable } from "@/lib/suppliers-setup";
 
-interface SupplierContextType {
+interface SupplierContextValue {
   suppliers: Supplier[];
   loading: boolean;
-  error: string | null;
-  refreshSuppliers: () => Promise<void>;
-  createSupplier: (supplier: Omit<Supplier, 'id'>) => Promise<void>;
-  updateSupplier: (id: string, supplier: Partial<Supplier>) => Promise<void>;
+  addSupplier: (supplier: Omit<Supplier, "id" | "user_id" | "created_at" | "updated_at">) => Promise<void>;
+  updateSupplier: (supplier: Supplier) => Promise<void>;
   deleteSupplier: (id: string) => Promise<void>;
-  hasFetched: boolean;
+  refresh: () => Promise<void>;
 }
 
-const SupplierContext = createContext<SupplierContextType | undefined>(undefined);
+const SupplierContext = createContext<SupplierContextValue | undefined>(undefined);
 
-export function SupplierProvider({ children }: { children: React.ReactNode }) {
+export const SupplierProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [hasFetched, setHasFetched] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const { user, loading: authLoading } = useAuth();
+  const setupInProgress = useRef(false);
 
-  const fetchSuppliers = useCallback(async () => {
+  const refresh = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError(null);
-      
-      const data = await apiClient.fetchSuppliers();
-      setSuppliers(data);
-      setHasFetched(true);
-    } catch (error: any) {
-      console.error('Error fetching suppliers:', error);
-      setError(error.message);
-      toast.error(`Errore nel caricamento dei fornitori: ${error.message}`);
+      console.log("[supplier-context] Fetching suppliers from Supabase...");
+      const { data, error } = await supabase
+        .from("suppliers")
+        .select("*")
+        .order("ragione_sociale", { ascending: true });
+
+      if (error) throw error;
+      setSuppliers(data || []);
+      console.log("[supplier-context] Suppliers fetched:", data);
+    } catch (err: any) {
+      if (String(err?.message || '').includes('AbortError')) {
+        setSuppliers([]);
+        return;
+      }
+      console.error("[supplier-context] Error fetching suppliers:", err);
+      if (err?.code === "PGRST205") {
+        if (!setupInProgress.current) {
+          setupInProgress.current = true;
+          toast.info("Inizializzazione fornitori in corso...");
+          try {
+            await ensureSuppliersTable();
+            toast.success("Tabella fornitori creata!");
+            const { data } = await supabase
+              .from("suppliers")
+              .select("*")
+              .order("ragione_sociale", { ascending: true });
+            setSuppliers(data || []);
+          } catch (e: any) {
+            console.error("[supplier-context] Setup failed:", e);
+            toast.error(e?.message || "Impossibile creare la tabella fornitori.");
+            setSuppliers([]);
+          } finally {
+            setupInProgress.current = false;
+          }
+        }
+      } else {
+        toast.error(err?.message || "Errore nel caricamento fornitori");
+        setSuppliers([]);
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const refreshSuppliers = useCallback(async () => {
-    // Invalidate cache before refreshing
-    apiClient.invalidate('suppliers');
-    await fetchSuppliers();
-  }, [fetchSuppliers]);
-
-  const createSupplier = useCallback(async (supplier: Omit<Supplier, 'id'>) => {
-    try {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .insert([supplier])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setSuppliers((prev) => [...prev, data]);
-      
-      // Invalidate cache
-      apiClient.invalidate('suppliers');
-      
-      toast.success('Fornitore creato con successo');
-    } catch (error: any) {
-      toast.error(`Errore nella creazione del fornitore: ${error.message}`);
-      throw error;
-    }
-  }, []);
-
-  const updateSupplier = useCallback(async (id: string, updates: Partial<Supplier>) => {
-    try {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setSuppliers((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, ...data } : s))
-      );
-      
-      // Invalidate cache
-      apiClient.invalidate('suppliers');
-      
-      toast.success('Fornitore aggiornato con successo');
-    } catch (error: any) {
-      toast.error(`Errore nell'aggiornamento del fornitore: ${error.message}`);
-      throw error;
-    }
-  }, []);
-
-  const deleteSupplier = useCallback(async (id: string) => {
-    try {
-      const { error } = await supabase.from('suppliers').delete().eq('id', id);
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setSuppliers((prev) => prev.filter((s) => s.id !== id));
-      
-      // Invalidate cache
-      apiClient.invalidate('suppliers');
-      
-      toast.success('Fornitore eliminato con successo');
-    } catch (error: any) {
-      toast.error(`Errore nell'eliminazione del fornitore: ${error.message}`);
-      throw error;
-    }
-  }, []);
+  };
 
   useEffect(() => {
-    if (!hasFetched) {
-      fetchSuppliers();
+    if (!authLoading && user) {
+      refresh();
+    } else if (!authLoading && !user) {
+      setSuppliers([]);
     }
-  }, [hasFetched, fetchSuppliers]);
+  }, [user?.id, authLoading]);
+
+  const addSupplier = async (
+    supplier: Omit<Supplier, "id" | "user_id" | "created_at" | "updated_at">
+  ) => {
+    const {
+      data: { user: authUser },
+      error: authErr,
+    } = await supabase.auth.getUser();
+
+    if (authErr) throw authErr;
+    if (!authUser) throw new Error("Devi essere autenticato per salvare un fornitore");
+
+    const payload = {
+      ...supplier,
+      user_id: authUser.id,
+      attivo: supplier.attivo ?? true,
+    };
+
+    const { error } = await supabase.from("suppliers").insert(payload);
+    if (error) throw error;
+    toast.success("Fornitore creato con successo");
+    await refresh();
+  };
+
+  const updateSupplier = async (supplier: Supplier) => {
+    const { id, ...rest } = supplier;
+    const { error } = await supabase.from("suppliers").update(rest).eq("id", id);
+    if (error) throw error;
+    toast.success("Fornitore aggiornato con successo");
+    await refresh();
+  };
+
+  const deleteSupplier = async (id: string) => {
+    const { error } = await supabase.from("suppliers").delete().eq("id", id);
+    if (error) throw error;
+    toast.success("Fornitore eliminato");
+    await refresh();
+  };
 
   return (
     <SupplierContext.Provider
-      value={{
-        suppliers,
-        loading,
-        error,
-        refreshSuppliers,
-        createSupplier,
-        updateSupplier,
-        deleteSupplier,
-        hasFetched,
-      }}
+      value={{ suppliers, loading, addSupplier, updateSupplier, deleteSupplier, refresh }}
     >
       {children}
     </SupplierContext.Provider>
   );
-}
+};
 
-export function useSuppliers() {
-  const context = useContext(SupplierContext);
-  if (!context) {
-    throw new Error('useSuppliers must be used within a SupplierProvider');
-  }
-  return context;
-}
+export const useSuppliers = () => {
+  const ctx = useContext(SupplierContext);
+  if (!ctx) throw new Error("useSuppliers must be used within SupplierProvider");
+  return ctx;
+};

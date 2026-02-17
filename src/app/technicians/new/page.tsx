@@ -9,13 +9,13 @@ import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 
 export default function NewTechnicianPage() {
-  const { createTechnician } = useTechnicians();
+  const { addTechnician } = useTechnicians();
   const router = useRouter();
 
   const handleSubmit = async (data: TechnicianFormValues) => {
     console.log('Form submitted with data:', data);
     try {
-      await createTechnician(data as any);
+      await addTechnician(data);
       console.log('Technician added successfully');
       toast.success("Tecnico aggiunto con successo!");
       router.push('/technicians');
