@@ -1,4 +1,3 @@
-import { createNextDevToolsPlugin } from 'next-dev-tools/plugin';
 const nextConfig = {
   images: {
     domains: ['nrdsgtuzpnamcovuzghb.supabase.co', 'avatars.githubusercontent.com'],
@@ -39,11 +38,4 @@ const nextConfig = {
   },
 };
 
-const withDevTools = createNextDevToolsPlugin({
-  port: 3000,
-  hotkeys: {
-    togglePanel: 'ctrl+shift+d',
-  },
-});
-
-export default withDevTools(nextConfig);
+export default nextConfig;
