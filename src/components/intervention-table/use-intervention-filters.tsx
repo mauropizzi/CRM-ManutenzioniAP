@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from 'react';
-import { Intervention } from '@/types/intervention';
+import type { InterventionRequest as Intervention } from '@/types/intervention';
 
 export function useInterventionFilters(
   interventions: Intervention[],

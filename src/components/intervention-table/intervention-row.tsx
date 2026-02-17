@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Edit, MapPin, Calendar, User, Wrench } from 'lucide-react';
-import { Intervention } from '@/types/intervention';
+import type { InterventionRequest as Intervention } from '@/types/intervention';
 
 interface InterventionRowProps {
   intervention: Intervention;
@@ -40,7 +40,7 @@ export function InterventionRow({ intervention, statusBadgeClass, onTechnicianCl
           </div>
           <div className="flex items-center gap-1.5 text-xs text-text-secondary">
             <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-            <span>{intervention.scheduled_date || '—'}</span>
+            <span>{String(intervention.scheduled_date || '—')}</span>
           </div>
         </div>
       </TableCell>
@@ -51,7 +51,7 @@ export function InterventionRow({ intervention, statusBadgeClass, onTechnicianCl
             <div className="flex items-center gap-1.5 text-sm text-foreground">
               <User className="h-3.5 w-3.5 text-muted-foreground" />
               <button
-                onClick={() => onTechnicianClick?.(intervention.assigned_technicians)}
+                onClick={() => onTechnicianClick?.(intervention.assigned_technicians!)}
                 className="text-left truncate hover:text-primary transition-colors"
                 title={intervention.assigned_technicians}
               >
@@ -104,3 +104,5 @@ export function InterventionRow({ intervention, statusBadgeClass, onTechnicianCl
     </TableRow>
   );
 }
+
+export default InterventionRow;
