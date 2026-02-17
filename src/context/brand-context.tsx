@@ -48,28 +48,21 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     await fetchBrands();
   }, [fetchBrands]);
 
-  const createBrand = useCallback(async (brand: Omit<Brand, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      const { data, error } = await supabase
-        .from('brands')
-        .insert([brand])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setBrands((prev) => [...prev, data]);
-      
-      // Invalidate cache
-      apiClient.invalidate('brands');
-      
-      toast.success('Marca creata con successo');
-    } catch (error: any) {
-      toast.error(`Errore nella creazione della marca: ${error.message}`);
-      throw error;
+  const createBrand = async (brand: Omit<Brand, 'id' | 'created_at' | 'updated_at'>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
     }
-  }, []);
+
+    const { data, error } = await supabase
+      .from('brands')
+      .insert([{ ...brand, user_id: user.id }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    setBrands(prev => [...prev, data as Brand]);
+  };
 
   const updateBrand = useCallback(async (id: string, updates: Partial<Brand>) => {
     try {

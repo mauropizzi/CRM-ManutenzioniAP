@@ -4,7 +4,7 @@ import React from 'react';
 import { useParams } from 'next/navigation';
 import ServicePointForm from '@/components/service-point-form';
 import { ServicePointProvider, useServicePoints } from '@/context/service-point-context';
-import type { ServicePoint } from '@/types/service-point';
+import type { ServicePointWithSystems } from '@/types/service-point';
 import { CustomerProvider } from '@/context/customer-context';
 import { SystemTypeProvider } from '@/context/system-type-context';
 import { BrandProvider } from '@/context/brand-context';

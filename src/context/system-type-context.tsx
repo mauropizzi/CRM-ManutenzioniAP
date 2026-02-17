@@ -48,28 +48,21 @@ export function SystemTypeProvider({ children }: { children: React.ReactNode }) 
     await fetchSystemTypes();
   }, [fetchSystemTypes]);
 
-  const createSystemType = useCallback(async (systemType: Omit<SystemType, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      const { data, error } = await supabase
-        .from('system_types')
-        .insert([systemType])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setSystemTypes((prev) => [...prev, data]);
-      
-      // Invalidate cache
-      apiClient.invalidate('system-types');
-      
-      toast.success('Tipo impianto creato con successo');
-    } catch (error: any) {
-      toast.error(`Errore nella creazione del tipo impianto: ${error.message}`);
-      throw error;
+  const createSystemType = async (systemType: Omit<SystemType, 'id' | 'created_at' | 'updated_at'>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
     }
-  }, []);
+
+    const { data, error } = await supabase
+      .from('system_types')
+      .insert([{ ...systemType, user_id: user.id }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    setSystemTypes(prev => [...prev, data as SystemType]);
+  };
 
   const updateSystemType = useCallback(async (id: string, updates: Partial<SystemType>) => {
     try {
