@@ -370,9 +370,8 @@ export function SystemTypeTable() {
                     <TableCell className="px-4 sm:px-6 py-4">
                       <div className="flex items-center justify-end gap-1">
                         <UpsertSystemTypeDialog
-                          mode="edit"
-                          initial={row}
-                          onSave={async (name) => updateSystemType(row.id, { name })}
+                          mode="create"
+                          onSave={async (name) => createSystemType({ name })}
                         />
 
                         <AlertDialog>

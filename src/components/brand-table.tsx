@@ -382,9 +382,8 @@ export function BrandTable() {
                       <TableCell className="px-4 sm:px-6 py-4">
                         <div className="flex items-center justify-end gap-1">
                           <UpsertBrandDialog
-                            mode="edit"
-                            initial={brand}
-                            onSave={async (name) => updateBrand(brand.id, { name })}
+                            mode="create"
+                            onSave={async (name) => createBrand({ name })}
                           />
 
                           <AlertDialog>

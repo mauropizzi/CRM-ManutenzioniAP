@@ -9,7 +9,7 @@ import { ProtectedRoute } from '@/components/protected-route';
 import { toast } from 'sonner';
 import { SystemTypeProvider } from '@/context/system-type-context';
 import { BrandProvider } from '@/context/brand-context';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function NewInterventionPage() {
   const router = useRouter();

@@ -48,28 +48,21 @@ export function TechnicianProvider({ children }: { children: React.ReactNode }) 
     await fetchTechnicians();
   }, [fetchTechnicians]);
 
-  const createTechnician = useCallback(async (technician: Omit<Technician, 'id'>) => {
-    try {
-      const { data, error } = await supabase
-        .from('technicians')
-        .insert([technician])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setTechnicians((prev) => [...prev, data]);
-      
-      // Invalidate cache
-      apiClient.invalidate('technicians');
-      
-      toast.success('Tecnico creato con successo');
-    } catch (error: any) {
-      toast.error(`Errore nella creazione del tecnico: ${error.message}`);
-      throw error;
+  const createTechnician = async (technician: Omit<Technician, 'id'>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
     }
-  }, []);
+
+    const { data, error } = await supabase
+      .from('technicians')
+      .insert([{ ...technician, user_id: user.id }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    setTechnicians(prev => [...prev, data as Technician]);
+  };
 
   const updateTechnician = useCallback(async (id: string, updates: Partial<Technician>) => {
     try {

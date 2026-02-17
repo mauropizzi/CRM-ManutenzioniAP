@@ -48,28 +48,21 @@ export function MaterialProvider({ children }: { children: React.ReactNode }) {
     await fetchMaterials();
   }, [fetchMaterials]);
 
-  const createMaterial = useCallback(async (material: Omit<Material, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      const { data, error } = await supabase
-        .from('materials')
-        .insert([material])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setMaterials((prev) => [...prev, data]);
-      
-      // Invalidate cache so next fetch gets fresh data
-      apiClient.invalidate('materials');
-      
-      toast.success('Materiale creato con successo');
-    } catch (error: any) {
-      toast.error(`Errore nella creazione del materiale: ${error.message}`);
-      throw error;
+  const createMaterial = async (material: Omit<Material, 'id' | 'created_at' | 'updated_at'>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
     }
-  }, []);
+
+    const { data, error } = await supabase
+      .from('materials')
+      .insert([{ ...material, user_id: user.id }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    setMaterials(prev => [...prev, data as Material]);
+  };
 
   const updateMaterial = useCallback(async (id: string, updates: Partial<Material>) => {
     try {

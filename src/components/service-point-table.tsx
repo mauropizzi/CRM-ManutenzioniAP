@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { Edit, Filter, MapPin, PlusCircle, Search, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
-import { useServicePoint } from "@/context/service-point-context";
+import { useServicePoints } from "@/context/service-point-context";
 import { useCustomers } from "@/context/customer-context";
-import type { ServicePointWithSystems } from "@/types/service-point";
+import type { ServicePoint } from "@/types/service-point";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-function getNavigateUrl(point: ServicePointWithSystems) {
+function getNavigateUrl(point: ServicePoint) {
   const destination = [point.address, point.city, point.cap, point.provincia]
     .filter(Boolean)
     .join(", ");
@@ -57,7 +57,7 @@ function getSystemsBadgeVariant(count: number) {
 
 export default function ServicePointTable() {
   const router = useRouter();
-  const { servicePoints, loading, deleteServicePoint } = useServicePoint();
+  const { servicePoints, loading, deleteServicePoint } = useServicePoints();
   const { customers } = useCustomers();
 
   const [searchTerm, setSearchTerm] = React.useState("");

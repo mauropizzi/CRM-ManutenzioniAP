@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useServicePoint } from '@/context/service-point-context';
+import { useServicePoints } from '@/context/service-point-context';
 import { useCustomers } from '@/context/customer-context';
+import type { ServicePoint } from '@/types/service-point';
 import { ServicePointProvider } from '@/context/service-point-context';
 import { CustomerProvider } from '@/context/customer-context';
 import { ProtectedRoute } from '@/components/protected-route';
@@ -17,7 +18,7 @@ import Link from 'next/link';
 function CustomerServicePointsContent() {
   const params = useParams();
   const router = useRouter();
-  const { servicePoints, loading } = useServicePoint();
+  const { servicePoints, loading } = useServicePoints();
   const { customers } = useCustomers();
   
   const customer = customers.find((c: any) => c.id === params.id);
