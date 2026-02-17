@@ -10,7 +10,6 @@ import { useServicePoint } from '@/context/service-point-context';
 import { useCustomers } from '@/context/customer-context';
 import { ServicePointProvider } from '@/context/service-point-context';
 import { CustomerProvider } from '@/context/customer-context';
-import { ProtectedRoute } from '@/components/protected-route';
 import { Plus, Edit, MapPin, Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
 
@@ -134,12 +133,10 @@ function CustomerServicePointsContent() {
 
 export default function CustomerServicePointsPage() {
   return (
-    <ProtectedRoute>
-      <CustomerProvider>
-        <ServicePointProvider>
-          <CustomerServicePointsContent />
-        </ServicePointProvider>
-      </CustomerProvider>
-    </ProtectedRoute>
+    <CustomerProvider>
+      <ServicePointProvider>
+        <CustomerServicePointsContent />
+      </ServicePointProvider>
+    </CustomerProvider>
   );
 }
