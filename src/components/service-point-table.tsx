@@ -327,7 +327,7 @@ export default function ServicePointTable() {
                         </Badge>
                         {systemsCount > 0 && (
                           <div className="mt-2 flex flex-wrap gap-1">
-                            {point.systems.slice(0, 3).map((s: any, idx: number) => (
+                            {point.systems?.slice(0, 3).map((s: any, idx: number) => (
                               <Badge
                                 key={`${point.id}-${idx}`}
                                 className="rounded-full bg-muted text-foreground border border-border text-[11px]"

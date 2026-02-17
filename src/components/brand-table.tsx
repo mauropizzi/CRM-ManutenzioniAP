@@ -383,7 +383,7 @@ export function BrandTable() {
                         <div className="flex items-center justify-end gap-1">
                           <UpsertBrandDialog
                             mode="create"
-                            onSave={async (name) => createBrand({ name })}
+                            onSave={async (name) => createBrand({ name } as any)}
                           />
 
                           <AlertDialog>

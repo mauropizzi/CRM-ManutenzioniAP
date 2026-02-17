@@ -15,7 +15,7 @@ export default function NewTechnicianPage() {
   const handleSubmit = async (data: TechnicianFormValues) => {
     console.log('Form submitted with data:', data);
     try {
-      await createTechnician(data);
+      await createTechnician(data as any);
       console.log('Technician added successfully');
       toast.success("Tecnico aggiunto con successo!");
       router.push('/technicians');

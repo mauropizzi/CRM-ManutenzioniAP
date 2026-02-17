@@ -12,17 +12,17 @@ export interface ServicePoint {
   created_at: string;
   updated_at: string;
   created_by: string;
-  systems?: Array<{
-    id: string;
-    system_type: string;
-    brand: string;
-  }>;
+  systems?: ServicePointSystem[];
+}
+
+export interface ServicePointSystem {
+  id: string;
+  system_type: string;
+  brand: string;
+  model?: string;
+  notes?: string;
 }
 
 export interface ServicePointWithSystems extends ServicePoint {
-  systems: Array<{
-    id: string;
-    system_type: string;
-    brand: string;
-  }>;
+  systems: ServicePointSystem[];
 }

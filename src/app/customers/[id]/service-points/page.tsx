@@ -91,10 +91,10 @@ function CustomerServicePointsContent() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {point.systems.length === 0 ? (
+                        {point.systems?.length === 0 ? (
                           <Badge variant="outline">Nessun impianto</Badge>
                         ) : (
-                          point.systems.map((system: any, index: number) => (
+                          point.systems?.map((system: any, index: number) => (
                             <Badge key={index} variant="secondary" className="text-xs">
                               {system.system_type} - {system.brand}
                             </Badge>

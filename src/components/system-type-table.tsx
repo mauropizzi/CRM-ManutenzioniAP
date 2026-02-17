@@ -371,7 +371,7 @@ export function SystemTypeTable() {
                       <div className="flex items-center justify-end gap-1">
                         <UpsertSystemTypeDialog
                           mode="create"
-                          onSave={async (name) => createSystemType({ name })}
+                          onSave={async (name) => createSystemType({ name } as any)}
                         />
 
                         <AlertDialog>

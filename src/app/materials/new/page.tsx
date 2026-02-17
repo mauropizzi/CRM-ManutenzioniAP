@@ -15,7 +15,7 @@ export default function NewMaterialPage() {
   const handleSubmit = async (data: MaterialFormValues) => {
     console.log('Form submitted with data:', data);
     try {
-      await createMaterial(data);
+      await createMaterial(data as any);
       console.log('Material added successfully');
       toast.success("Materiale aggiunto con successo!");
       router.push('/materials');
