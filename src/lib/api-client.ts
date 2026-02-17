@@ -218,7 +218,7 @@ export const apiClient = {
         const { data, error } = await supabase
           .from('customers')
           .select('*')
-          .order('company_name', { ascending: true });
+          .order('ragione_sociale', { ascending: true });
         
         if (error) throw error;
         return data || [];
@@ -262,7 +262,7 @@ export const apiClient = {
       key,
       async () => {
         const { data, error } = await supabase
-          .from('intervention_requests')
+          .from('interventions')
           .select('*')
           .order('created_at', { ascending: false });
         
