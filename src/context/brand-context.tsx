@@ -6,12 +6,14 @@ import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+type BrandCreateInput = Omit<Brand, 'id' | 'created_at' | 'updated_at' | 'user_id'>;
+
 interface BrandContextType {
   brands: Brand[];
   loading: boolean;
   error: string | null;
   refreshBrands: () => Promise<void>;
-  createBrand: (brand: Omit<Brand, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  createBrand: (brand: BrandCreateInput) => Promise<void>;
   updateBrand: (id: string, brand: Partial<Brand>) => Promise<void>;
   deleteBrand: (id: string) => Promise<void>;
   hasFetched: boolean;
@@ -48,7 +50,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     await fetchBrands();
   }, [fetchBrands]);
 
-  const createBrand = async (brand: Omit<Brand, 'id' | 'created_at' | 'updated_at'>) => {
+  const createBrand = async (brand: BrandCreateInput) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       throw new Error('User not authenticated');

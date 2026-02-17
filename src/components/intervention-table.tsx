@@ -278,7 +278,7 @@ export function InterventionTable() {
                           <div className="flex items-center gap-1.5 text-sm text-foreground">
                             <User className="h-3.5 w-3.5 text-muted-foreground" />
                             <button
-                              onClick={() => handleTechnicianClick(intervention.assigned_technicians)}
+                              onClick={() => handleTechnicianClick(intervention.assigned_technicians || '')}
                               className="text-left truncate hover:text-primary transition-colors"
                               title={intervention.assigned_technicians}
                             >

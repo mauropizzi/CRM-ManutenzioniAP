@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Brand } from '@/types/brand';
 import { useBrands } from '@/context/brand-context';
 import { Edit, Trash2, PlusCircle, Search, Filter, Package } from 'lucide-react';
@@ -19,10 +20,16 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import UpsertBrandDialog from './upsert-brand-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 export const BrandTable = () => {
-  const { brands, deleteBrand, createBrand } = useBrands();
+  const { brands, deleteBrand, createBrand, updateBrand } = useBrands();
   const [searchTerm, setSearchTerm] = React.useState('');
 
   // Ottieni a lista filtrata
@@ -62,7 +69,34 @@ export const BrandTable = () => {
               </div>
               <h3 className="text-lg font-medium text-foreground mb-2">Nessuna marca trovata</h3>
               <p className="text-text-secondary mb-6">Aggiungi una nuova marca per iniziare.</p>
-              <UpsertBrandDialog mode="create" onSave={async (name) => createBrand({ name } as any)} />
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Nuova Marca
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Nuova Marca</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    const form = e.target as HTMLFormElement;
+                    const formData = new FormData(form);
+                    const name = formData.get('name') as string;
+                    if (name) {
+                      await createBrand({ name });
+                    }
+                  }} className="space-y-4">
+                    <div>
+                      <Label htmlFor="name">Nome Marca</Label>
+                      <Input id="name" name="name" placeholder="Inserisci il nome della marca" required />
+                    </div>
+                    <Button type="submit">Salva</Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         ) : (
@@ -80,7 +114,33 @@ export const BrandTable = () => {
                     <TableCell className="px-4 sm:px-6 py-4 text-sm font-medium text-foreground">{brand.name}</TableCell>
                     <TableCell className="px-4 sm:px-6 py-4 text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
-                        <UpsertBrandDialog mode="edit" brand={brand} onSave={async (name) => createBrand({ name } as any)} />
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Modifica Marca</DialogTitle>
+                            </DialogHeader>
+                            <form onSubmit={async (e) => {
+                              e.preventDefault();
+                              const form = e.target as HTMLFormElement;
+                              const formData = new FormData(form);
+                              const name = formData.get('name') as string;
+                              if (name) {
+                                await updateBrand(brand.id, { name });
+                              }
+                            }} className="space-y-4">
+                              <div>
+                                <Label htmlFor="name">Nome Marca</Label>
+                                <Input id="name" name="name" defaultValue={brand.name} required />
+                              </div>
+                              <Button type="submit">Aggiorna</Button>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
                         <Button variant="ghost" size="icon" onClick={() => deleteBrand(brand.id)}>
                           <Trash2 />
                         </Button>

@@ -16,7 +16,6 @@ import { useBrands } from '@/context/brand-context';
 import { ServicePointWithSystems, ServicePointSystem } from '@/types/service-point';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useServicePoint } from '@/context/service-point-context';
 
 interface ServicePointFormProps {
   servicePoint?: ServicePointWithSystems;
@@ -26,7 +25,7 @@ interface ServicePointFormProps {
 export default function ServicePointForm({ servicePoint, customerId }: ServicePointFormProps) {
   const router = useRouter();
   const { customers } = useCustomers();
-  const { createServicePoint, updateServicePoint, addSystem, updateSystem, deleteSystem } = useServicePoint();
+  const { createServicePoint, updateServicePoint } = useServicePoints();
   const { systemTypes } = useSystemTypes();
   const { brands } = useBrands();
 

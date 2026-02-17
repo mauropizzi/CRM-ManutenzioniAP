@@ -6,12 +6,14 @@ import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+type SystemTypeCreateInput = Omit<SystemType, 'id' | 'created_at' | 'updated_at' | 'user_id'>;
+
 interface SystemTypeContextType {
   systemTypes: SystemType[];
   loading: boolean;
   error: string | null;
   refreshSystemTypes: () => Promise<void>;
-  createSystemType: (systemType: Omit<SystemType, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  createSystemType: (systemType: SystemTypeCreateInput) => Promise<void>;
   updateSystemType: (id: string, systemType: Partial<SystemType>) => Promise<void>;
   deleteSystemType: (id: string) => Promise<void>;
   hasFetched: boolean;
@@ -48,7 +50,7 @@ export function SystemTypeProvider({ children }: { children: React.ReactNode }) 
     await fetchSystemTypes();
   }, [fetchSystemTypes]);
 
-  const createSystemType = async (systemType: Omit<SystemType, 'id' | 'created_at' | 'updated_at'>) => {
+  const createSystemType = async (systemType: SystemTypeCreateInput) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       throw new Error('User not authenticated');
