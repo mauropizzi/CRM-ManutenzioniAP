@@ -2,7 +2,7 @@
 
 import React from "react";
 import SupplierForm, { SupplierFormValues } from "@/components/supplier-form";
-import { SupplierProvider, useSuppliers } from "@/context/supplier-context";
+import { useSuppliers } from "@/context/supplier-context";
 import { useRouter } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
