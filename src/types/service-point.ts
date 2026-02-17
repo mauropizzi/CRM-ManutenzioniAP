@@ -18,7 +18,9 @@ export interface ServicePoint {
 export interface ServicePointSystem {
   id: string;
   system_type: string;
+  system_type_id?: string;
   brand: string;
+  brand_id?: string;
   model?: string;
   notes?: string;
 }
