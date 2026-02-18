@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "Gestione anagrafica clienti e richieste di intervento",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{
