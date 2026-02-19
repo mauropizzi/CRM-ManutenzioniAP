@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { use } from 'react';
 import { InterventionForm, InterventionFormValues } from '@/components/intervention-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter, notFound } from 'next/navigation';
@@ -9,11 +9,11 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 
 interface EditInterventionPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function EditInterventionPage({ params }: EditInterventionPageProps) {
-  const { id } = params;
+  const { id } = use(params);
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 

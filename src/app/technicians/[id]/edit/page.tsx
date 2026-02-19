@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { use } from 'react';
 import { TechnicianForm, TechnicianFormValues } from '@/components/technician-form';
 import { useTechnicians } from '@/context/technician-context';
 import { useRouter } from 'next/navigation';
@@ -9,11 +9,11 @@ import { Technician } from '@/types/technician';
 import { Toaster } from '@/components/ui/sonner';
 
 interface EditTechnicianPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function EditTechnicianPage({ params }: EditTechnicianPageProps) {
-  const { id } = params;
+  const { id } = use(params);
   const { technicians, updateTechnician } = useTechnicians();
   const router = useRouter();
 
