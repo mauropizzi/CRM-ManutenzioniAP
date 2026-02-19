@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
 
   async headers() {
     return [
-      // Cache aggressiva per asset statici di Next
+      // Cache aggressiva per asset statici di Next (sono versionati, quindi sicuri)
       {
         source: "/_next/static/:path*",
         headers: [
@@ -25,10 +25,10 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Per tutte le pagine (HTML) e API: evita cache del browser/CDN.
-      // Questo previene situazioni in cui Chrome serve HTML vecchio che punta a chunk JS non più disponibili dopo un deploy.
+      // Per tutte le pagine HTML (e tutto ciò che non è /_next/*): evita cache del browser/CDN.
+      // Così Chrome non serve HTML vecchio che punta a chunk JS non più disponibili dopo un deploy.
       {
-        source: "/:path*",
+        source: "/((?!_next/).*)",
         headers: [
           {
             key: "Cache-Control",
