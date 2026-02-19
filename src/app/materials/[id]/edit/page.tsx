@@ -7,14 +7,13 @@ import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Material } from '@/types/material';
 import { Toaster } from '@/components/ui/sonner';
-import { use } from 'react';
 
 interface EditMaterialPageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export default function EditMaterialPage({ params }: EditMaterialPageProps) {
-  const { id } = use(params);
+  const { id } = params;
   const { materials, updateMaterial } = useMaterials();
   const router = useRouter();
 

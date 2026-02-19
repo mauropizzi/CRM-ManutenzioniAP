@@ -7,14 +7,13 @@ import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { Technician } from '@/types/technician';
 import { Toaster } from '@/components/ui/sonner';
-import { use } from 'react';
 
 interface EditTechnicianPageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export default function EditTechnicianPage({ params }: EditTechnicianPageProps) {
-  const { id } = use(params);
+  const { id } = params;
   const { technicians, updateTechnician } = useTechnicians();
   const router = useRouter();
 

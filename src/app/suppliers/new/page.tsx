@@ -2,7 +2,7 @@
 
 import React from "react";
 import SupplierForm, { SupplierFormValues } from "@/components/supplier-form";
-import { useSuppliers, SupplierProvider } from "@/context/supplier-context";
+import { useSuppliers } from "@/context/supplier-context";
 import { useRouter } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
@@ -42,9 +42,7 @@ export default function NewSupplierPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-8">
       <div className="mx-auto max-w-4xl">
-        <SupplierProvider>
-          <NewSupplierContent />
-        </SupplierProvider>
+        <NewSupplierContent />
       </div>
       <Toaster />
     </div>

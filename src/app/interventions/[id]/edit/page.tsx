@@ -7,16 +7,13 @@ import { useRouter, notFound } from 'next/navigation';
 import { InterventionRequest } from '@/types/intervention';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
-import { use } from 'react';
-import { SystemTypeProvider } from '@/context/system-type-context';
-import { BrandProvider } from '@/context/brand-context';
 
 interface EditInterventionPageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export default function EditInterventionPage({ params }: EditInterventionPageProps) {
-  const { id } = use(params);
+  const { id } = params;
   const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
   const router = useRouter();
 
@@ -40,18 +37,14 @@ export default function EditInterventionPage({ params }: EditInterventionPagePro
   };
 
   return (
-    <SystemTypeProvider>
-      <BrandProvider>
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4 sm:p-8">
-          <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
-              Modifica Richiesta di Intervento
-            </h1>
-            <InterventionForm initialData={interventionToEdit} onSubmit={handleSubmit} />
-          </div>
-          <Toaster />
-        </div>
-      </BrandProvider>
-    </SystemTypeProvider>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4 sm:p-8">
+      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
+          Modifica Richiesta di Intervento
+        </h1>
+        <InterventionForm initialData={interventionToEdit} onSubmit={handleSubmit} />
+      </div>
+      <Toaster />
+    </div>
   );
 }
