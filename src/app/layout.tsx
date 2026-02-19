@@ -10,8 +10,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AppShell } from "@/components/app-shell";
 import { SystemTypeProvider } from "@/context/system-type-context";
 import { BrandProvider } from "@/context/brand-context";
-import { ProtectedRoute } from "@/components/protected-route";
-import { DataLoadingWrapper } from "@/components/data-loading-wrapper";
 
 export const metadata: Metadata = {
   title: "Gestione Interventi",
@@ -42,11 +40,7 @@ export default function RootLayout({
                     <MaterialProvider>
                       <TechnicianProvider>
                         <SupplierProvider>
-                          <ProtectedRoute>
-                            <DataLoadingWrapper>
-                              <AppShell>{children}</AppShell>
-                            </DataLoadingWrapper>
-                          </ProtectedRoute>
+                          <AppShell>{children}</AppShell>
                         </SupplierProvider>
                       </TechnicianProvider>
                     </MaterialProvider>
