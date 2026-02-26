@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AppShell } from "@/components/app-shell";
 import { SystemTypeProvider } from "@/context/system-type-context";
 import { BrandProvider } from "@/context/brand-context";
+import { RuntimeErrorLogger } from "@/components/runtime-error-logger";
 
 export const metadata: Metadata = {
   title: "Gestione Interventi",
@@ -32,6 +33,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
+          <RuntimeErrorLogger />
           <AuthProvider>
             <SystemTypeProvider>
               <BrandProvider>
