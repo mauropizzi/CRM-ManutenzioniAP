@@ -4,14 +4,19 @@ const nextConfig: NextConfig = {
   // Rimosso il rule 'component-tagger' per evitare blocchi/timeout nei chunk in dev.
 
   async headers() {
+    // In DEV i chunk NON sono versionati (stesso path), quindi cache aggressiva = "Loading chunk failed".
+    const isProd = process.env.NODE_ENV === "production";
+
     return [
-      // Cache aggressiva per asset statici di Next (sono versionati, quindi sicuri)
+      // Asset statici di Next
       {
         source: "/_next/static/:path*",
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
+            value: isProd
+              ? "public, max-age=31536000, immutable"
+              : "no-store",
           },
         ],
       },
@@ -21,7 +26,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=86400",
+            value: isProd ? "public, max-age=86400" : "no-store",
           },
         ],
       },
