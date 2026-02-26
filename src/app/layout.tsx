@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Script from "next/script";
 import { CustomerProvider } from "@/context/customer-context";
 import { InterventionProvider } from "@/context/intervention-context";
 import { MaterialProvider } from "@/context/material-context";
@@ -28,15 +27,6 @@ export default function RootLayout({
   return (
     <html lang="it" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground">
-        <Script
-          id="dev-disable-sw"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{var h=location.hostname;var isLocal=h==='localhost'||h==='127.0.0.1'||h.endsWith('.local');if(!isLocal)return;var key='__dyad_sw_purge_done__';if(typeof sessionStorage!=='undefined'&&sessionStorage.getItem(key))return;function done(){try{sessionStorage.setItem(key,'1');}catch(e){}}if(!('serviceWorker'in navigator))return;var hasController=!!navigator.serviceWorker.controller;navigator.serviceWorker.getRegistrations().then(function(regs){if(!regs||!regs.length){done();return;}return Promise.all(regs.map(function(r){return r.unregister();}));}).then(function(){if(!(window.caches&&caches.keys))return;return caches.keys().then(function(keys){return Promise.all(keys.map(function(k){return caches.delete(k);}));});}).then(function(){done();if(hasController){location.reload();}}).catch(function(){done();});}catch(e){}})();",
-          }}
-        />
-
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

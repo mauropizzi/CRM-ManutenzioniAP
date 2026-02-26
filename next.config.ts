@@ -39,16 +39,6 @@ const nextConfig: NextConfig = {
             key: "Cache-Control",
             value: "no-store",
           },
-          ...(isProd
-            ? []
-            : [
-                // In locale/Dyad, forza la pulizia di cache/storage e la rimozione di service worker
-                // per evitare "Invalid or unexpected token" dovuto ad asset serviti dal SW.
-                {
-                  key: "Clear-Site-Data",
-                  value: '"cache", "storage", "executionContexts"',
-                },
-              ]),
         ],
       },
     ];
