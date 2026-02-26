@@ -27,13 +27,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it" suppressHydrationWarning>
-      <head>
+      <body className="min-h-screen bg-background text-foreground">
         <Script
           id="dev-disable-sw"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: `
-(function () {
+            __html: `(function () {
   try {
     // In ambiente Dyad/Dev il Service Worker del proxy può servire asset vecchi e causare
     // errori tipo "Invalid or unexpected token" o "Loading chunk failed".
@@ -54,12 +53,10 @@ export default function RootLayout({
       }).catch(function () {});
     }
   } catch (e) {}
-})();
-`,
+})();`,
           }}
         />
-      </head>
-      <body className="min-h-screen bg-background text-foreground">
+
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
