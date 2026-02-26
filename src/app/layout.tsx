@@ -32,28 +32,8 @@ export default function RootLayout({
           id="dev-disable-sw"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: `(function () {
-  try {
-    // In ambiente Dyad/Dev il Service Worker del proxy può servire asset vecchi e causare
-    // errori tipo "Invalid or unexpected token" o "Loading chunk failed".
-    // Disabilitiamolo SOLO in locale.
-    var host = location.hostname;
-    var isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local');
-    if (!isLocal) return;
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function (regs) {
-        return Promise.all(regs.map(function (r) { return r.unregister(); }));
-      }).then(function () {
-        if (window.caches && caches.keys) {
-          return caches.keys().then(function (keys) {
-            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-          });
-        }
-      }).catch(function () {});
-    }
-  } catch (e) {}
-})();`,
+            __html:
+              "(function(){try{var h=location.hostname;var isLocal=h==='localhost'||h==='127.0.0.1'||h.endsWith('.local');if(!isLocal)return;var key='__dyad_sw_purge_done__';if(typeof sessionStorage!=='undefined'&&sessionStorage.getItem(key))return;function done(){try{sessionStorage.setItem(key,'1');}catch(e){}}if(!('serviceWorker'in navigator))return;var hasController=!!navigator.serviceWorker.controller;navigator.serviceWorker.getRegistrations().then(function(regs){if(!regs||!regs.length){done();return;}return Promise.all(regs.map(function(r){return r.unregister();}));}).then(function(){if(!(window.caches&&caches.keys))return;return caches.keys().then(function(keys){return Promise.all(keys.map(function(k){return caches.delete(k);}));});}).then(function(){done();if(hasController){location.reload();}}).catch(function(){done();});}catch(e){}})();",
           }}
         />
 
