@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Script from "next/script";
 import { CustomerProvider } from "@/context/customer-context";
 import { InterventionProvider } from "@/context/intervention-context";
 import { MaterialProvider } from "@/context/material-context";
@@ -26,6 +27,38 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it" suppressHydrationWarning>
+      <head>
+        <Script
+          id="dev-disable-sw"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+(function () {
+  try {
+    // In ambiente Dyad/Dev il Service Worker del proxy può servire asset vecchi e causare
+    // errori tipo "Invalid or unexpected token" o "Loading chunk failed".
+    // Disabilitiamolo SOLO in locale.
+    var host = location.hostname;
+    var isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local');
+    if (!isLocal) return;
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        return Promise.all(regs.map(function (r) { return r.unregister(); }));
+      }).then(function () {
+        if (window.caches && caches.keys) {
+          return caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+          });
+        }
+      }).catch(function () {});
+    }
+  } catch (e) {}
+})();
+`,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-background text-foreground">
         <ThemeProvider
           attribute="class"
