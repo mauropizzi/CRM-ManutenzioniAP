@@ -11,6 +11,7 @@ import { AppShell } from "@/components/app-shell";
 import { SystemTypeProvider } from "@/context/system-type-context";
 import { BrandProvider } from "@/context/brand-context";
 import { RuntimeErrorLogger } from "@/components/runtime-error-logger";
+import { DevDisableServiceWorker } from "@/components/dev-disable-service-worker";
 
 export const metadata: Metadata = {
   title: "Gestione Interventi",
@@ -33,6 +34,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
+          <DevDisableServiceWorker />
           <RuntimeErrorLogger />
           <AuthProvider>
             <SystemTypeProvider>

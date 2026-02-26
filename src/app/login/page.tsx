@@ -93,6 +93,7 @@ export default function LoginPage() {
                   <Input
                     id="email-login"
                     type="email"
+                    autoComplete="email"
                     placeholder="tua@email.com"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
@@ -104,6 +105,7 @@ export default function LoginPage() {
                   <Input
                     id="password-login"
                     type="password"
+                    autoComplete="current-password"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     required
@@ -122,6 +124,7 @@ export default function LoginPage() {
                     <Label htmlFor="firstName">Nome</Label>
                     <Input
                       id="firstName"
+                      autoComplete="given-name"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required
@@ -131,6 +134,7 @@ export default function LoginPage() {
                     <Label htmlFor="lastName">Cognome</Label>
                     <Input
                       id="lastName"
+                      autoComplete="family-name"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       required
@@ -142,6 +146,7 @@ export default function LoginPage() {
                   <Input
                     id="registerEmail"
                     type="email"
+                    autoComplete="email"
                     placeholder="tua@email.com"
                     value={registerEmail}
                     onChange={(e) => setRegisterEmail(e.target.value)}
@@ -153,6 +158,7 @@ export default function LoginPage() {
                   <Input
                     id="registerPassword"
                     type="password"
+                    autoComplete="new-password"
                     value={registerPassword}
                     onChange={(e) => setRegisterPassword(e.target.value)}
                     required
