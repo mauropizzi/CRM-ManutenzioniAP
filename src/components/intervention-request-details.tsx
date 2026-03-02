@@ -1,21 +1,34 @@
 import React from 'react';
-import { TimeEntry, WorkReportData, MaterialUsed } from '@/types/intervention';
 
 interface InterventionRequestDetailsProps {
   request: {
     id: string;
     work_report_data?: {
-      time_entries?: TimeEntry[];
+      time_entries?: Array<{
+        date: string;
+        technician: string;
+        time_slot_1_start: string;
+        time_slot_1_end: string;
+        time_slot_2_start?: string;
+        time_slot_2_end?: string;
+        total_hours: number;
+      }[];
       kilometers?: number;
-      materials?: MaterialUsed[];
-    };
-    created_at?: string;
+      materials?: Array<{
+        unit?: string;
+        quantity: number;
+        description?: string;
+      }[];
+    } | null;
+  } | undefined;
+  };
+  created_at?: string;
   };
 }
 
 /**
  * InterventionRequestDetails
- *
+ * 
  * Componente per visualizzare i dettagli completi di una richiesta di intervento
  * in modo strutturato e organizzato.
  */
@@ -40,8 +53,15 @@ export default function InterventionRequestDetails({ request }: InterventionRequ
           </h2>
         </div>
         <div className="text-sm text-gray-600 dark:text-gray-400">
-          Aggiornato: {request.created_at ? new Date(request.created_at).toLocaleDateString('it-IT') : '-'}
+          Aggiornato: {new Date(request.created_at).toLocaleDateString('it-IT', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }) : '-'}
         </div>
+      </div>
       </div>
 
       {/* Sezione tecnica */}
@@ -51,53 +71,60 @@ export default function InterventionRequestDetails({ request }: InterventionRequ
             <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
               Dati Tecnici
             </h3>
+            
+            {work_report_data.time_entries.map((entry, index) => {
+              if (!entry?.date) {
+                return null;
+              }
+
+              const startTime = new Date(entry.date);
+              const endTime = new Date(entry.date);
+              const duration = endTime && entry.start_time 
+                ? Math.round((endTime.getTime() - startTime.getTime()) / 1000 / 60)
+                : null;
+
+              return (
+                <div key={index} className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:mb-0">
+                  <div className="flex justify-between items-start">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm text-gray-900 dark:text-white">
+                        {entry.time_slot_1_start ? new Date(entry.time_slot_1_start).toLocaleTimeString('it-IT') : '--:--'}
+                      </span>
+                      <span className="mx-2 text-gray-400">
+                        {entry.time_slot_1_end ? new Date(entry.time_slot_1_end).toLocaleTimeString('it-IT') : '--:--'}
+                      </span>
+                      <span className="ml-2 text-gray-900 dark:text-white">
+                        {entry.time_slot_1_end && entry.time_slot_2_start ? `${Math.round((new Date(entry.time_slot_2_start).getTime() - new Date(entry.time_slot_2_end).getTime()) / 1000 / 60)} min` : '--'}
+                      </span>
+                    </div>
+                    <div className="flex-1 text-gray-600 dark:text-gray-400 mt-2">
+                      {entry.description && (
+                        <div className="flex-1 text-gray-600 dark:text-gray-400">
+                          {entry.description}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
-          {work_report_data.time_entries.map((entry, index) => {
-            if (!entry?.date) {
-              return null;
-            }
-
-            const startTime = new Date(entry.date);
-            const endTime = new Date(entry.date);
-            const duration = entry.total_hours || 0;
-
-            return (
-              <div key={index} className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:mb-0">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 text-gray-900 dark:text-white">
-                    {entry.time_slot_1_start}
-                  </div>
-                  <span className="mx-2 text-gray-400">
-                    {entry.time_slot_1_end}
-                  </span>
-                  <span className="ml-2 text-gray-900 dark:text-white">
-                    {duration > 0 ? `${duration.toFixed(1)} h` : '--'}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Sezione materiali */}
-      {work_report_data?.materials && work_report_data.materials.length > 0 && (
+          {/* Sezione materiali */}
+          {work_report_data?.materials && work_report_data.materials.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border border-gray-700 dark:border-gray-600">
           <div className="mb-4">
             <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
               Materiali Utilizzati
             </h3>
-          </div>
-
-          <div className="space-y-2">
+            
             {work_report_data.materials.map((material, index) => (
               <div key={index} className="flex items-center justify-between py-2">
                 <div className="flex-1 text-gray-900 dark:text-white">
-                  {material.description || 'Senza descrizione'}
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 text-gray-600 dark:text-gray-400">
+                  <div>
+                    {material.description || 'Senza descrizione'}
+                  </div>
+                  <div className="flex-1 text-sm text-gray-600 dark:text-gray-400">
                     {material.unit || 'PZ'}
                   </div>
                   <div className="flex-1 text-gray-900 dark:text-white">
@@ -107,7 +134,8 @@ export default function InterventionRequestDetails({ request }: InterventionRequ
               </div>
             ))}
           </div>
-        </div>
+        )}
+    </div>
       )}
     </div>
   );
