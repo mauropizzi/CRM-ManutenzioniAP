@@ -16,7 +16,6 @@ export default function EditInterventionPage({ params }: EditInterventionPagePro
   const { id } = use(params);
   const { interventionRequests, updateInterventionRequest, refreshInterventions } = useInterventionRequests();
   const router = useRouter();
-
   const interventionToEdit = interventionRequests.find((request) => request.id === id);
 
   if (!interventionToEdit) {
@@ -30,12 +29,12 @@ export default function EditInterventionPage({ params }: EditInterventionPagePro
       await updateInterventionRequest({ ...interventionToEdit, ...data } as InterventionRequest);
       console.log('Intervento aggiornato con successo!');
       
-      // Refresh interventions data to get updated list
+      // Sincronizza i dati delle richieste per assicurare che siano aggiornati prima della navigazione
       await refreshInterventions();
       
       toast.success('Intervento aggiornato con successo!');
       
-      // Navigate to interventions list after data is refreshed
+      // Naviga alla lista interventi dopo che i dati sono sincronizzati
       router.push('/interventions');
     } catch (error: any) {
       console.error('Error updating intervention:', error);
