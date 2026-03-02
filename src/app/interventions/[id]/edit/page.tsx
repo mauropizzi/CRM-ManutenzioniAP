@@ -28,7 +28,7 @@ export default function EditInterventionPage({ params }: EditInterventionPagePro
     
     try {
       await updateInterventionRequest({ ...interventionToEdit, ...data } as InterventionRequest);
-      console.log('Intervention updated successfully');
+      console.log('Intervento aggiornato con successo!');
       
       // Refresh interventions data to get updated list
       await refreshInterventions();
