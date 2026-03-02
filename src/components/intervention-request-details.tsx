@@ -1,12 +1,25 @@
 import React from 'react';
+import { TimeEntry, WorkReportData, MaterialUsed } from '@/types/intervention';
+
+interface InterventionRequestDetailsProps {
+  request: {
+    id: string;
+    work_report_data?: {
+      time_entries?: TimeEntry[];
+      kilometers?: number;
+      materials?: MaterialUsed[];
+    };
+    created_at?: string;
+  };
+}
 
 /**
  * InterventionRequestDetails
- * 
+ *
  * Componente per visualizzare i dettagli completi di una richiesta di intervento
  * in modo strutturato e organizzato.
  */
-export default function InterventionRequestDetails({ request }: { request: { id: string; work_report_data?: { time_entries?: Array<{ date: string; technician: string; time_slot_1_start: string; time_slot_1_end: string; time_slot_2_start?: string; time_slot_2_end?: string; total_hours: number }>; kilometers?: number; materials?: Array<{ unit?: string; quantity: number; description?: string } }; created_at?: string } } }) {
+export default function InterventionRequestDetails({ request }: InterventionRequestDetailsProps) {
   const { work_report_data } = request;
 
   if (!work_report_data) {
@@ -45,30 +58,23 @@ export default function InterventionRequestDetails({ request }: { request: { id:
               return null;
             }
 
-            const startTime = new Date(`2000-01-01T${entry.time_slot_1_start}`);
-            const endTime = new Date(`2000-01-01T${entry.time_slot_1_end}`);
-            const duration = entry.time_slot_2_start && entry.time_slot_2_end
-              ? Math.round((endTime.getTime() - startTime.getTime()) / 1000 / 60)
-              : null;
+            const startTime = new Date(entry.date);
+            const endTime = new Date(entry.date);
+            const duration = entry.total_hours || 0;
 
             return (
               <div key={index} className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:mb-0">
                 <div className="flex items-center gap-2">
                   <div className="flex-1 text-gray-900 dark:text-white">
-                    {entry.time_slot_1_start ? new Date(entry.time_slot_1_start).toLocaleTimeString('it-IT') : '--:--'}
+                    {entry.time_slot_1_start}
                   </div>
                   <span className="mx-2 text-gray-400">
-                    {entry.time_slot_1_end ? new Date(entry.time_slot_1_end).toLocaleTimeString('it-IT') : '--:--'}
+                    {entry.time_slot_1_end}
                   </span>
                   <span className="ml-2 text-gray-900 dark:text-white">
-                    {duration !== null ? `${duration} min` : '--'}
+                    {duration > 0 ? `${duration.toFixed(1)} h` : '--'}
                   </span>
                 </div>
-                {entry.description && (
-                  <div className="flex-1 text-gray-600 dark:text-gray-400 mt-2">
-                    {entry.description}
-                  </div>
-                )}
               </div>
             );
           })}

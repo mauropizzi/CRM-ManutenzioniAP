@@ -160,7 +160,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         provincia: emptyToNull(String((newRequest as any).client_provincia ?? '').trim().toUpperCase()),
         telefono: (newRequest as any).client_phone,
         email: (newRequest as any).client_email,
-        referente: emptyToNull((newRequest as any).client_referent),
+        referente: emptyToNull((newRequest as any).client_referente),
         pec: emptyToNull((newRequest as any).client_pec),
         sdi: emptyToNull((newRequest as any).client_sdi),
         attivo: true,
