@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from 'react';
+import React, { useEffect } from 'react';
 import { InterventionForm, InterventionFormValues } from '@/components/intervention-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter, notFound } from 'next/navigation';
@@ -14,7 +14,7 @@ interface EditInterventionPageProps {
 
 export default function EditInterventionPage({ params }: EditInterventionPageProps) {
   const { id } = use(params);
-  const { interventionRequests, updateInterventionRequest } = useInterventionRequests();
+  const { interventionRequests, updateInterventionRequest, refreshInterventions } = useInterventionRequests();
   const router = useRouter();
 
   const interventionToEdit = interventionRequests.find((request) => request.id === id);
@@ -25,10 +25,17 @@ export default function EditInterventionPage({ params }: EditInterventionPagePro
 
   const handleSubmit = async (data: InterventionFormValues) => {
     console.log('Form submitted with data:', data);
+    
     try {
       await updateInterventionRequest({ ...interventionToEdit, ...data } as InterventionRequest);
       console.log('Intervention updated successfully');
+      
+      // Refresh interventions data to get updated list
+      await refreshInterventions();
+      
       toast.success('Intervento aggiornato con successo!');
+      
+      // Navigate to interventions list after data is refreshed
       router.push('/interventions');
     } catch (error: any) {
       console.error('Error updating intervention:', error);

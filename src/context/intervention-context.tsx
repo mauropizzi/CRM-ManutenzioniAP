@@ -12,6 +12,7 @@ interface InterventionContextType {
   addInterventionRequest: (request: Omit<InterventionRequest, 'id' | 'user_id'>) => Promise<void>;
   updateInterventionRequest: (request: InterventionRequest) => Promise<void>;
   deleteInterventionRequest: (id: string) => Promise<void>;
+  refreshInterventions: () => Promise<void>;
   loading: boolean;
 }
 
@@ -307,6 +308,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         addInterventionRequest,
         updateInterventionRequest,
         deleteInterventionRequest,
+        refreshInterventions,
         loading,
       }}
     >
