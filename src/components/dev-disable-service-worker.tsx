@@ -4,11 +4,9 @@ import { useEffect } from "react";
 
 export function DevDisableServiceWorker() {
   useEffect(() => {
-    // In alcuni ambienti (specialmente Chrome) può rimanere registrato un Service Worker
-    // vecchio che serve asset obsoleti dopo un deploy.
-    // Qui lo disregistriamo in modo sicuro (senza toccare localStorage/sessione Supabase)
-    // e svuotiamo SOLO le Cache Storage, una sola volta per sessione.
-    const key = "__sw_cleanup_done__";
+    // Pulizia Service Worker e Cache Storage - eseguito SEMPRE (non solo in dev)
+    // per evitare che asset obsoleti vengano serviti dopo un deploy.
+    const key = "__sw_cleanup_v2__";
 
     try {
       if (typeof window === "undefined") return;
@@ -21,11 +19,17 @@ export function DevDisableServiceWorker() {
         .getRegistrations()
         .then((regs) => {
           if (!regs?.length) return;
+          console.log("[sw-cleanup] Unregistering", regs.length, "service workers");
           return Promise.all(regs.map((r) => r.unregister()));
         })
         .then(() => {
           if (!window.caches?.keys) return;
-          return caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))));
+          return caches.keys().then((keys) => {
+            if (keys.length) {
+              console.log("[sw-cleanup] Deleting", keys.length, "caches");
+            }
+            return Promise.all(keys.map((k) => caches.delete(k)));
+          });
         })
         .finally(() => {
           try {
@@ -37,6 +41,7 @@ export function DevDisableServiceWorker() {
           // Se un SW stava controllando la pagina, ricarichiamo una volta
           // per far prendere i nuovi asset.
           if (hadController) {
+            console.log("[sw-cleanup] Had controller, reloading...");
             window.location.reload();
           }
         });

@@ -29,59 +29,68 @@ export default function RootLayout({
   return (
     <html lang="it" suppressHydrationWarning>
       <head>
-        {/* Safari-specific: disable back-forward cache */}
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-screen bg-background text-foreground">
         <Script
-          id="sw-early-cleanup"
+          id="cache-buster"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
 (function(){
   try {
-    // Detect Safari
-    var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.endsWith('.local');
+    // Gestione bfcache per tutti i browser
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
     
-    // Safari: disable bfcache to prevent stale chunks
-    if (isSafari) {
-      window.addEventListener('pageshow', function(event) {
-        if (event.persisted) {
-          window.location.reload();
-        }
-      });
-    }
-    
-    // Only run SW cleanup in local dev
-    if (!isLocal) return;
-    
-    var key = '__sw_cleanup_done__';
+    // Pulizia Service Worker e Cache - SEMPRE, non solo in locale
+    var key = '__sw_cleanup_v2__';
     try {
       if (sessionStorage && sessionStorage.getItem(key)) return;
     } catch(e) {}
     
-    if (!('serviceWorker' in navigator)) return;
+    if (!('serviceWorker' in navigator)) {
+      // Nessun SW supportato, pulisci solo cache
+      if (window.caches && caches.keys) {
+        caches.keys().then(function(keys) {
+          return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+        });
+      }
+      return;
+    }
     
     var hadController = !!navigator.serviceWorker.controller;
     
     navigator.serviceWorker.getRegistrations().then(function(regs) {
-      if (!regs || !regs.length) return;
+      if (!regs || !regs.length) return Promise.resolve();
+      console.log('[cache-buster] Unregistering', regs.length, 'service workers');
       return Promise.all(regs.map(function(r) { return r.unregister(); }));
     }).then(function() {
-      if (!(window.caches && caches.keys)) return;
+      if (!(window.caches && caches.keys)) return Promise.resolve();
       return caches.keys().then(function(keys) {
+        if (keys.length) {
+          console.log('[cache-buster] Deleting', keys.length, 'caches');
+        }
         return Promise.all(keys.map(function(k) { return caches.delete(k); }));
       });
-    }).finally(function() {
+    }).then(function() {
       try {
         sessionStorage && sessionStorage.setItem(key, '1');
       } catch(e) {}
+      
       if (hadController) {
+        console.log('[cache-buster] Had SW controller, reloading...');
         location.reload();
       }
+    }).catch(function(err) {
+      console.error('[cache-buster] Error:', err);
     });
-  } catch(e) {}
+  } catch(e) {
+    console.error('[cache-buster] Init error:', e);
+  }
 })();
             `,
           }}
