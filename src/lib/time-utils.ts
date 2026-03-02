@@ -1,42 +1,26 @@
-export const calculateHours = (
-  start1: string, 
-  end1: string, 
-  start2?: string, 
-  end2?: string
-): number => {
-  let totalMinutes = 0;
-
-  const parseTime = (time: string) => {
-    if (!time || !time.includes(':')) return 0;
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours * 60 + minutes;
-  };
-
-  if (start1 && end1) {
-    const s1 = parseTime(start1);
-    const e1 = parseTime(end1);
-    if (e1 > s1) totalMinutes += (e1 - s1);
-  }
-
-  if (start2 && end2) {
-    const s2 = parseTime(start2);
-    const e2 = parseTime(end2);
-    if (e2 > s2) totalMinutes += (e2 - s2);
-  }
-
-  return totalMinutes / 60;
+export const formatDuration = (totalMinutes: number): string => {
+  return `${totalMinutes} min`;
 };
 
-export const generateTimeOptions = (): string[] => {
-  const times: string[] = [];
-  for (let h = 0; h < 24; h++) {
-    for (let m = 0; m < 60; m += 30) {
-      const hour = h.toString().padStart(2, '0');
-      const minute = m.toString().padStart(2, '0');
-      times.push(`${hour}:${minute}`);
-    }
-  }
-  return times;
+export const formatMaterialName = (material: string): string => {
+  return material.description || 'Materiale non specificato';
 };
 
-export const timeOptions = generateTimeOptions();
+export const formatTimeSlot = (startTime: string, endTime?: string): string => {
+  if (!startTime || !endTime) return '--:--';
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  return `${start.toLocaleTimeString('it-IT')} - ${end.toLocaleTimeString('it-IT')}`;
+};
+
+export const formatTimeSlots = (slot1_start: string, slot1_end: string, slot2_start?: string, slot2_end?: string): string => {
+  const time1 = formatTimeSlot(slot1_start, slot1_end);
+  const time2 = slot2_start && slot2_end ? formatTimeSlot(slot2_start, slot2_end) : '';
+  return time2 ? `${time1} (pausa) ${time2}` : time1;
+};
+
+export const calculateTotalHours = (entries: Array<{ total_hours?: number } | undefined>): number => {
+  if (!entries || entries.length === 0) return 0;
+  const total = entries.reduce((sum: number, entry: any) => sum + (Number(entry.total_hours) || 0), 0);
+  return total;
+};

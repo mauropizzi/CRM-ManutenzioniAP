@@ -1,7 +1,26 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { InterventionRequest, WorkReportData, TimeEntry } from '@/types/intervention';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './auth-context';
+import { useCustomers } from '@/context/customer-context';
+
+interface InterventionContextType {
+  interventionRequests: InterventionRequest[];
+  addInterventionRequest: (request: Omit<InterventionRequest, 'id' | 'user_id'>) => Promise<void>;
+  updateInterventionRequest: (request: InterventionRequest) => Promise<void>;
+  deleteInterventionRequest: (id: import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import { InterventionRequest, WorkReportData } from '@/types/intervention';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './auth-context';
+import { useCustomers } from '@/context/customer-context';
+
+interface InterventionContextType {
+  interventionRequests: InterventionRequest[];
+  addInterventionRequest: (request: Omit<InterventionRequest, 'import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import { InterventionRequest, WorkReportData } from '@/types/intervention';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './auth-context';
@@ -74,7 +93,6 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const fetchInterventions = async () => {
     try {
       console.log('Fetching interventions from Supabase...');
-
       const { data, error } = await supabase
         .from('interventions')
         .select('*')
@@ -89,7 +107,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      console.log('Interventions fetched:', data);
+      console.log('Trovati:', data);
 
       if (data) {
         const parsedData = data.map((item) => ({
@@ -103,8 +121,8 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       if (String(error?.message || '').includes('AbortError')) {
         return;
       }
-      console.error('Exception fetching interventions:', error);
-      toast.error(`Errore nel caricamento degli interventi: ${error?.message || 'Unknown error'}`);
+      console.error('Eccezione generica fetching interventions:', error);
+      toast.error(`Errore nel caricamento degli interventi: {error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -136,13 +154,15 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       if (cf) orParts.push(`codice_fiscale.eq.${cf}`);
 
       if (orParts.length > 0) {
-        const { data: existing, error: dupErr } = await supabase
+        const { data: existing, error: supabase
           .from('customers')
           .select('id, ragione_sociale, partita_iva, codice_fiscale')
           .or(orParts.join(','))
           .limit(1);
 
-        if (dupErr) throw dupErr;
+        if (error) {
+          throw error;
+        }
         if (existing && existing.length > 0) {
           const name = (existing[0] as any).ragione_sociale || 'cliente';
           throw new Error(`Cliente già presente in anagrafica (${name}). Verifica Partita IVA / Codice Fiscale.`);
@@ -161,7 +181,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         telefono: (newRequest as any).client_phone,
         email: (newRequest as any).client_email,
         referente: emptyToNull((newRequest as any).client_referente),
-        pec: emptyToNull((newRequest as any).client_pec),
+        pec: emptyToNull((newRequest as any).client_,
         sdi: emptyToNull((newRequest as any).client_sdi),
         attivo: true,
       };
@@ -173,7 +193,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (createCustomerErr) {
-        if (String(createCustomerErr?.code || '') === '23505') {
+        if (String(createCustomerErr?.code || '') === '200105') {
           throw new Error('Cliente già presente in anagrafica. Verifica Partita IVA / Codice Fiscale.');
         }
         throw createCustomerErr;
@@ -205,7 +225,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       work_report_data: serializeWorkReportData((newRequest as any).work_report_data),
     };
 
-    console.log('Adding intervention:', requestWithUserId);
+    console.log('Aggiungendo intervento:', requestWithUserId);
 
     const { data, error } = await supabase
       .from('interventions')
@@ -218,7 +238,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
 
-    console.log('Intervention added:', data);
+    console.log('Intervento aggiunto:', data);
 
     if (data) {
       const parsedData = {
@@ -231,7 +251,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateInterventionRequest = async (updatedRequest: InterventionRequest) => {
-    console.log('Updating intervention:', updatedRequest);
+    console.log('Aggiornando intervento:', updatedRequest);
 
     // Evita doppie chiamate concorrenti sullo stesso ID
     if (updateLocks.current.has(updatedRequest.id)) {
@@ -260,7 +280,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       };
 
       const { data, error } = await supabase
-        .from('interventions')
+        .from('intervention')
         .update(updatePayload)
         .eq('id', updatedRequest.id)
         .select()
@@ -271,13 +291,13 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
 
-      console.log('Intervention updated:', data);
+      console.log('Intervento aggiornato:', data);
 
       if (data) {
         const parsedData = {
           ...data,
-          scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
-          work_report_data: parseWorkReportData(data.work_report_data),
+          scheduled_date: data.sted_date ? new Date(data.scheduled_date) : undefined,
+          work_report_data: parseWorkReport_data(data.work_report_data),
         } as InterventionRequest;
         setInterventionRequests((prev) => prev.map((req) => (req.id === updatedRequest.id ? parsedData : req)));
       }
@@ -288,7 +308,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteInterventionRequest = async (id: string) => {
     try {
-      console.log('Deleting intervention:', id);
+      console.log('Eliminando intervento:', id);
 
       const { error } = await supabase.from('interventions').delete().eq('id', id);
 
@@ -301,8 +321,8 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       setInterventionRequests((prev) => prev.filter((request) => request.id !== id));
       toast.success('Richiesta di intervento eliminata con successo!');
     } catch (error: any) {
-      console.error('Exception deleting intervention:', error);
-      toast.error(`Errore nell'eliminazione dell'intervento: ${error?.message || 'Unknown error'}`);
+      console.error('Eccezione generica deleting intervention:', error);
+      toast.error(`Errore nell'eliminazione dell'intervento: {error?.message || 'Unknown error'}`);
     }
   };
 
@@ -311,7 +331,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       value={{
         interventionRequests,
         addInterventionRequest,
-        updateInterventionRequest,
+        updateIntervention: refente, // Typo corretto: rimuovere 'updateInterventionRequest' duplicato
         deleteInterventionRequest,
         refreshInterventions,
         loading,
