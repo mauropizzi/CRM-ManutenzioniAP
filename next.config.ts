@@ -1,14 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Rimosso il rule 'component-tagger' per evitare blocchi/timeout nei chunk in dev.
+  // Genera build ID unico per ogni deploy
+  generateBuildId: async () => {
+    return `build-${Date.now()}`;
+  },
 
   async headers() {
-    // In DEV i chunk NON sono versionati (stesso path), quindi cache aggressiva = "Loading chunk failed".
     const isProd = process.env.NODE_ENV === "production";
 
     return [
-      // Asset statici di Next
+      // Asset statici di Next - Safari fix: aggiungere Vary header
       {
         source: "/_next/static/:path*",
         headers: [
@@ -16,7 +18,27 @@ const nextConfig: NextConfig = {
             key: "Cache-Control",
             value: isProd
               ? "public, max-age=31536000, immutable"
-              : "no-store",
+              : "no-store, must-revalidate",
+          },
+          {
+            key: "Vary",
+            value: "Accept-Encoding",
+          },
+        ],
+      },
+      // Chunk JS specifici - Safari fix
+      {
+        source: "/_next/static/chunks/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: isProd
+              ? "public, max-age=31536000, immutable"
+              : "no-store, no-cache, must-revalidate",
+          },
+          {
+            key: "Pragma",
+            value: isProd ? "" : "no-cache",
           },
         ],
       },
@@ -30,14 +52,21 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Per tutte le pagine HTML (e tutto ciò che non è /_next/*): evita cache del browser/CDN.
-      // Così Chrome non serve HTML vecchio che punta a chunk JS non più disponibili dopo un deploy.
+      // Per tutte le pagine HTML: evita cache del browser/CDN
       {
         source: "/((?!_next/).*)",
         headers: [
           {
             key: "Cache-Control",
-            value: "no-store",
+            value: "no-store, no-cache, must-revalidate",
+          },
+          {
+            key: "Pragma",
+            value: "no-cache",
+          },
+          {
+            key: "Expires",
+            value: "0",
           },
         ],
       },
