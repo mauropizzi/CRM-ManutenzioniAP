@@ -1,26 +1,7 @@
 "use client";
 
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { InterventionRequest, WorkReportData, TimeEntry } from '@/types/intervention';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './auth-context';
-import { useCustomers } from '@/context/customer-context';
-
-interface InterventionContextType {
-  interventionRequests: InterventionRequest[];
-  addInterventionRequest: (request: Omit<InterventionRequest, 'id' | 'user_id'>) => Promise<void>;
-  updateInterventionRequest: (request: InterventionRequest) => Promise<void>;
-  deleteInterventionRequest: (id: import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
-import { InterventionRequest, WorkReportData } from '@/types/intervention';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './auth-context';
-import { useCustomers } from '@/context/customer-context';
-
-interface InterventionContextType {
-  interventionRequests: InterventionRequest[];
-  addInterventionRequest: (request: Omit<InterventionRequest, 'import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
-import { InterventionRequest, WorkReportData } from '@/types/intervention';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './auth-context';
@@ -122,7 +103,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       console.error('Eccezione generica fetching interventions:', error);
-      toast.error(`Errore nel caricamento degli interventi: {error?.message || 'Unknown error'}`);
+      toast.error(`Errore nel caricamento degli interventi: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -154,7 +135,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       if (cf) orParts.push(`codice_fiscale.eq.${cf}`);
 
       if (orParts.length > 0) {
-        const { data: existing, error: supabase
+        const { data: existing, error } = await supabase
           .from('customers')
           .select('id, ragione_sociale, partita_iva, codice_fiscale')
           .or(orParts.join(','))
@@ -181,7 +162,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         telefono: (newRequest as any).client_phone,
         email: (newRequest as any).client_email,
         referente: emptyToNull((newRequest as any).client_referente),
-        pec: emptyToNull((newRequest as any).client_,
+        pec: emptyToNull((newRequest as any).client_pec),
         sdi: emptyToNull((newRequest as any).client_sdi),
         attivo: true,
       };
@@ -280,7 +261,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       };
 
       const { data, error } = await supabase
-        .from('intervention')
+        .from('interventions')
         .update(updatePayload)
         .eq('id', updatedRequest.id)
         .select()
@@ -296,8 +277,8 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       if (data) {
         const parsedData = {
           ...data,
-          scheduled_date: data.sted_date ? new Date(data.scheduled_date) : undefined,
-          work_report_data: parseWorkReport_data(data.work_report_data),
+          scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
+          work_report_data: parseWorkReportData(data.work_report_data),
         } as InterventionRequest;
         setInterventionRequests((prev) => prev.map((req) => (req.id === updatedRequest.id ? parsedData : req)));
       }
@@ -322,7 +303,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       toast.success('Richiesta di intervento eliminata con successo!');
     } catch (error: any) {
       console.error('Eccezione generica deleting intervention:', error);
-      toast.error(`Errore nell'eliminazione dell'intervento: {error?.message || 'Unknown error'}`);
+      toast.error(`Errore nell'eliminazione dell'intervento: ${error?.message || 'Unknown error'}`);
     }
   };
 
@@ -331,7 +312,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       value={{
         interventionRequests,
         addInterventionRequest,
-        updateIntervention: refente, // Typo corretto: rimuovere 'updateInterventionRequest' duplicato
+        updateInterventionRequest,
         deleteInterventionRequest,
         refreshInterventions,
         loading,
