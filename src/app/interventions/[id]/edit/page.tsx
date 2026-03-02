@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React from 'react';
+import { use } from 'react';
 import { InterventionForm, InterventionFormValues } from '@/components/intervention-form';
 import { useInterventionRequests } from '@/context/intervention-context';
 import { useRouter, notFound } from 'next/navigation';

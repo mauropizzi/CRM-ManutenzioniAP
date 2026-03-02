@@ -110,6 +110,11 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const refreshInterventions = async () => {
+    console.log('Refreshing interventions from Supabase...');
+    await fetchInterventions();
+  };
+
   const addInterventionRequest = async (newRequest: Omit<InterventionRequest, 'id' | 'user_id'>) => {
     const {
       data: { user: authUser },
