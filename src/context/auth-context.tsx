@@ -47,6 +47,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          const msg = String(error.message || '');
+          // Detect invalid refresh token error and clear session (local-only)
+          if (msg.includes('refresh_token_not_found') || msg.includes('Invalid Refresh Token')) {
+            console.warn('[auth-context] Invalid refresh token detected, clearing local session...');
+            await clearLocalAuthSession();
+            setUser(null);
+            toast.message('Sessione scaduta', {
+              description: 'Per favore accedi di nuovo.',
+            });
+            return;
+          }
+          throw error;
+        }
+
+        if (session?.user) {
+          await fetchUserProfile(session.user);
+        }
+      } catch (error: any) {
+        if (error?.name === 'AbortError' || String(error?.message || '').includes('AbortError')) {
+          // Ignora gli abort dovuti a HMR/locks
+          return;
+        }
+        console.error('[auth-context] Auth initialization error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        await fetchUserProfile(session.user);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const fetchUserProfile = async (authUser: any) => {
     try {
       const { data, error } = await supabase
@@ -84,75 +136,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (error) {
-          const msg = String(error.message || '');
-          // Detect invalid refresh token error and clear session (local-only)
-          if (msg.includes('refresh_token_not_found') || msg.includes('Invalid Refresh Token')) {
-            console.warn('[auth-context] Invalid refresh token detected, clearing local session...');
-            await clearLocalAuthSession();
-            setUser(null);
-            toast.message('Sessione scaduta', {
-              description: 'Per favore accedi di nuovo.',
-            });
-            return;
-          }
-          throw error;
-        }
-
-        if (session?.user) {
-          // Set a minimal user immediately to avoid redirect races, then enrich with profile.
-          setUser({ id: session.user.id, email: session.user.email || '' });
-          await fetchUserProfile(session.user);
-        }
-      } catch (error: any) {
-        if (error?.name === 'AbortError' || String(error?.message || '').includes('AbortError')) {
-          // Ignora gli abort dovuti a HMR/locks
-          return;
-        }
-        console.error('[auth-context] Auth initialization error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        // Same race-avoidance on fresh login: set minimal user first.
-        setUser({ id: session.user.id, email: session.user.email || '' });
-        await fetchUserProfile(session.user);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       toast.error(`Errore di accesso: ${error.message}`);
       throw error;
     }
-
-    if (data.user) {
-      // Ensure the user is available immediately for route guards.
-      setUser({ id: data.user.id, email: data.user.email || '' });
-      await fetchUserProfile(data.user);
-    }
-
     toast.success('Accesso effettuato con successo!');
   };
 
