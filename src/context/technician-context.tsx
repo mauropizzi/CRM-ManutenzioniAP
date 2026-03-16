@@ -1,44 +1,42 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import { Material } from '@/types/material';
+import { Technician } from '@/types/technician';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './auth-context';
 
-interface MaterialContextType {
-  materials: Material[];
-  addMaterial: (material: Omit<Material, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  updateMaterial: (material: Material) => Promise<void>;
-  deleteMaterial: (id: string) => Promise<void>;
-  refreshMaterials: () => Promise<void>;
+interface TechnicianContextType {
+  technicians: Technician[];
+  addTechnician: (technician: Omit<Technician, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateTechnician: (technician: Technician) => Promise<void>;
+  deleteTechnician: (id: string) => Promise<void>;
   loading: boolean;
 }
 
-const MaterialContext = createContext<MaterialContextType | undefined>(undefined);
+const TechnicianContext = createContext<TechnicianContextType | undefined>(undefined);
 
-export const MaterialProvider = ({ children }: { children: ReactNode }) => {
-  const [materials, setMaterials] = useState<Material[]>([]);
+export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
+  const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const isMounted = useRef(true);
 
-  const refreshMaterials = async () => {
+  const fetchTechnicians = async () => {
     if (!isMounted.current) return;
-    setLoading(true);
     try {
-      const { data, error } = await supabase.from('materials').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('technicians').select('*').order('created_at', { ascending: false });
       if (!isMounted.current) return;
       if (error) {
         if (error.name === 'AbortError' || error.message?.includes('aborted')) return;
-        toast.error(`Errore nel caricamento dei materiali: ${error.message}`);
+        toast.error(`Errore nel caricamento dei tecnici: ${error.message}`);
         return;
       }
-      setMaterials((data as Material[]) || []);
+      if (data) setTechnicians(data as Technician[]);
     } catch (error: any) {
       if (!isMounted.current) return;
       if (error?.name === 'AbortError' || error?.message?.includes('aborted')) return;
-      toast.error(`Errore nel caricamento dei materiali: ${error?.message || 'Unknown error'}`);
+      toast.error(`Errore nel caricamento dei tecnici: ${error?.message || 'Unknown error'}`);
     } finally {
       if (isMounted.current) setLoading(false);
     }
@@ -47,59 +45,58 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     isMounted.current = true;
     if (user) {
-      refreshMaterials();
+      fetchTechnicians();
     } else {
-      setMaterials([]);
+      setTechnicians([]);
       setLoading(false);
     }
     return () => { isMounted.current = false; };
   }, [user]);
 
-  const addMaterial = async (newMaterial: Omit<Material, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  const addTechnician = async (newTechnician: Omit<Technician, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { toast.error("Devi essere autenticato per aggiungere un materiale"); return; }
-      const { data, error } = await supabase.from('materials').insert([{ ...newMaterial, user_id: user.id }]).select();
-      if (error) { toast.error(`Errore nell'aggiunta del materiale: ${error.message}`); return; }
-      if (data && data.length > 0) { setMaterials((prev) => [data[0] as Material, ...prev]); toast.success("Materiale aggiunto con successo!"); }
+      if (!user) { toast.error("Devi essere autenticato per aggiungere un tecnico"); return; }
+      const { data, error } = await supabase.from('technicians').insert([{ ...newTechnician, user_id: user.id }]).select().single();
+      if (error) { toast.error(`Errore nell'aggiunta del tecnico: ${error.message}`); return; }
+      if (data) { setTechnicians((prev) => [data as Technician, ...prev]); toast.success("Tecnico aggiunto con successo!"); }
     } catch (error: any) {
-      toast.error(`Errore nell'aggiunta del materiale: ${error?.message || 'Unknown error'}`);
+      toast.error(`Errore nell'aggiunta del tecnico: ${error?.message || 'Unknown error'}`);
     }
   };
 
-  const updateMaterial = async (updatedMaterial: Material) => {
+  const updateTechnician = async (updatedTechnician: Technician) => {
     try {
-      const { data, error } = await supabase.from('materials').update(updatedMaterial).eq('id', updatedMaterial.id).select().single();
-      if (error) { toast.error(`Errore nell'aggiornamento del materiale: ${error.message}`); return; }
+      const { data, error } = await supabase.from('technicians').update(updatedTechnician).eq('id', updatedTechnician.id).select().single();
+      if (error) { toast.error(`Errore nell'aggiornamento del tecnico: ${error.message}`); return; }
       if (data) {
-        setMaterials((prev) => prev.map((m) => m.id === updatedMaterial.id ? (data as Material) : m));
-        toast.success("Materiale aggiornato con successo!");
+        setTechnicians((prev) => prev.map((t) => t.id === updatedTechnician.id ? (data as Technician) : t));
+        toast.success("Tecnico aggiornato con successo!");
       }
     } catch (error: any) {
-      toast.error(`Errore nell'aggiornamento del materiale: ${error?.message || 'Unknown error'}`);
+      toast.error(`Errore nell'aggiornamento del tecnico: ${error?.message || 'Unknown error'}`);
     }
   };
 
-  const deleteMaterial = async (id: string) => {
+  const deleteTechnician = async (id: string) => {
     try {
-      const { error } = await supabase.from('materials').delete().eq('id', id);
-      if (error) { toast.error(`Errore nell'eliminazione del materiale: ${error.message}`); return; }
-      setMaterials((prev) => prev.filter((m) => m.id !== id));
-      toast.success("Materiale eliminato con successo!");
+      const { error } = await supabase.from('technicians').delete().eq('id', id);
+      if (error) { toast.error(`Errore nell'eliminazione del tecnico: ${error.message}`); return; }
+      setTechnicians((prev) => prev.filter((t) => t.id !== id));
+      toast.success("Tecnico eliminato con successo!");
     } catch (error: any) {
-      toast.error(`Errore nell'eliminazione del materiale: ${error?.message || 'Unknown error'}`);
+      toast.error(`Errore nell'eliminazione del tecnico: ${error?.message || 'Unknown error'}`);
     }
   };
 
   return (
-    <MaterialContext.Provider value={{ materials, addMaterial, updateMaterial, deleteMaterial, refreshMaterials, loading }}>
+    <TechnicianContext.Provider value={{ technicians, addTechnician, updateTechnician, deleteTechnician, loading }}>
       {children}
-    </MaterialContext.Provider>
+    </TechnicianContext.Provider>
   );
 };
 
-export const useMaterials = () => {
-  const context = useContext(MaterialContext);
-  if (context === undefined) throw new Error('useMaterials must be used within a MaterialProvider');
+export const useTechnicians = () => {
+  const context = useContext(TechnicianContext);
+  if (context === undefined) throw new Error('useTechnicians must be used within a TechnicianProvider');
   return context;
 };
