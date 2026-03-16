@@ -1,25 +1,72 @@
-"use client";
+import type { Metadata } from "next";
+import "./globals.css";
+import { CustomerProvider } from "@/context/customer-context";
+import { InterventionProvider } from "@/context/intervention-context";
+import { MaterialProvider } from "@/context/material-context";
+import { TechnicianProvider } from "@/context/technician-context";
+import { SupplierProvider } from "@/context/supplier-context";
+import { AuthProvider } from "@/context/auth-context";
+import { ThemeProvider } from "@/components/theme-provider";
+import { AppShell } from "@/components/app-shell";
+import { SystemTypeProvider } from "@/context/system-type-context";
+import { BrandProvider } from "@/context/brand-context";
+import { RuntimeErrorLogger } from "@/components/runtime-error-logger";
+import { DevDisableServiceWorker } from "@/components/dev-disable-service-worker";
+import { GlobalErrorHandler } from "@/components/global-error-handler";
 
-import { useEffect } from "react";
+export const metadata: Metadata = {
+  title: "Gestione Interventi",
+  description: "Gestione anagrafica clienti e richieste di intervento",
+};
 
-export function GlobalErrorHandler() {
-  useEffect(() => {
-    const handler = (event: PromiseRejectionEvent) => {
-      const err = event.reason;
-      const isAbort =
-        err?.name === "AbortError" ||
-        err?.message?.includes("aborted") ||
-        err?.message?.includes("AbortError");
+export const dynamic = "force-dynamic";
 
-      if (isAbort) {
-        event.preventDefault();
-        return;
-      }
-    };
-
-    window.addEventListener("unhandledrejection", handler);
-    return () => window.removeEventListener("unhandledrejection", handler);
-  }, []);
-
-  return null;
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="it" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.addEventListener('unhandledrejection', function(event) {
+            var err = event.reason;
+            if (err && (err.name === 'AbortError' || (err.message && err.message.indexOf('aborted') !== -1))) {
+              event.preventDefault();
+            }
+          });
+        `}} />
+      </head>
+      <body className="min-h-screen bg-background text-foreground">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange={true}
+        >
+          <GlobalErrorHandler />
+          <DevDisableServiceWorker />
+          <RuntimeErrorLogger />
+          <AuthProvider>
+            <SystemTypeProvider>
+              <BrandProvider>
+                <CustomerProvider>
+                  <InterventionProvider>
+                    <MaterialProvider>
+                      <TechnicianProvider>
+                        <SupplierProvider>
+                          <AppShell>{children}</AppShell>
+                        </SupplierProvider>
+                      </TechnicianProvider>
+                    </MaterialProvider>
+                  </InterventionProvider>
+                </CustomerProvider>
+              </BrandProvider>
+            </SystemTypeProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
 }
