@@ -1,105 +1,226 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import { Material } from '@/types/material';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import { InterventionRequest, WorkReportData, TimeEntry } from '@/types/intervention';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './auth-context';
+import { useCustomers } from '@/context/customer-context';
 
-interface MaterialContextType {
-  materials: Material[];
-  addMaterial: (material: Omit<Material, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  updateMaterial: (material: Material) => Promise<void>;
-  deleteMaterial: (id: string) => Promise<void>;
-  refreshMaterials: () => Promise<void>;
+interface InterventionContextType {
+  interventionRequests: InterventionRequest[];
+  addInterventionRequest: (request: Omit<InterventionRequest, 'id' | 'user_id'>) => Promise<void>;
+  updateInterventionRequest: (request: InterventionRequest) => Promise<void>;
+  deleteInterventionRequest: (id: string) => Promise<void>;
+  refreshInterventions: () => Promise<void>;
   loading: boolean;
 }
 
-const MaterialContext = createContext<MaterialContextType | undefined>(undefined);
+const InterventionContext = createContext<InterventionContextType | undefined>(undefined);
 
-export const MaterialProvider = ({ children }: { children: ReactNode }) => {
-  const [materials, setMaterials] = useState<Material[]>([]);
+const parseWorkReportData = (data: any): WorkReportData | undefined => {
+  if (!data) return undefined;
+  return {
+    ...data,
+    time_entries: data.time_entries?.map((entry: any) => ({
+      ...entry,
+      date: entry.date ? new Date(entry.date) : undefined,
+    })),
+  };
+};
+
+const serializeWorkReportData = (data: WorkReportData | undefined): any | undefined => {
+  if (!data) return undefined;
+  return {
+    ...data,
+    time_entries: data.time_entries?.map((entry: TimeEntry) => ({
+      ...entry,
+      date: entry.date ? entry.date.toISOString().split('T')[0] : undefined,
+    })),
+  };
+};
+
+const normalizeCustomerId = (value: unknown): string | null => {
+  const v = typeof value === 'string' ? value.trim() : '';
+  if (!v || v === 'new-customer') return null;
+  return v;
+};
+
+const normFiscal = (value: unknown) => String(value ?? '').trim().toUpperCase();
+const emptyToNull = (value: unknown) => {
+  const v = String(value ?? '').trim();
+  return v.length > 0 ? v : null;
+};
+
+export const InterventionProvider = ({ children }: { children: ReactNode }) => {
+  const [interventionRequests, setInterventionRequests] = useState<InterventionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { refreshCustomers } = useCustomers();
+  const updateLocks = useRef<Set<string>>(new Set());
   const isMounted = useRef(true);
-
-  const refreshMaterials = async () => {
-    if (!isMounted.current) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.from('materials').select('*').order('created_at', { ascending: false });
-      if (!isMounted.current) return;
-      if (error) {
-        if (error.name === 'AbortError' || error.message?.includes('aborted')) return;
-        toast.error(`Errore nel caricamento dei materiali: ${error.message}`);
-        return;
-      }
-      setMaterials((data as Material[]) || []);
-    } catch (error: any) {
-      if (!isMounted.current) return;
-      if (error?.name === 'AbortError' || error?.message?.includes('aborted')) return;
-      toast.error(`Errore nel caricamento dei materiali: ${error?.message || 'Unknown error'}`);
-    } finally {
-      if (isMounted.current) setLoading(false);
-    }
-  };
 
   useEffect(() => {
     isMounted.current = true;
     if (user) {
-      refreshMaterials();
+      fetchInterventions();
     } else {
-      setMaterials([]);
+      setInterventionRequests([]);
       setLoading(false);
     }
     return () => { isMounted.current = false; };
   }, [user]);
 
-  const addMaterial = async (newMaterial: Omit<Material, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  const fetchInterventions = async () => {
+    if (!isMounted.current) return;
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { toast.error("Devi essere autenticato per aggiungere un materiale"); return; }
-      const { data, error } = await supabase.from('materials').insert([{ ...newMaterial, user_id: user.id }]).select();
-      if (error) { toast.error(`Errore nell'aggiunta del materiale: ${error.message}`); return; }
-      if (data && data.length > 0) { setMaterials((prev) => [data[0] as Material, ...prev]); toast.success("Materiale aggiunto con successo!"); }
-    } catch (error: any) {
-      toast.error(`Errore nell'aggiunta del materiale: ${error?.message || 'Unknown error'}`);
-    }
-  };
+      const { data, error } = await supabase
+        .from('interventions')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const updateMaterial = async (updatedMaterial: Material) => {
-    try {
-      const { data, error } = await supabase.from('materials').update(updatedMaterial).eq('id', updatedMaterial.id).select().single();
-      if (error) { toast.error(`Errore nell'aggiornamento del materiale: ${error.message}`); return; }
+      if (!isMounted.current) return;
+
+      if (error) {
+        if (error.name === 'AbortError' || error.message?.includes('aborted')) return;
+        toast.error(`Errore nel caricamento degli interventi: ${error.message}`);
+        return;
+      }
+
       if (data) {
-        setMaterials((prev) => prev.map((m) => m.id === updatedMaterial.id ? (data as Material) : m));
-        toast.success("Materiale aggiornato con successo!");
+        const parsedData = data.map((item) => ({
+          ...item,
+          scheduled_date: item.scheduled_date ? new Date(item.scheduled_date) : undefined,
+          work_report_data: parseWorkReportData(item.work_report_data),
+        })) as InterventionRequest[];
+        setInterventionRequests(parsedData);
       }
     } catch (error: any) {
-      toast.error(`Errore nell'aggiornamento del materiale: ${error?.message || 'Unknown error'}`);
+      if (!isMounted.current) return;
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted')) return;
+      toast.error(`Errore nel caricamento degli interventi: ${error?.message || 'Unknown error'}`);
+    } finally {
+      if (isMounted.current) setLoading(false);
     }
   };
 
-  const deleteMaterial = async (id: string) => {
+  const refreshInterventions = async () => {
+    await fetchInterventions();
+  };
+
+  const addInterventionRequest = async (newRequest: Omit<InterventionRequest, 'id' | 'user_id'>) => {
+    const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
+    if (authErr) throw authErr;
+    if (!authUser) throw new Error('Devi essere autenticato per aggiungere un intervento');
+
+    let customerId = normalizeCustomerId((newRequest as any).customer_id);
+    const cf = normFiscal((newRequest as any).client_codice_fiscale);
+    const piva = normFiscal((newRequest as any).client_partita_iva);
+
+    if (!customerId) {
+      const orParts: string[] = [];
+      if (piva) orParts.push(`partita_iva.eq.${piva}`);
+      if (cf) orParts.push(`codice_fiscale.eq.${cf}`);
+
+      if (orParts.length > 0) {
+        const { data: existing, error } = await supabase
+          .from('customers').select('id, ragione_sociale, partita_iva, codice_fiscale')
+          .or(orParts.join(',')).limit(1);
+        if (error) throw error;
+        if (existing && existing.length > 0) {
+          const name = (existing[0] as any).ragione_sociale || 'cliente';
+          throw new Error(`Cliente già presente in anagrafica (${name}). Verifica Partita IVA / Codice Fiscale.`);
+        }
+      }
+
+      const customerPayload = {
+        user_id: authUser.id,
+        ragione_sociale: (newRequest as any).client_company_name,
+        codice_fiscale: cf || null,
+        partita_iva: piva || null,
+        indirizzo: (newRequest as any).client_address,
+        citta: emptyToNull((newRequest as any).client_citta),
+        cap: emptyToNull((newRequest as any).client_cap),
+        provincia: emptyToNull(String((newRequest as any).client_provincia ?? '').trim().toUpperCase()),
+        telefono: (newRequest as any).client_phone,
+        email: (newRequest as any).client_email,
+        referente: emptyToNull((newRequest as any).client_referente),
+        pec: emptyToNull((newRequest as any).client_pec),
+        sdi: emptyToNull((newRequest as any).client_sdi),
+        attivo: true,
+      };
+
+      const { data: createdCustomer, error: createCustomerErr } = await supabase
+        .from('customers').insert([customerPayload]).select('id').single();
+      if (createCustomerErr) {
+        if (String(createCustomerErr?.code || '') === '200105')
+          throw new Error('Cliente già presente in anagrafica. Verifica Partita IVA / Codice Fiscale.');
+        throw createCustomerErr;
+      }
+
+      customerId = (createdCustomer as any)?.id ?? null;
+      if (!customerId) throw new Error('Impossibile creare il cliente in anagrafica');
+      await refreshCustomers();
+    }
+
+    const { client_codice_fiscale, client_partita_iva, client_citta, client_cap, client_provincia, client_pec, client_sdi, ...rest } = newRequest as any;
+    const { data, error } = await supabase.from('interventions')
+      .insert([{ ...rest, user_id: authUser.id, customer_id: customerId, work_report_data: serializeWorkReportData((newRequest as any).work_report_data) }])
+      .select().single();
+
+    if (error) throw error;
+    if (data) {
+      const parsedData = {
+        ...data,
+        scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
+        work_report_data: parseWorkReportData(data.work_report_data),
+      } as InterventionRequest;
+      setInterventionRequests((prev) => [parsedData, ...prev]);
+    }
+  };
+
+  const updateInterventionRequest = async (updatedRequest: InterventionRequest) => {
+    if (updateLocks.current.has(updatedRequest.id)) return;
+    updateLocks.current.add(updatedRequest.id);
     try {
-      const { error } = await supabase.from('materials').delete().eq('id', id);
-      if (error) { toast.error(`Errore nell'eliminazione del materiale: ${error.message}`); return; }
-      setMaterials((prev) => prev.filter((m) => m.id !== id));
-      toast.success("Materiale eliminato con successo!");
+      const { client_codice_fiscale, client_partita_iva, client_citta, client_cap, client_provincia, client_pec, client_sdi, ...rest } = updatedRequest as any;
+      const { data, error } = await supabase.from('interventions')
+        .update({ ...rest, customer_id: normalizeCustomerId((updatedRequest as any).customer_id), scheduled_date: updatedRequest.scheduled_date ? updatedRequest.scheduled_date.toISOString().split('T')[0] : null, work_report_data: serializeWorkReportData(updatedRequest.work_report_data) })
+        .eq('id', updatedRequest.id).select().single();
+      if (error) throw error;
+      if (data) {
+        const parsedData = {
+          ...data,
+          scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
+          work_report_data: parseWorkReportData(data.work_report_data),
+        } as InterventionRequest;
+        setInterventionRequests((prev) => prev.map((req) => req.id === updatedRequest.id ? parsedData : req));
+      }
+    } finally {
+      updateLocks.current.delete(updatedRequest.id);
+    }
+  };
+
+  const deleteInterventionRequest = async (id: string) => {
+    try {
+      const { error } = await supabase.from('interventions').delete().eq('id', id);
+      if (error) { toast.error(`Errore nell'eliminazione dell'intervento: ${error.message}`); return; }
+      setInterventionRequests((prev) => prev.filter((r) => r.id !== id));
+      toast.success('Richiesta di intervento eliminata con successo!');
     } catch (error: any) {
-      toast.error(`Errore nell'eliminazione del materiale: ${error?.message || 'Unknown error'}`);
+      toast.error(`Errore nell'eliminazione dell'intervento: ${error?.message || 'Unknown error'}`);
     }
   };
 
   return (
-    <MaterialContext.Provider value={{ materials, addMaterial, updateMaterial, deleteMaterial, refreshMaterials, loading }}>
+    <InterventionContext.Provider value={{ interventionRequests, addInterventionRequest, updateInterventionRequest, deleteInterventionRequest, refreshInterventions, loading }}>
       {children}
-    </MaterialContext.Provider>
+    </InterventionContext.Provider>
   );
 };
 
-export const useMaterials = () => {
-  const context = useContext(MaterialContext);
-  if (context === undefined) throw new Error('useMaterials must be used within a MaterialProvider');
+export const useInterventionRequests = () => {
+  const context = useContext(InterventionContext);
+  if (context === undefined) throw new Error('useInterventionRequests must be used within an InterventionProvider');
   return context;
 };
