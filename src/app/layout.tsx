@@ -12,7 +12,6 @@ import { SystemTypeProvider } from "@/context/system-type-context";
 import { BrandProvider } from "@/context/brand-context";
 import { RuntimeErrorLogger } from "@/components/runtime-error-logger";
 import { DevDisableServiceWorker } from "@/components/dev-disable-service-worker";
-import { GlobalErrorHandler } from "@/components/global-error-handler";
 
 export const metadata: Metadata = {
   title: "Gestione Interventi",
@@ -35,7 +34,6 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={true}
         >
-          <GlobalErrorHandler />
           <DevDisableServiceWorker />
           <RuntimeErrorLogger />
           <AuthProvider>

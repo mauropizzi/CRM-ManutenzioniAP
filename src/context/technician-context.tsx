@@ -1,226 +1,180 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
-import { InterventionRequest, WorkReportData, TimeEntry } from '@/types/intervention';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Technician } from '@/types/technician';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './auth-context';
-import { useCustomers } from '@/context/customer-context';
 
-interface InterventionContextType {
-  interventionRequests: InterventionRequest[];
-  addInterventionRequest: (request: Omit<InterventionRequest, 'id' | 'user_id'>) => Promise<void>;
-  updateInterventionRequest: (request: InterventionRequest) => Promise<void>;
-  deleteInterventionRequest: (id: string) => Promise<void>;
-  refreshInterventions: () => Promise<void>;
+interface TechnicianContextType {
+  technicians: Technician[];
+  addTechnician: (technician: Omit<Technician, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateTechnician: (technician: Technician) => Promise<void>;
+  deleteTechnician: (id: string) => Promise<void>;
   loading: boolean;
 }
 
-const InterventionContext = createContext<InterventionContextType | undefined>(undefined);
+const TechnicianContext = createContext<TechnicianContextType | undefined>(undefined);
 
-const parseWorkReportData = (data: any): WorkReportData | undefined => {
-  if (!data) return undefined;
-  return {
-    ...data,
-    time_entries: data.time_entries?.map((entry: any) => ({
-      ...entry,
-      date: entry.date ? new Date(entry.date) : undefined,
-    })),
-  };
-};
-
-const serializeWorkReportData = (data: WorkReportData | undefined): any | undefined => {
-  if (!data) return undefined;
-  return {
-    ...data,
-    time_entries: data.time_entries?.map((entry: TimeEntry) => ({
-      ...entry,
-      date: entry.date ? entry.date.toISOString().split('T')[0] : undefined,
-    })),
-  };
-};
-
-const normalizeCustomerId = (value: unknown): string | null => {
-  const v = typeof value === 'string' ? value.trim() : '';
-  if (!v || v === 'new-customer') return null;
-  return v;
-};
-
-const normFiscal = (value: unknown) => String(value ?? '').trim().toUpperCase();
-const emptyToNull = (value: unknown) => {
-  const v = String(value ?? '').trim();
-  return v.length > 0 ? v : null;
-};
-
-export const InterventionProvider = ({ children }: { children: ReactNode }) => {
-  const [interventionRequests, setInterventionRequests] = useState<InterventionRequest[]>([]);
+export const TechnicianProvider = ({ children }: { children: ReactNode }) => {
+  const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { refreshCustomers } = useCustomers();
-  const updateLocks = useRef<Set<string>>(new Set());
-  const isMounted = useRef(true);
 
   useEffect(() => {
-    isMounted.current = true;
-    if (user) {
-      fetchInterventions();
-    } else {
-      setInterventionRequests([]);
+    if (typeof window !== 'undefined' && user) {
+      fetchTechnicians();
+    } else if (!user) {
+      setTechnicians([]);
       setLoading(false);
     }
-    return () => { isMounted.current = false; };
   }, [user]);
 
-  const fetchInterventions = async () => {
-    if (!isMounted.current) return;
+  const fetchTechnicians = async () => {
     try {
+      console.log('Fetching technicians from Supabase...');
+      
       const { data, error } = await supabase
-        .from('interventions')
+        .from('technicians')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!isMounted.current) return;
-
       if (error) {
-        if (error.name === 'AbortError' || error.message?.includes('aborted')) return;
-        toast.error(`Errore nel caricamento degli interventi: ${error.message}`);
+        if (String(error?.message || '').includes('AbortError')) {
+          return;
+        }
+        console.error('Supabase error fetching technicians:', error);
+        toast.error(`Errore nel caricamento dei tecnici: ${error.message}`);
         return;
       }
 
+      console.log('Technicians fetched:', data);
+      
       if (data) {
-        const parsedData = data.map((item) => ({
-          ...item,
-          scheduled_date: item.scheduled_date ? new Date(item.scheduled_date) : undefined,
-          work_report_data: parseWorkReportData(item.work_report_data),
-        })) as InterventionRequest[];
-        setInterventionRequests(parsedData);
+        setTechnicians(data as Technician[]);
       }
     } catch (error: any) {
-      if (!isMounted.current) return;
-      if (error?.name === 'AbortError' || error?.message?.includes('aborted')) return;
-      toast.error(`Errore nel caricamento degli interventi: ${error?.message || 'Unknown error'}`);
+      if (String(error?.message || '').includes('AbortError')) {
+        return;
+      }
+      console.error('Exception fetching technicians:', error);
+      toast.error(`Errore nel caricamento dei tecnici: ${error?.message || 'Unknown error'}`);
     } finally {
-      if (isMounted.current) setLoading(false);
+      setLoading(false);
     }
   };
 
-  const refreshInterventions = async () => {
-    await fetchInterventions();
-  };
-
-  const addInterventionRequest = async (newRequest: Omit<InterventionRequest, 'id' | 'user_id'>) => {
-    const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
-    if (authErr) throw authErr;
-    if (!authUser) throw new Error('Devi essere autenticato per aggiungere un intervento');
-
-    let customerId = normalizeCustomerId((newRequest as any).customer_id);
-    const cf = normFiscal((newRequest as any).client_codice_fiscale);
-    const piva = normFiscal((newRequest as any).client_partita_iva);
-
-    if (!customerId) {
-      const orParts: string[] = [];
-      if (piva) orParts.push(`partita_iva.eq.${piva}`);
-      if (cf) orParts.push(`codice_fiscale.eq.${cf}`);
-
-      if (orParts.length > 0) {
-        const { data: existing, error } = await supabase
-          .from('customers').select('id, ragione_sociale, partita_iva, codice_fiscale')
-          .or(orParts.join(',')).limit(1);
-        if (error) throw error;
-        if (existing && existing.length > 0) {
-          const name = (existing[0] as any).ragione_sociale || 'cliente';
-          throw new Error(`Cliente già presente in anagrafica (${name}). Verifica Partita IVA / Codice Fiscale.`);
-        }
+  const addTechnician = async (newTechnician: Omit<Technician, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    try {
+      if (!user) {
+        toast.error("Devi essere autenticato per aggiungere un tecnico");
+        return;
       }
 
-      const customerPayload = {
-        user_id: authUser.id,
-        ragione_sociale: (newRequest as any).client_company_name,
-        codice_fiscale: cf || null,
-        partita_iva: piva || null,
-        indirizzo: (newRequest as any).client_address,
-        citta: emptyToNull((newRequest as any).client_citta),
-        cap: emptyToNull((newRequest as any).client_cap),
-        provincia: emptyToNull(String((newRequest as any).client_provincia ?? '').trim().toUpperCase()),
-        telefono: (newRequest as any).client_phone,
-        email: (newRequest as any).client_email,
-        referente: emptyToNull((newRequest as any).client_referente),
-        pec: emptyToNull((newRequest as any).client_pec),
-        sdi: emptyToNull((newRequest as any).client_sdi),
-        attivo: true,
+      const technicianWithUserId = {
+        ...newTechnician,
+        user_id: user.id,
       };
 
-      const { data: createdCustomer, error: createCustomerErr } = await supabase
-        .from('customers').insert([customerPayload]).select('id').single();
-      if (createCustomerErr) {
-        if (String(createCustomerErr?.code || '') === '200105')
-          throw new Error('Cliente già presente in anagrafica. Verifica Partita IVA / Codice Fiscale.');
-        throw createCustomerErr;
+      console.log('Adding technician:', technicianWithUserId);
+      
+      const { data, error } = await supabase
+        .from('technicians')
+        .insert([technicianWithUserId])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error adding technician:', error);
+        toast.error(`Errore nell'aggiunta del tecnico: ${error.message}`);
+        return;
       }
 
-      customerId = (createdCustomer as any)?.id ?? null;
-      if (!customerId) throw new Error('Impossibile creare il cliente in anagrafica');
-      await refreshCustomers();
-    }
+      console.log('Technician added:', data);
 
-    const { client_codice_fiscale, client_partita_iva, client_citta, client_cap, client_provincia, client_pec, client_sdi, ...rest } = newRequest as any;
-    const { data, error } = await supabase.from('interventions')
-      .insert([{ ...rest, user_id: authUser.id, customer_id: customerId, work_report_data: serializeWorkReportData((newRequest as any).work_report_data) }])
-      .select().single();
-
-    if (error) throw error;
-    if (data) {
-      const parsedData = {
-        ...data,
-        scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
-        work_report_data: parseWorkReportData(data.work_report_data),
-      } as InterventionRequest;
-      setInterventionRequests((prev) => [parsedData, ...prev]);
-    }
-  };
-
-  const updateInterventionRequest = async (updatedRequest: InterventionRequest) => {
-    if (updateLocks.current.has(updatedRequest.id)) return;
-    updateLocks.current.add(updatedRequest.id);
-    try {
-      const { client_codice_fiscale, client_partita_iva, client_citta, client_cap, client_provincia, client_pec, client_sdi, ...rest } = updatedRequest as any;
-      const { data, error } = await supabase.from('interventions')
-        .update({ ...rest, customer_id: normalizeCustomerId((updatedRequest as any).customer_id), scheduled_date: updatedRequest.scheduled_date ? updatedRequest.scheduled_date.toISOString().split('T')[0] : null, work_report_data: serializeWorkReportData(updatedRequest.work_report_data) })
-        .eq('id', updatedRequest.id).select().single();
-      if (error) throw error;
       if (data) {
-        const parsedData = {
-          ...data,
-          scheduled_date: data.scheduled_date ? new Date(data.scheduled_date) : undefined,
-          work_report_data: parseWorkReportData(data.work_report_data),
-        } as InterventionRequest;
-        setInterventionRequests((prev) => prev.map((req) => req.id === updatedRequest.id ? parsedData : req));
+        setTechnicians((prev) => [data as Technician, ...prev]);
+        toast.success("Tecnico aggiunto con successo!");
       }
-    } finally {
-      updateLocks.current.delete(updatedRequest.id);
+    } catch (error: any) {
+      console.error('Exception adding technician:', error);
+      toast.error(`Errore nell'aggiunta del tecnico: ${error?.message || 'Unknown error'}`);
     }
   };
 
-  const deleteInterventionRequest = async (id: string) => {
+  const updateTechnician = async (updatedTechnician: Technician) => {
     try {
-      const { error } = await supabase.from('interventions').delete().eq('id', id);
-      if (error) { toast.error(`Errore nell'eliminazione dell'intervento: ${error.message}`); return; }
-      setInterventionRequests((prev) => prev.filter((r) => r.id !== id));
-      toast.success('Richiesta di intervento eliminata con successo!');
+      console.log('Updating technician:', updatedTechnician);
+      
+      const { data, error } = await supabase
+        .from('technicians')
+        .update(updatedTechnician)
+        .eq('id', updatedTechnician.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error updating technician:', error);
+        toast.error(`Errore nell'aggiornamento del tecnico: ${error.message}`);
+        return;
+      }
+
+      console.log('Technician updated:', data);
+
+      if (data) {
+        setTechnicians((prev) =>
+          prev.map((technician) =>
+            technician.id === updatedTechnician.id ? (data as Technician) : technician
+          )
+        );
+        toast.success("Tecnico aggiornato con successo!");
+      }
     } catch (error: any) {
-      toast.error(`Errore nell'eliminazione dell'intervento: ${error?.message || 'Unknown error'}`);
+      console.error('Exception updating technician:', error);
+      toast.error(`Errore nell'aggiornamento del tecnico: ${error?.message || 'Unknown error'}`);
+    }
+  };
+
+  const deleteTechnician = async (id: string) => {
+    try {
+      console.log('Deleting technician:', id);
+      
+      const { error } = await supabase
+        .from('technicians')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Supabase error deleting technician:', error);
+        toast.error(`Errore nell'eliminazione del tecnico: ${error.message}`);
+        return;
+      }
+
+      setTechnicians((prev) => prev.filter((technician) => technician.id !== id));
+      toast.success("Tecnico eliminato con successo!");
+    } catch (error: any) {
+      console.error('Exception deleting technician:', error);
+      toast.error(`Errore nell'eliminazione del tecnico: ${error?.message || 'Unknown error'}`);
     }
   };
 
   return (
-    <InterventionContext.Provider value={{ interventionRequests, addInterventionRequest, updateInterventionRequest, deleteInterventionRequest, refreshInterventions, loading }}>
+    <TechnicianContext.Provider value={{ 
+      technicians, 
+      addTechnician, 
+      updateTechnician, 
+      deleteTechnician,
+      loading 
+    }}>
       {children}
-    </InterventionContext.Provider>
+    </TechnicianContext.Provider>
   );
 };
 
-export const useInterventionRequests = () => {
-  const context = useContext(InterventionContext);
-  if (context === undefined) throw new Error('useInterventionRequests must be used within an InterventionProvider');
+export const useTechnicians = () => {
+  const context = useContext(TechnicianContext);
+  if (context === undefined) {
+    throw new Error('useTechnicians must be used within a TechnicianProvider');
+  }
   return context;
 };
