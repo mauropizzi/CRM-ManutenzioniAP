@@ -9,6 +9,7 @@ import { useInterventionRequests } from "@/context/intervention-context";
 import { useSystemTypes } from "@/context/system-type-context";
 import { useBrands } from "@/context/brand-context";
 import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function DataLoadingWrapper({ children }: { children: React.ReactNode }) {
   const { loading: authLoading } = useAuth();
@@ -20,6 +21,8 @@ export function DataLoadingWrapper({ children }: { children: React.ReactNode }) 
   const { loading: systemTypesLoading } = useSystemTypes();
   const { loading: brandsLoading } = useBrands();
 
+  const [showContent, setShowContent] = useState(false);
+
   const isLoading = 
     authLoading ||
     materialsLoading ||
@@ -30,7 +33,27 @@ export function DataLoadingWrapper({ children }: { children: React.ReactNode }) 
     systemTypesLoading ||
     brandsLoading;
 
-  if (isLoading) {
+  // Usa un timeout per evitare flash di caricamento troppo brevi
+  useEffect(() => {
+    if (!isLoading) {
+      const timer = setTimeout(() => setShowContent(true), 100);
+      return () => clearTimeout(timer);
+    } else {
+      setShowContent(false);
+    }
+  }, [isLoading]);
+
+  // Mostra sempre il contenuto dopo un massimo di 3 secondi anche se ancora in caricamento
+  useEffect(() => {
+    const maxWaitTimer = setTimeout(() => {
+      if (!showContent) {
+        setShowContent(true);
+      }
+    }, 3000);
+    return () => clearTimeout(maxWaitTimer);
+  }, [showContent]);
+
+  if (!showContent) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
