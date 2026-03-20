@@ -6,6 +6,18 @@ const nextConfig: NextConfig = {
     return `build-${Date.now()}`;
   },
 
+  // Configurazione webpack per gestire meglio i chunk in sviluppo
+  webpack: (config, { dev, isServer }) => {
+    if (dev && !isServer) {
+      // Aumenta il timeout per il caricamento dei chunk in sviluppo
+      config.optimization = {
+        ...config.optimization,
+        runtimeChunk: 'single',
+      };
+    }
+    return config;
+  },
+
   async headers() {
     const isProd = process.env.NODE_ENV === "production";
 

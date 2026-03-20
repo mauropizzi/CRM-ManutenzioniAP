@@ -24,6 +24,10 @@ function isChunkLoadError(error: unknown): boolean {
     /cannot find module/i,
     /unexpected token/i,
     /syntax.*error/i,
+    /timeout/i,
+    /timed out/i,
+    /network.*error/i,
+    /abort/i,
   ];
   
   return chunkErrorPatterns.some(pattern => 
