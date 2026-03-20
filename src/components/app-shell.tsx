@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/context/auth-context";
 import { AppTopnav } from "@/components/app-topnav";
-import { DataLoadingWrapper } from "@/components/data-loading-wrapper";
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -57,7 +56,7 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  const content = (
+  return (
     <div className="flex min-h-screen flex-col" data-dyad-component="AppShell">
       <AppTopnav />
       <main className="flex-1 overflow-auto" data-dyad-component="Main">
@@ -68,9 +67,6 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
       <Toaster />
     </div>
   );
-
-  // For authenticated pages, wait for the main datasets before rendering.
-  return requiresAuth ? <DataLoadingWrapper>{content}</DataLoadingWrapper> : content;
 };
 
 export default AppShell;
