@@ -47,7 +47,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let isMounted = true;
 
     const initializeAuth = async () => {
-      // Safety timeout to prevent infinite loading screen
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Auth timeout')), 5000)
       );
@@ -55,8 +54,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const sessionPromise = supabase.auth.getSession();
         
-        // Race the session fetch against a 5s timeout
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+        // Cast the result of Promise.race to the expected Supabase session response type
+        const result = await Promise.race([sessionPromise, timeoutPromise]) as { data: { session: any } };
+        const session = result.data?.session;
 
         if (!isMounted) return;
 
