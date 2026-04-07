@@ -59,36 +59,34 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { refreshCustomers } = useCustomers();
-  // Lock per evitare aggiornamenti concorrenti dello stesso intervento
   const updateLocks = useRef<Set<string>>(new Set());
+  const isFetching = useRef(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && user) {
+    if (user) {
       fetchInterventions();
-    } else if (!user) {
+    } else {
       setInterventionRequests([]);
       setLoading(false);
     }
   }, [user]);
 
   const fetchInterventions = async () => {
+    if (isFetching.current) return;
+    isFetching.current = true;
+    
     try {
-      console.log('Fetching interventions from Supabase...');
       const { data, error } = await supabase
         .from('interventions')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        if (String(error?.message || '').includes('AbortError')) {
-          return;
-        }
+        if (String(error?.message || '').includes('AbortError')) return;
         console.error('Supabase error fetching interventions:', error);
         toast.error(`Errore nel caricamento degli interventi: ${error.message}`);
         return;
       }
-
-      console.log('Trovati:', data);
 
       if (data) {
         const parsedData = data.map((item) => ({
@@ -99,18 +97,15 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         setInterventionRequests(parsedData);
       }
     } catch (error: any) {
-      if (String(error?.message || '').includes('AbortError')) {
-        return;
-      }
+      if (String(error?.message || '').includes('AbortError')) return;
       console.error('Eccezione generica fetching interventions:', error);
-      toast.error(`Errore nel caricamento degli interventi: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
+      isFetching.current = false;
     }
   };
 
   const refreshInterventions = async () => {
-    console.log('Refreshing interventions from Supabase...');
     await fetchInterventions();
   };
 
@@ -123,7 +118,6 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
     if (authErr) throw authErr;
     if (!authUser) throw new Error('Devi essere autenticato per aggiungere un intervento');
 
-    // 1) Se il cliente è inserito manualmente, crealo in anagrafica (con blocco duplicati)
     let customerId = normalizeCustomerId((newRequest as any).customer_id);
 
     const cf = normFiscal((newRequest as any).client_codice_fiscale);
@@ -141,9 +135,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
           .or(orParts.join(','))
           .limit(1);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
         if (existing && existing.length > 0) {
           const name = (existing[0] as any).ragione_sociale || 'cliente';
           throw new Error(`Cliente già presente in anagrafica (${name}). Verifica Partita IVA / Codice Fiscale.`);
@@ -183,11 +175,9 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       customerId = (createdCustomer as any)?.id ?? null;
       if (!customerId) throw new Error('Impossibile creare il cliente in anagrafica');
 
-      // Aggiorna lista clienti in memoria (così compare subito in Anagrafica)
       await refreshCustomers();
     }
 
-    // 2) Inserisci intervento (rimuovendo i campi extra usati solo per il cliente)
     const {
       client_codice_fiscale,
       client_partita_iva,
@@ -206,20 +196,13 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       work_report_data: serializeWorkReportData((newRequest as any).work_report_data),
     };
 
-    console.log('Aggiungendo intervento:', requestWithUserId);
-
     const { data, error } = await supabase
       .from('interventions')
       .insert([requestWithUserId])
       .select()
       .single();
 
-    if (error) {
-      console.error('Supabase error adding intervention:', error);
-      throw error;
-    }
-
-    console.log('Intervento aggiunto:', data);
+    if (error) throw error;
 
     if (data) {
       const parsedData = {
@@ -232,13 +215,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateInterventionRequest = async (updatedRequest: InterventionRequest) => {
-    console.log('Aggiornando intervento:', updatedRequest);
-
-    // Evita doppie chiamate concorrenti sullo stesso ID
-    if (updateLocks.current.has(updatedRequest.id)) {
-      console.warn('Duplicate update ignored for intervention:', updatedRequest.id);
-      return;
-    }
+    if (updateLocks.current.has(updatedRequest.id)) return;
     updateLocks.current.add(updatedRequest.id);
 
     try {
@@ -267,12 +244,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Supabase error updating intervention:', error);
-        throw error;
-      }
-
-      console.log('Intervento aggiornato:', data);
+      if (error) throw error;
 
       if (data) {
         const parsedData = {
@@ -289,20 +261,11 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteInterventionRequest = async (id: string) => {
     try {
-      console.log('Eliminando intervento:', id);
-
       const { error } = await supabase.from('interventions').delete().eq('id', id);
-
-      if (error) {
-        console.error('Supabase error deleting intervention:', error);
-        toast.error(`Errore nell'eliminazione dell'intervento: ${error.message}`);
-        return;
-      }
-
+      if (error) throw error;
       setInterventionRequests((prev) => prev.filter((request) => request.id !== id));
       toast.success('Richiesta di intervento eliminata con successo!');
     } catch (error: any) {
-      console.error('Eccezione generica deleting intervention:', error);
       toast.error(`Errore nell'eliminazione dell'intervento: ${error?.message || 'Unknown error'}`);
     }
   };

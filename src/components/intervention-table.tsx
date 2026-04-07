@@ -205,16 +205,16 @@ export function InterventionTable() {
 
   const stats = React.useMemo(() => {
     const total = interventionRequests.length;
-    const daFare = interventionRequests.filter((i) => i.status === "Da fare").length;
-    const inCorso = interventionRequests.filter((i) => i.status === "In corso").length;
-    const completati = interventionRequests.filter((i) => i.status === "Completato").length;
+    const daFare = interventionRequests.filter((i: InterventionRequest) => i.status === "Da fare").length;
+    const inCorso = interventionRequests.filter((i: InterventionRequest) => i.status === "In corso").length;
+    const completati = interventionRequests.filter((i: InterventionRequest) => i.status === "Completato").length;
     return { total, daFare, inCorso, completati };
   }, [interventionRequests]);
 
   const filtered = React.useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
 
-    return interventionRequests.filter((r) => {
+    return interventionRequests.filter((r: InterventionRequest) => {
       const assigned = getAssignedInfo(r, technicians as any[], suppliers as any[]);
 
       const matchesSearch =
@@ -413,203 +413,193 @@ export function InterventionTable() {
         ) : filtered.length === 0 ? (
           <CardContent className="py-12">
             <div className="text-center">
-              <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                <Wrench className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                {interventionRequests.length === 0 ? "Nessun intervento trovato" : "Nessun risultato"}
-              </h3>
-              <p className="text-text-secondary mb-6">
-                {interventionRequests.length === 0
-                  ? "Crea la prima richiesta di intervento"
-                  : "Prova a modificare i filtri di ricerca"}
-              </p>
-              {interventionRequests.length === 0 && (
-                <Link href="/interventions/new">
-                  <Button variant="default">Primo Intervento</Button>
-                </Link>
-              )}
-            </div>
-          </CardContent>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider min-w-[260px]">
-                    Cliente
-                  </TableHead>
-                  <TableHead className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider min-w-[260px]">
-                    Impianto
-                  </TableHead>
-                  <TableHead className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider min-w-[160px]">
-                    Data/Ora
-                  </TableHead>
-                  <TableHead className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider min-w-[140px]">
-                    Stato
-                  </TableHead>
-                  <TableHead className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider min-w-[220px]">
-                    Assegnato
-                  </TableHead>
-                  <TableHead className="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider min-w-[240px]">
-                    Azioni
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
+              <div className="mx-<dyad-problem-report summary="1 problems">
+<problem file="src/context/auth-context.tsx" line="59" column="17" code="2339">Property 'data' does not exist on type 'unknown'.</problem>
+</dyad-problem-report>The error occurs because `Promise.race` returns a `Promise<unknown>`, and TypeScript cannot guarantee that the result contains a `data` property. I will fix this by explicitly casting the result of the race to the expected type from the Supabase session fetch.
 
-              <TableBody className="divide-y divide-border">
-                {filtered.map((request) => {
-                  const assigned = getAssignedInfo(request, technicians as any[], suppliers as any[]);
-                  const mapsHref = getGoogleMapsLink(request);
+<dyad-write path="src/context/auth-context.tsx" description="Fixing TypeScript error in AuthProvider by casting Promise.race result">
+"use client";
 
-                  const d = request.scheduled_date
-                    ? request.scheduled_date instanceof Date
-                      ? request.scheduled_date
-                      : new Date(request.scheduled_date as any)
-                    : null;
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-                  return (
-                    <TableRow key={request.id} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="px-4 sm:px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-sm flex-shrink-0">
-                            👷
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium text-foreground truncate">
-                              {request.client_company_name}
-                            </div>
-                            <div className="text-xs text-text-secondary truncate">
-                              {request.client_address || "—"}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="px-4 sm:px-6 py-4">
-                        <div className="text-sm font-medium text-foreground truncate">
-                          {request.system_type} · {request.brand}
-                        </div>
-                        <div className="text-xs text-text-secondary truncate">{request.model || "—"}</div>
-                      </TableCell>
-
-                      <TableCell className="px-4 sm:px-6 py-4">
-                        <div className="text-sm text-foreground">
-                          {d ? format(d, "dd/MM/yyyy", { locale: it }) : "N/D"}
-                          {request.scheduled_time ? ` • ${request.scheduled_time}` : ""}
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="px-4 sm:px-6 py-4">
-                        <Badge
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium border ${getStatusBadgeVariant(
-                            request.status
-                          )}`}
-                        >
-                          {request.status}
-                        </Badge>
-                      </TableCell>
-
-                      <TableCell className="px-4 sm:px-6 py-4">
-                        {assigned.type === "none" ? (
-                          <div className="text-sm text-text-secondary">Nessuno</div>
-                        ) : (
-                          <div>
-                            <div className="text-sm font-medium text-foreground truncate">{assigned.name}</div>
-                            <div className="text-xs text-text-secondary">
-                              {assigned.type === "technician" ? "Tecnico" : "Fornitore"}
-                            </div>
-                          </div>
-                        )}
-                      </TableCell>
-
-                      <TableCell className="px-4 sm:px-6 py-4">
-                        <div className="flex items-center justify-end gap-1">
-                          <Link href={`/interventions/${request.id}/work-report`}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-primary hover:bg-primary/10 flex-shrink-0"
-                              title="Bolla di lavoro"
-                            >
-                              <FileText size={14} />
-                            </Button>
-                          </Link>
-
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-success hover:bg-success/10 flex-shrink-0"
-                            title="Invia WhatsApp"
-                            onClick={() => void handleWhatsAppClick(request)}
-                          >
-                            <MessageCircle size={14} />
-                          </Button>
-
-                          {mapsHref ? (
-                            <Button
-                              asChild
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-success hover:bg-success/10 flex-shrink-0"
-                              title="Naviga"
-                            >
-                              <a href={mapsHref} target="_blank" rel="noopener noreferrer">
-                                <MapPin size={14} />
-                              </a>
-                            </Button>
-                          ) : null}
-
-                          <Link href={`/interventions/${request.id}/edit`}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-primary hover:bg-primary/10 flex-shrink-0"
-                              title="Modifica Intervento"
-                            >
-                              <Edit size={14} />
-                            </Button>
-                          </Link>
-
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-danger hover:bg-danger/10 flex-shrink-0"
-                                title="Elimina Intervento"
-                              >
-                                <Trash2 size={14} />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="rounded-2xl">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Eliminare questo intervento?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Questa azione non può essere annullata.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
-                                <AlertDialogAction
-                                  className="rounded-xl bg-red-600 text-white hover:bg-red-700"
-                                  onClick={() => handleDelete(request.id)}
-                                >
-                                  Elimina
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </Card>
-    </div>
-  );
+interface User {
+  id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  role?: string;
 }
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  signOut: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const SUPABASE_PROJECT_REF = 'nrdsgtuzpnamcovuzghb';
+const SUPABASE_STORAGE_KEY = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
+
+async function clearLocalAuthSession() {
+  try {
+    await supabase.auth.signOut({ scope: 'local' });
+  } catch {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem(SUPABASE_STORAGE_KEY);
+      } catch {
+        // ignore
+      }
+    }
+  }
+}
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Auth timeout')), 5000)
+      );
+
+      try {
+        const sessionPromise = supabase.auth.getSession();
+        
+        // Cast the result of Promise.race to the expected Supabase session response type
+        const result = await Promise.race([sessionPromise, timeoutPromise]) as { data: { session: any } };
+        const session = result.data?.session;
+
+        if (!isMounted) return;
+
+        if (session?.user) {
+          await fetchUserProfile(session.user);
+        }
+      } catch (error: any) {
+        if (!isMounted) return;
+        
+        if (error?.message === 'Auth timeout') {
+          console.warn('[auth-context] Auth initialization timed out, proceeding to guest state');
+        } else if (error?.name === 'AbortError' || String(error?.message || '').includes('AbortError')) {
+          return;
+        } else {
+          console.error('[auth-context] Auth initialization error:', error);
+          
+          const msg = String(error?.message || '');
+          if (msg.includes('refresh_token_not_found') || msg.includes('Invalid Refresh Token')) {
+            console.warn('[auth-context] Invalid refresh token detected, clearing local session...');
+            await clearLocalAuthSession();
+            setUser(null);
+          }
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
+      if (session?.user) {
+        await fetchUserProfile(session.user);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const fetchUserProfile = async (authUser: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        await supabase.from('profiles').insert({
+          id: authUser.id,
+          first_name: authUser.user_metadata?.first_name || '',
+          last_name: authUser.user_metadata?.last_name || '',
+        });
+        setUser({
+          id: authUser.id,
+          email: authUser.email,
+          first_name: authUser.user_metadata?.first_name,
+          last_name: authUser.user_metadata?.last_name,
+        });
+      } else if (data) {
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+          first_name: data.first_name,
+          last_name: data.last_name,
+          role: data.role,
+        });
+      } else {
+        setUser({ id: authUser.id, email: authUser.email || '' });
+      }
+    } catch (error) {
+      console.error('[auth-context] Profile fetch error:', error);
+      setUser({ id: authUser.id, email: authUser.email || '' });
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      toast.error(`Errore di accesso: ${error.message}`);
+      throw error;
+    }
+    toast.success('Accesso effettuato con successo!');
+  };
+
+  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { first_name: firstName, last_name: lastName } },
+    });
+    if (error) {
+      toast.error(`Errore di registrazione: ${error.message}`);
+      throw error;
+    }
+    toast.success('Registrazione completata! Controlla la tua email per confermare.');
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.warn('[auth-context] signOut error, clearing local session...', error);
+      await clearLocalAuthSession();
+    }
+    setUser(null);
+    toast.success('Logout effettuato!');
+  };
+
+  return <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

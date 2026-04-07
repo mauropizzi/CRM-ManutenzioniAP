@@ -26,13 +26,9 @@ const SUPABASE_PROJECT_REF = 'nrdsgtuzpnamcovuzghb';
 const SUPABASE_STORAGE_KEY = `sb-${SUPABASE_PROJECT_REF}-auth-token`;
 
 async function clearLocalAuthSession() {
-  // IMPORTANT: for "Invalid Refresh Token" scenarios we must clear local storage without
-  // hitting the network, otherwise signOut() can keep failing/hanging.
   try {
-    // v2 supports scope: 'local'
     await supabase.auth.signOut({ scope: 'local' });
   } catch {
-    // fallback (shouldn't normally be needed)
     if (typeof window !== 'undefined') {
       try {
         window.localStorage.removeItem(SUPABASE_STORAGE_KEY);
@@ -48,39 +44,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
+    let isMounted = true;
 
-        if (error) {
-          const msg = String(error.message || '');
-          // Detect invalid refresh token error and clear session (local-only)
-          if (msg.includes('refresh_token_not_found') || msg.includes('Invalid Refresh Token')) {
-            console.warn('[auth-context] Invalid refresh token detected, clearing local session...');
-            await clearLocalAuthSession();
-            setUser(null);
-            toast.message('Sessione scaduta', {
-              description: 'Per favore accedi di nuovo.',
-            });
-            return;
-          }
-          throw error;
-        }
+    const initializeAuth = async () => {
+      // Safety timeout to prevent infinite loading screen
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Auth timeout')), 5000)
+      );
+
+      try {
+        const sessionPromise = supabase.auth.getSession();
+        
+        // Race the session fetch against a 5s timeout
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+
+        if (!isMounted) return;
 
         if (session?.user) {
           await fetchUserProfile(session.user);
         }
       } catch (error: any) {
-        if (error?.name === 'AbortError' || String(error?.message || '').includes('AbortError')) {
-          // Ignora gli abort dovuti a HMR/locks
+        if (!isMounted) return;
+        
+        if (error?.message === 'Auth timeout') {
+          console.warn('[auth-context] Auth initialization timed out, proceeding to guest state');
+        } else if (error?.name === 'AbortError' || String(error?.message || '').includes('AbortError')) {
           return;
+        } else {
+          console.error('[auth-context] Auth initialization error:', error);
+          
+          const msg = String(error?.message || '');
+          if (msg.includes('refresh_token_not_found') || msg.includes('Invalid Refresh Token')) {
+            console.warn('[auth-context] Invalid refresh token detected, clearing local session...');
+            await clearLocalAuthSession();
+            setUser(null);
+          }
         }
-        console.error('[auth-context] Auth initialization error:', error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
@@ -89,6 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
       if (session?.user) {
         await fetchUserProfile(session.user);
       } else {
@@ -96,7 +98,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserProfile = async (authUser: any) => {
@@ -159,8 +164,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    // Try the standard sign out first; if it fails (e.g. corrupted refresh token),
-    // fall back to local-only clear so the UI can recover.
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.warn('[auth-context] signOut error, clearing local session...', error);
