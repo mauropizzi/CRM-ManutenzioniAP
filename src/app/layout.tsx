@@ -1,45 +1,61 @@
-"use client";
+import type { Metadata } from "next";
+import "./globals.css";
+import { CustomerProvider } from "@/context/customer-context";
+import { InterventionProvider } from "@/context/intervention-context";
+import { MaterialProvider } from "@/context/material-context";
+import { TechnicianProvider } from "@/context/technician-context";
+import { SupplierProvider } from "@/context/supplier-context";
+import { AuthProvider } from "@/context/auth-context";
+import { ThemeProvider } from "@/components/theme-provider";
+import { AppShell } from "@/components/app-shell";
+import { SystemTypeProvider } from "@/context/system-type-context";
+import { BrandProvider } from "@/context/brand-context";
+import { RuntimeErrorLogger } from "@/components/runtime-error-logger";
+import { DevDisableServiceWorker } from "@/components/dev-disable-service-worker";
+import { GlobalErrorHandler } from "@/components/global-error-handler";
 
-import React from 'react';
-import { AuthProvider } from '@/context/auth-context';
-import { CustomerProvider } from '@/context/customer-context';
-import { InterventionProvider } from '@/context/intervention-context';
-import { Toaster } from '@/components/ui/sonner';
-import './globals.css';
+export const metadata: Metadata = {
+  title: "Gestione Interventi",
+  description: "Gestione anagrafica clienti e richieste di intervento",
+};
+
+export const dynamic = "force-dynamic";
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
-  React.useEffect(() => {
-    if (process.env.NODE_ENV === 'production') {
-      const APP_VERSION = '1.0.2'; 
-      const storedVersion = localStorage.getItem('app_version');
-
-      if (storedVersion !== APP_VERSION) {
-        console.log('[boot] New version detected. Clearing corrupted storage...');
-        localStorage.clear();
-        document.cookie.split("; ").forEach((cookie) => {
-          document.cookie = cookie.replace(/^(.+?)=.*/, "$1=") + ";expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-        });
-        localStorage.setItem('app_version', APP_VERSION);
-        window.location.reload();
-      }
-    }
-  }, []);
-
+}>) {
   return (
-    <html lang="it">
-      <body className="min-h-screen bg-background">
-        <AuthProvider>
-          <CustomerProvider>
-            <InterventionProvider>
-              {children}
-              <Toaster position="top-center" />
-            </InterventionProvider>
-          </CustomerProvider>
-        </AuthProvider>
+    <html lang="it" suppressHydrationWarning>
+      <body className="min-h-screen bg-background text-foreground">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange={true}
+        >
+          <GlobalErrorHandler />
+          <DevDisableServiceWorker />
+          <RuntimeErrorLogger />
+          <AuthProvider>
+            <SystemTypeProvider>
+              <BrandProvider>
+                <CustomerProvider>
+                  <InterventionProvider>
+                    <MaterialProvider>
+                      <TechnicianProvider>
+                        <SupplierProvider>
+                          <AppShell>{children}</AppShell>
+                        </SupplierProvider>
+                      </TechnicianProvider>
+                    </MaterialProvider>
+                  </InterventionProvider>
+                </CustomerProvider>
+              </BrandProvider>
+            </SystemTypeProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
