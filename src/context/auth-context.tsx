@@ -31,7 +31,7 @@ async function clearLocalAuthSession() {
   } catch {
     if (typeof window !== 'undefined') {
       try {
-        window.localStorage.removeItem(SUPABASE_STORAGE_KEY);
+        window.localStorage.clear(); // Clear everything to be safe in production
       } catch {
         // ignore
       }
@@ -47,14 +47,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let isMounted = true;
 
     const initializeAuth = async () => {
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 10000)
-      );
+      // Watchdog timer: if auth takes too long in production, force a reset
+      const watchdogTimer = setTimeout(async () => {
+        if (isMounted && loading) {
+          console.warn('[auth-context] Production watchdog triggered: Auth taking too long. Forcing reset...');
+          await clearLocalAuthSession();
+          setUser(null);
+          setLoading(false);
+        }
+      }, 7000); // 7 seconds limit
 
       try {
-        const sessionPromise = supabase.auth.getSession();
-        const result = await Promise.race([sessionPromise, timeoutPromise]) as { data: { session: any } };
-        const session = result.data?.session;
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
 
         if (!isMounted) return;
 
@@ -63,21 +69,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (error: any) {
         if (!isMounted) return;
-        
-        if (error?.message === 'Auth timeout') {
-          console.warn('[auth-context] Auth initialization timed out, proceeding to guest state');
-        } else {
-          console.error('[auth-context] Auth initialization error:', error);
-          
-          // If we have a critical error, we force a session clear to prevent the "white screen" or "loop"
-          const msg = String(error?.message || '');
-          if (msg.includes('refresh_token_not_found') || msg.includes('Invalid Refresh Token') || msg.includes('JWT')) {
-            console.warn('[auth-context] Critical auth error detected, forcing session reset...');
-            await clearLocalAuthSession();
-            setUser(null);
-          }
-        }
+        console.error('[auth-context] Auth initialization error:', error);
+        await clearLocalAuthSession();
+        setUser(null);
       } finally {
+        clearTimeout(watchdogTimer);
         if (isMounted) setLoading(false);
       }
     };

@@ -11,6 +11,7 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Force no-cache for all API routes and Next.js data fetches
         source: '/api/(.*)',
         headers: [
           {
@@ -25,6 +26,16 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+        ],
+      },
+      {
+        // Prevent caching of the main HTML page to ensure the latest JS bundles are requested
+        source: '/(:path*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
           },
         ],
       },
