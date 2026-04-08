@@ -47,14 +47,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let isMounted = true;
 
     const initializeAuth = async () => {
+      // Increased timeout from 5000ms to 10000ms to handle slow connections/cold starts
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 5000)
+        setTimeout(() => reject(new Error('Auth timeout')), 10000)
       );
 
       try {
         const sessionPromise = supabase.auth.getSession();
         
-        // Cast the result of Promise.race to the expected Supabase session response type
         const result = await Promise.race([sessionPromise, timeoutPromise]) as { data: { session: any } };
         const session = result.data?.session;
 
