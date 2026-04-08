@@ -2,20 +2,22 @@
 
 import React from 'react';
 import { MaterialForm, MaterialFormValues } from '@/components/material-form';
-import { useMaterials } from '@/context/material-context';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Toaster } from '@/components/ui/sonner';
+import { useMaterials } from '@/context/material-context';
 import { toast } from 'sonner';
 
+// This prevents Next.js from trying to prerender this page during build
+export const dynamic = 'force-dynamic';
+
 export default function NewMaterialPage() {
-  const { addMaterial } = useMaterials();
   const router = useRouter();
+  const { addMaterial } = useMaterials();
 
   const handleSubmit = async (data: MaterialFormValues) => {
-    console.log('Form submitted with data:', data);
     try {
       await addMaterial(data);
-      console.log('Material added successfully');
       toast.success("Materiale aggiunto con successo!");
       router.push('/materials');
     } catch (error: any) {
@@ -25,12 +27,21 @@ export default function NewMaterialPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4 sm:p-8">
-      <div className="max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Aggiungi Nuovo Materiale</h1>
+    <div className="container mx-auto p-4 max-w-4xl">
+      <div className="flex items-center gap-4 mb-6">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h1 className="text-3xl font-bold tracking-tight">Nuovo Materiale</h1>
+      </div>
+      
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
         <MaterialForm onSubmit={handleSubmit} />
       </div>
-      <Toaster />
     </div>
   );
 }

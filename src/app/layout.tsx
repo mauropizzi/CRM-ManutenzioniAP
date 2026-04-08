@@ -5,6 +5,7 @@ import { AuthProvider } from '@/context/auth-context';
 import { CustomerProvider } from '@/context/customer-context';
 import { InterventionProvider } from '@/context/intervention-context';
 import { TechnicianProvider } from '@/context/technician-context';
+import { MaterialProvider } from '@/context/material-context';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
@@ -37,8 +38,10 @@ export default function RootLayout({
           <CustomerProvider>
             <InterventionProvider>
               <TechnicianProvider>
-                {children}
-                <Toaster position="top-center" />
+                <MaterialProvider>
+                  {children}
+                  <Toaster position="top-center" />
+                </MaterialProvider>
               </TechnicianProvider>
             </InterventionProvider>
           </CustomerProvider>
