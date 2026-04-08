@@ -4,6 +4,7 @@ import React from 'react';
 import { AuthProvider } from '@/context/auth-context';
 import { CustomerProvider } from '@/context/customer-context';
 import { InterventionProvider } from '@/context/intervention-context';
+import { TechnicianProvider } from '@/context/technician-context';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
@@ -35,8 +36,10 @@ export default function RootLayout({
         <AuthProvider>
           <CustomerProvider>
             <InterventionProvider>
-              {children}
-              <Toaster position="top-center" />
+              <TechnicianProvider>
+                {children}
+                <Toaster position="top-center" />
+              </TechnicianProvider>
             </InterventionProvider>
           </CustomerProvider>
         </AuthProvider>
