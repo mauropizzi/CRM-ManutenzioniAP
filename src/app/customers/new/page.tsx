@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { CustomerForm, CustomerFormValues } from '@/components/customer-form';
+import { useCustomers } from '@/context/customer-context';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCustomers } from '@/context/customer-context';
 import { toast } from 'sonner';
 
 // This prevents Next.js from trying to prerender this page during build
@@ -39,7 +39,9 @@ export default function NewCustomerPage() {
         <h1 className="text-3xl font-bold tracking-tight">Nuovo Cliente</h1>
       </div>
       
-      <CustomerForm onSubmit={handleSubmit} />
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
+        <CustomerForm onSubmit={handleSubmit} />
+      </div>
     </div>
   );
 }
