@@ -47,14 +47,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let isMounted = true;
 
     const initializeAuth = async () => {
-      // Increased timeout from 5000ms to 10000ms to handle slow connections/cold starts
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Auth timeout')), 10000)
       );
 
       try {
         const sessionPromise = supabase.auth.getSession();
-        
         const result = await Promise.race([sessionPromise, timeoutPromise]) as { data: { session: any } };
         const session = result.data?.session;
 
@@ -68,14 +66,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (error?.message === 'Auth timeout') {
           console.warn('[auth-context] Auth initialization timed out, proceeding to guest state');
-        } else if (error?.name === 'AbortError' || String(error?.message || '').includes('AbortError')) {
-          return;
         } else {
           console.error('[auth-context] Auth initialization error:', error);
           
+          // If we have a critical error, we force a session clear to prevent the "white screen" or "loop"
           const msg = String(error?.message || '');
-          if (msg.includes('refresh_token_not_found') || msg.includes('Invalid Refresh Token')) {
-            console.warn('[auth-context] Invalid refresh token detected, clearing local session...');
+          if (msg.includes('refresh_token_not_found') || msg.includes('Invalid Refresh Token') || msg.includes('JWT')) {
+            console.warn('[auth-context] Critical auth error detected, forcing session reset...');
             await clearLocalAuthSession();
             setUser(null);
           }
