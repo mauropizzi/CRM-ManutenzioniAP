@@ -3,6 +3,7 @@
 import React from 'react';
 import { AuthProvider } from '@/context/auth-context';
 import { CustomerProvider } from '@/context/customer-context';
+import { InterventionProvider } from '@/context/intervention-context';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
@@ -33,8 +34,10 @@ export default function RootLayout({
       <body className="min-h-screen bg-background">
         <AuthProvider>
           <CustomerProvider>
-            {children}
-            <Toaster position="top-center" />
+            <InterventionProvider>
+              {children}
+              <Toaster position="top-center" />
+            </InterventionProvider>
           </CustomerProvider>
         </AuthProvider>
       </body>
