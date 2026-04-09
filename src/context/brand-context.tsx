@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth-context';
 import type { Brand } from '@/types/brand';
+import { resolveAuthenticatedUserId } from '@/lib/auth-utils';
 
 interface BrandContextValue {
   brands: Brand[];
@@ -60,12 +61,10 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const { data: authData, error: authErr } = await supabase.auth.getUser();
-      if (authErr) throw authErr;
-      if (!authData.user) throw new Error('Devi essere autenticato');
+      const userId = await resolveAuthenticatedUserId(user?.id);
 
       const { error } = await supabase.from('brands').insert({
-        user_id: authData.user.id,
+        user_id: userId,
         name: cleanName,
       });
 

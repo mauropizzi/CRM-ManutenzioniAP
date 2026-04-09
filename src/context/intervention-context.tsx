@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './auth-context';
 import { useCustomers } from '@/context/customer-context';
+import { resolveAuthenticatedUserId } from '@/lib/auth-utils';
 
 interface InterventionContextType {
   interventionRequests: InterventionRequest[];
@@ -110,13 +111,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addInterventionRequest = async (newRequest: Omit<InterventionRequest, 'id' | 'user_id'>) => {
-    const {
-      data: { user: authUser },
-      error: authErr,
-    } = await supabase.auth.getUser();
-
-    if (authErr) throw authErr;
-    if (!authUser) throw new Error('Devi essere autenticato per aggiungere un intervento');
+    const authUserId = await resolveAuthenticatedUserId(user?.id);
 
     let customerId = normalizeCustomerId((newRequest as any).customer_id);
 
@@ -143,7 +138,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const customerPayload = {
-        user_id: authUser.id,
+        user_id: authUserId,
         ragione_sociale: (newRequest as any).client_company_name,
         codice_fiscale: cf || null,
         partita_iva: piva || null,
@@ -153,7 +148,7 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
         provincia: emptyToNull(String((newRequest as any).client_provincia ?? '').trim().toUpperCase()),
         telefono: (newRequest as any).client_phone,
         email: (newRequest as any).client_email,
-        referente: emptyToNull((newRequest as any).client_referente),
+        referente: emptyToNull((newRequest as any).client_referent),
         pec: emptyToNull((newRequest as any).client_pec),
         sdi: emptyToNull((newRequest as any).client_sdi),
         attivo: true,
@@ -191,9 +186,10 @@ export const InterventionProvider = ({ children }: { children: ReactNode }) => {
 
     const requestWithUserId = {
       ...rest,
-      user_id: authUser.id,
+      user_id: authUserId,
       customer_id: customerId,
       work_report_data: serializeWorkReportData((newRequest as any).work_report_data),
+      scheduled_date: newRequest.scheduled_date ? newRequest.scheduled_date.toISOString().split('T')[0] : null,
     };
 
     const { data, error } = await supabase

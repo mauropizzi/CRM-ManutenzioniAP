@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -42,104 +42,112 @@ async function clearLocalAuthSession() {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
 
-    const initializeAuth = async () => {
-      // Increased timeout from 5000ms to 10000ms to handle slow connections/cold starts
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 10000)
-      );
-
-      try {
-        const sessionPromise = supabase.auth.getSession();
-        
-        const result = await Promise.race([sessionPromise, timeoutPromise]) as { data: { session: any } };
-        const session = result.data?.session;
-
-        if (!isMounted) return;
-
-        if (session?.user) {
-          await fetchUserProfile(session.user);
-        }
-      } catch (error: any) {
-        if (!isMounted) return;
-        
-        if (error?.message === 'Auth timeout') {
-          console.warn('[auth-context] Auth initialization timed out, proceeding to guest state');
-        } else if (error?.name === 'AbortError' || String(error?.message || '').includes('AbortError')) {
-          return;
-        } else {
-          console.error('[auth-context] Auth initialization error:', error);
-          
-          const msg = String(error?.message || '');
-          if (msg.includes('refresh_token_not_found') || msg.includes('Invalid Refresh Token')) {
-            console.warn('[auth-context] Invalid refresh token detected, clearing local session...');
-            await clearLocalAuthSession();
-            setUser(null);
-          }
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
+    const finishInitialization = () => {
+      if (!isMounted || initializedRef.current) return;
+      initializedRef.current = true;
+      setLoading(false);
     };
 
-    initializeAuth();
+    const buildUserProfile = async (authUser: any): Promise<User> => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+
+        if (error && error.code === 'PGRST116') {
+          await supabase.from('profiles').insert({
+            id: authUser.id,
+            first_name: authUser.user_metadata?.first_name || '',
+            last_name: authUser.user_metadata?.last_name || '',
+          });
+
+          return {
+            id: authUser.id,
+            email: authUser.email || '',
+            first_name: authUser.user_metadata?.first_name,
+            last_name: authUser.user_metadata?.last_name,
+          };
+        }
+
+        if (data) {
+          return {
+            id: authUser.id,
+            email: authUser.email || '',
+            first_name: data.first_name,
+            last_name: data.last_name,
+            role: data.role,
+          };
+        }
+      } catch (error) {
+        console.error('[auth-context] Profile fetch error:', error);
+      }
+
+      return { id: authUser.id, email: authUser.email || '' };
+    };
+
+    const applySession = async (session: any) => {
+      if (!isMounted) return;
+
+      if (!session?.user) {
+        setUser(null);
+        finishInitialization();
+        return;
+      }
+
+      const nextUser = await buildUserProfile(session.user);
+      if (!isMounted) return;
+      setUser(nextUser);
+      finishInitialization();
+    };
+
+    const handleAuthError = async (error: any) => {
+      const msg = String(error?.message || '');
+      if (msg.includes('refresh_token_not_found') || msg.includes('Invalid Refresh Token')) {
+        console.warn('[auth-context] Invalid refresh token detected, clearing local session...');
+        await clearLocalAuthSession();
+        if (isMounted) setUser(null);
+        return;
+      }
+      console.error('[auth-context] Auth initialization error:', error);
+    };
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!isMounted) return;
-      if (session?.user) {
-        await fetchUserProfile(session.user);
-      } else {
-        setUser(null);
-      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void applySession(session);
     });
+
+    void supabase.auth
+      .getSession()
+      .then(async ({ data, error }) => {
+        if (error) {
+          await handleAuthError(error);
+          return;
+        }
+        await applySession(data.session);
+      })
+      .catch(async (error) => {
+        if (error?.name === 'AbortError' || String(error?.message || '').includes('AbortError')) {
+          return;
+        }
+        await handleAuthError(error);
+      })
+      .finally(() => {
+        finishInitialization();
+      });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
-
-  const fetchUserProfile = async (authUser: any) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .single();
-
-      if (error && error.code === 'PGRST116') {
-        await supabase.from('profiles').insert({
-          id: authUser.id,
-          first_name: authUser.user_metadata?.first_name || '',
-          last_name: authUser.user_metadata?.last_name || '',
-        });
-        setUser({
-          id: authUser.id,
-          email: authUser.email,
-          first_name: authUser.user_metadata?.first_name,
-          last_name: authUser.user_metadata?.last_name,
-        });
-      } else if (data) {
-        setUser({
-          id: authUser.id,
-          email: authUser.email || '',
-          first_name: data.first_name,
-          last_name: data.last_name,
-          role: data.role,
-        });
-      } else {
-        setUser({ id: authUser.id, email: authUser.email || '' });
-      }
-    } catch (error) {
-      console.error('[auth-context] Profile fetch error:', error);
-      setUser({ id: authUser.id, email: authUser.email || '' });
-    }
-  };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
