@@ -32,14 +32,38 @@ interface WorkReportBasicInfoProps {
   clientName?: string;
   clientEmail?: string;
   interventionId?: string;
+  onPersist?: (data: WorkReportFormValues) => Promise<boolean> | boolean;
 }
 
-export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }: WorkReportBasicInfoProps) => {
-  const { control, getValues, setValue } = useFormContext<WorkReportFormValues>();
+export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId, onPersist }: WorkReportBasicInfoProps) => {
+  const { control, getValues, setValue, handleSubmit } = useFormContext<WorkReportFormValues>();
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState(clientEmail || '');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isPersisting, setIsPersisting] = useState(false);
+
+  const persistCurrentForm = async () => {
+    if (!onPersist) return true;
+
+    let persisted = false;
+    setIsPersisting(true);
+
+    try {
+      await handleSubmit(
+        async (values) => {
+          persisted = await onPersist(values);
+        },
+        () => {
+          toast.error('Completa i campi obbligatori prima di generare o inviare la bolla.');
+        }
+      )();
+
+      return persisted;
+    } finally {
+      setIsPersisting(false);
+    }
+  };
 
   const handleDownloadPdf = async () => {
     if (!interventionId) {
@@ -49,6 +73,9 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
 
     setIsGeneratingPdf(true);
     try {
+      const persisted = await persistCurrentForm();
+      if (!persisted) return;
+
       const { pdfBase64 } = await fetchWorkReportPdf(interventionId);
       const bytes = Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0));
       const blob = new Blob([bytes], { type: 'application/pdf' });
@@ -87,6 +114,9 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
 
     setIsSendingEmail(true);
     try {
+      const persisted = await persistCurrentForm();
+      if (!persisted) return;
+
       await sendWorkReportEmail(interventionId, emails);
       setIsEmailDialogOpen(false);
       toast.success(`Email inviata a ${emails.length} destinatario/i.`);
@@ -118,10 +148,10 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
                 variant="outline"
                 className="gap-2 rounded-xl"
                 onClick={handleDownloadPdf}
-                disabled={isGeneratingPdf}
+                disabled={isGeneratingPdf || isPersisting}
               >
                 <Printer size={16} />
-                {isGeneratingPdf ? 'Generazione…' : 'Scarica PDF'}
+                {isGeneratingPdf || isPersisting ? 'Generazione…' : 'Scarica PDF'}
               </Button>
             )}
 
@@ -171,8 +201,8 @@ export const WorkReportBasicInfo = ({ clientName, clientEmail, interventionId }:
                     >
                       Annulla
                     </Button>
-                    <Button type="button" onClick={handleSendEmail} disabled={isSendingEmail} className="rounded-xl">
-                      {isSendingEmail ? 'Invio…' : 'Invia'}
+                    <Button type="button" onClick={handleSendEmail} disabled={isSendingEmail || isPersisting} className="rounded-xl">
+                      {isSendingEmail || isPersisting ? 'Invio…' : 'Invia'}
                     </Button>
                   </DialogFooter>
                 </DialogContent>

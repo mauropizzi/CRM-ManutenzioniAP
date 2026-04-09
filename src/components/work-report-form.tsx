@@ -69,6 +69,7 @@ export type WorkReportFormValues = z.infer<typeof workReportSchema>;
 interface WorkReportFormProps {
   initialData?: Partial<WorkReportFormValues>;
   onSubmit: (data: WorkReportFormValues) => Promise<void> | void;
+  onPersist?: (data: WorkReportFormValues) => Promise<boolean> | boolean;
   clientName?: string;
   clientEmail?: string;
   currentStatus: 'Da fare' | 'In corso' | 'Completato' | 'Annullato';
@@ -87,7 +88,7 @@ const DEFAULT_TIME_ENTRY = {
 
 const DEFAULT_MATERIAL = { unit: 'PZ', quantity: 0, description: '', material_id: '', is_new: undefined };
 
-export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail, currentStatus }: WorkReportFormProps) => {
+export const WorkReportForm = ({ initialData, onSubmit, onPersist, clientName, clientEmail, currentStatus }: WorkReportFormProps) => {
   const normalizedTimeEntries = initialData?.time_entries?.length
     ? initialData.time_entries.map((e) => ({
         ...e,
@@ -127,7 +128,12 @@ export const WorkReportForm = ({ initialData, onSubmit, clientName, clientEmail,
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8">
-        <WorkReportBasicInfo clientName={clientName} clientEmail={clientEmail} interventionId={initialData?.id} />
+        <WorkReportBasicInfo
+          clientName={clientName}
+          clientEmail={clientEmail}
+          interventionId={initialData?.id}
+          onPersist={onPersist}
+        />
         <TimeEntriesSection />
         <MaterialsSection />
         <SignaturesSection />

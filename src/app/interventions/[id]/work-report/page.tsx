@@ -76,14 +76,17 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
     await refreshMaterials();
   };
 
-  const handleSubmit = async (data: WorkReportFormValues) => {
-    if (isSaving) return; // Evita doppio submit
+  const saveWorkReport = async (
+    data: WorkReportFormValues,
+    options?: { redirectOnSuccess?: boolean; showSuccessToast?: boolean }
+  ) => {
+    const { redirectOnSuccess = false, showSuccessToast = true } = options ?? {};
+    if (isSaving) return false;
     setIsSaving(true);
-    
+
     const { status, ...workReportDataFields } = data;
 
     try {
-      // 1) se ci sono materiali confermati come nuovi, aggiungili in anagrafica
       const confirmedNew = (data.materials || []).filter(
         (m: any) => m?.is_new && m?.description && String(m.description).trim().length > 0
       );
@@ -92,7 +95,6 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
         await ensureCatalogMaterial(String(m.unit || 'PZ'), String(m.description));
       }
 
-      // 2) salva bolla (ripulisce campi interni non necessari)
       const cleanedMaterials = (data.materials || []).map((m: any) => ({
         unit: m.unit,
         quantity: m.quantity,
@@ -102,16 +104,28 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
       await updateInterventionRequest({
         ...intervention,
         work_report_data: { ...workReportDataFields, materials: cleanedMaterials },
-        status: status,
+        status,
       });
 
-      toast.success('Bolla salvata');
-      router.push('/interventions');
+      if (showSuccessToast) {
+        toast.success('Bolla salvata');
+      }
+
+      if (redirectOnSuccess) {
+        router.push('/interventions');
+      }
+
+      return true;
     } catch (e: any) {
       toast.error(e?.message || 'Errore durante il salvataggio della bolla');
+      return false;
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSubmit = async (data: WorkReportFormValues) => {
+    await saveWorkReport(data, { redirectOnSuccess: true, showSuccessToast: true });
   };
 
   return (
@@ -190,6 +204,7 @@ export default function WorkReportPage({ params }: WorkReportPageProps) {
             <WorkReportForm
               initialData={{ ...(intervention.work_report_data ?? {}), id: intervention.id } as any}
               onSubmit={handleSubmit}
+              onPersist={(data) => saveWorkReport(data, { redirectOnSuccess: false, showSuccessToast: false })}
               clientName={intervention.client_company_name}
               clientEmail={intervention.client_email}
               currentStatus={intervention.status}
