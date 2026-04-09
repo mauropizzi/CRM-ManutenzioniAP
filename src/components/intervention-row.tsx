@@ -142,9 +142,9 @@ export function InterventionRow({ request, getAssignedInfo, onDelete }: Interven
         {assigned.name || <span className="text-muted-foreground italic">Non assegnato</span>}
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex justify-end gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
           <Button variant="ghost" size="icon" asChild>
-            <Link href={`/interventions/edit/${request.id}`} title="Modifica">
+            <Link href={`/interventions/${request.id}/edit`} title="Modifica">
               <Edit size={16} />
             </Link>
           </Button>
@@ -153,8 +153,8 @@ export function InterventionRow({ request, getAssignedInfo, onDelete }: Interven
             <MessageCircle size={16} />
           </Button>
 
-          <Button variant="ghost" size="icon" title="Bolla di lavoro">
-            <Link href={`/interventions/report/${request.id}`}>
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={`/interventions/${request.id}/work-report`} title="Bolla di lavoro">
               <FileText size={16} />
             </Link>
           </Button>
